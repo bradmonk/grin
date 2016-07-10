@@ -1,6 +1,6 @@
 # OS X temporary files
 .DS_Store
-*.m~  # temporary MATLAB files
+*.m~
 *.aux
 *.log
 *.out
