@@ -98,27 +98,55 @@ delaytoCS       = xlsN(:,18);
 compressFrms    = xlsN(1,19);
 CS_length       = xlsN(1,20);
 
-total_trials    = size(xlsN,1);
 
-framesPerTrial  = total_frames / compressFrms;
-
-secPerFrame = frame_period * compressFrms;     % seconds per frame
-framesPerSec    = 1 / secPerFrame;             % frames per second
-
-secondsPerTrial = framesPerTrial * secPerFrame;
-
-fprintf('\n There are %8.4f seconds per trial \n', secondsPerTrial)
+total_trials    = size(xlsN,1);                 % total number of trials
+framesPerTrial  = total_frames / compressFrms;  % frames per trial
+secPerFrame     = frame_period * compressFrms;  % seconds per frame
+framesPerSec    = 1 / secPerFrame;              % frames per second
+secondsPerTrial = framesPerTrial * secPerFrame; % seconds per trial
 
 
-CSframeF  = delaytoCS .* framesPerSec;       % get first frame of CS in trial
-CSframerF = round(CSframeF);                 % round CS frame to get integer value
+fprintf('\n\n In this dataset (''% s'') there are...', xlsfilename)
+fprintf('\n    total trials: %10.1f  ', total_trials)
+fprintf('\n    frames per trial: %7.1f  ', framesPerTrial)
+fprintf('\n    seconds per frame: %8.5f  ', secPerFrame)
+fprintf('\n    frames per second: %8.5f  ', framesPerSec)
+fprintf('\n    seconds per trial: %8.4f  \n\n', secondsPerTrial)
 
-CSframeL  = (delaytoCS+10) .* framesPerSec;  % get last frame of CS in trial
-CSframerL = round(CSframeL);                 % round CS frame to get integer value
 
-USframeF  = CSframerL + 1;
 
-USframeL  = framesPerTrial - USframeF
+
+%% DETERMINE FIRST AND LAST FRAME FOR CS / US FOR EACH TRIAL
+
+CSframeF  = delaytoCS .* framesPerSec;       % CS first frame in trial
+CSframerF = round(CSframeF);                 % round frame to integer
+
+CSframeL  = (delaytoCS+10) .* framesPerSec;  % CS last frame in trial
+CSframerL = round(CSframeL);                 % round frame to integer
+
+USframeF  = (delaytoCS+11) .* framesPerSec;  % US first frame in trial
+USframerF = round(USframeF);                 % round frame to integer
+
+USframeL  = (delaytoCS+21) .* framesPerSec;  % US last frame in trial
+USframerL = round(USframeL);                 % round frame to integer
+
+
+%% SEPARATE EACH TRIAL TYPE (UNIQUE CS/US COMBOS)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 %% -- REMOVE BACKGROUND PIXELS
