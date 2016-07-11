@@ -69,13 +69,32 @@ xlsR(1:4,14:20)
 frame period    total frames    CS      US      delay to CS     compressF   CS length
 0.03462         2000            tone    us      35              20          10
 
+
+Every trial contains...
+
+variable delay period (VDP)   >   CS (sound)   >  US (shock/sucrose/nothing) > ITI
+
+VDP ranges from 25 - 35 sec
+
+CS is always 10 sec
+
+there is a short 0.5 sec delay between CS and US
+
+US is short ~< 1 sec
+
+The ITI is > 60 sec? however, frames are only captured through the end of
+the "trial" which is made to be 60 sec total. So the frames captured during ITI 
+period depend on the 'delay to CS' period.
+
+
+
 %}
 
 frame_period    = xlsN(1,14);
 total_frames    = xlsN(1,15);
 CS_type         = xlsT(:,16);
 US_type         = xlsT(:,17);
-delaytoCS       = xlsN(1,18);
+delaytoCS       = xlsN(:,18);
 compressFrms    = xlsN(1,19);
 CS_length       = xlsN(1,20);
 
@@ -83,14 +102,23 @@ total_trials    = size(xlsN,1);
 
 framesPerTrial  = total_frames / compressFrms;
 
-framerate = frame_period * compressFrms;
-framesPerSec = 1 / framerate;
+secPerFrame = frame_period * compressFrms;     % seconds per frame
+framesPerSec    = 1 / secPerFrame;             % frames per second
 
-secondsPerTrial = framesPerTrial * framerate;
+secondsPerTrial = framesPerTrial * secPerFrame;
 
-fprintf('%8.8f', frame_period*20)
+fprintf('\n There are %8.4f seconds per trial \n', secondsPerTrial)
 
 
+CSframeF  = delaytoCS .* framesPerSec;       % get first frame of CS in trial
+CSframerF = round(CSframeF);                 % round CS frame to get integer value
+
+CSframeL  = (delaytoCS+10) .* framesPerSec;  % get last frame of CS in trial
+CSframerL = round(CSframeL);                 % round CS frame to get integer value
+
+USframeF  = CSframerL + 1;
+
+USframeL  = framesPerTrial - USframeF
 
 
 %% -- REMOVE BACKGROUND PIXELS
