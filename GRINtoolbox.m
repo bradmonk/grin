@@ -56,15 +56,39 @@ end
 
 
 
+%% IMPORT ASSOCIATED EXCEL DATA
 
+[xlsfilename, xlspathname] = uigetfile({'*.xls*'},'File Selector');
 
+[xlsN,xlsT,xlsR] = xlsread([xlspathname , xlsfilename]);
 
+xlsR(1:4,14:20)
+%{
 
+14              15              16      17      18              19          20
+frame period    total frames    CS      US      delay to CS     compressF   CS length
+0.03462         2000            tone    us      35              20          10
 
+%}
 
+frame_period    = xlsN(1,14);
+total_frames    = xlsN(1,15);
+CS_type         = xlsT(:,16);
+US_type         = xlsT(:,17);
+delaytoCS       = xlsN(1,18);
+compressFrms    = xlsN(1,19);
+CS_length       = xlsN(1,20);
 
+total_trials    = size(xlsN,1);
 
+framesPerTrial  = total_frames / compressFrms;
 
+framerate = frame_period * compressFrms;
+framesPerSec = 1 / framerate;
+
+secondsPerTrial = framesPerTrial * framerate;
+
+fprintf('%8.8f', frame_period*20)
 
 
 
