@@ -1,55 +1,29 @@
 %% GRINtoolbox.m - GRIN LENS IMAGING TOOLBOX
 clc; close all; clear;
-
 % Change the current folder to the folder of this .m file.
 cd(fileparts(which('GRINtoolbox.m')));
-
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
-
-%% --- GET ALL THE .tif IMAGES FROM FOLDER SPECIFIED IN POPUP WINDOW
+%% GET TIF STACK
 clc; close all; clear;
 
-% filedir = uigetdir();
-filedir = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/testdata/grindata1';
-imgFiles = dir([filedir,'/*.tif*']);
-imgFileNames = {imgFiles(:).name}';
-GRINfils = strcat(repmat([filedir '/'],length(imgFileNames),1), imgFileNames);
+[filename, pathname] = uigetfile({'*.tif*'},'File Selector');
 
-disp(GRINfils)
-
-%% -- RESIZE IMAGES AND STORE IMAGE PIXEL MATRIX VALUES INTO A CELL ARRAY
-
-% THE FINAL CELL ARRAY OF INTEREST WILL BE CALLED 'dGRINs'
-% To access the pixel value matrix from a single image from this cell array, 
-% for example the first image of the z-stack, simply use: 
-
-nF = numel(GRINfils);   % number of image files
-
-IMGS = cell(nF,1);
-
-for ni = 1:nF
-     
-     IMGS{ni} = im2double(imread(GRINfils{ni}));
-        
-    %{
-    dGRIN = imresize(dGRIN, Pixels);
-    dGRIN(dGRIN > 1) = 1;  % In rare cases resizing results in some pixel vals > 1
-
-    %---- Adjust Contrast
-    dGRIN = imadjust(dGRIN);
-    %dGRIN = histeq(dGRIN);
-    %dGRIN = adapthisteq(dGRIN);
-
-    %---- Homogenize Background
-    %background = imopen(dGRIN,strel('disk',20));
-    %dGRIN = dGRIN - background;
-    dGRIN = imtophat(dGRIN,strel('disk',20));
-    %----
-    
-    %}
-
+FileTif=[pathname , filename];
+InfoImage=imfinfo(FileTif);
+mImage=InfoImage(1).Width;
+nImage=InfoImage(1).Height;
+NumberImages=length(InfoImage);
+IMGS=zeros(nImage,mImage,NumberImages,'double');
+ 
+TifLink = Tiff(FileTif, 'r');
+for i=1:NumberImages
+   TifLink.setDirectory(i);
+   IMGS(:,:,i)=TifLink.read();
 end
+TifLink.close();
+
+
 
 
 %% PREVIEW IMPORTED STACK
@@ -60,23 +34,55 @@ hax1 = axes('Position',[.05 .05 .45 .9],'Color','none','XTick',[],'YTick',[]);
 hax2 = axes('Position',[.55 .05 .45 .9],'Color','none','XTick',[],'YTick',[]);
 
 axes(hax1)
-imagesc(IMGS{1})
+imagesc(IMGS(:,:,1))
 
-mx = max(IMGS{1}(:));
-mn = min(IMGS{1}(:));
+mx = max(max(IMGS(:,:,1)));
+mn = min(min(IMGS(:,:,1)));
 
 % colormap(customcmap(1))
-for nT = 1:numel(IMGS)
+% for nT = 1:length(IMGS)
+for nT = 1:10:1000
     % PLOT MESH SURF
-    imagesc(IMGS{nT})
-    mesh(hax2,IMGS{nT})
+    imagesc(IMGS(:,:,nT))
+    mesh(hax2,IMGS(:,:,nT))
     view(hax2,[-40 2])
     zlim(hax2,[mn*.9 mx*1.2])
     
-    drawnow
+    % drawnow
     pause(.1)
 end
 %----------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% -- REMOVE BACKGROUND PIXELS
+
+
+hax2.ZLim
+hax1.XLim
+hax1.YLim
+
+hist(IMGS{1}(:),20)
+hax1.CameraUpVector = [1 0 0];
+
+
+
+
+
 
 
 

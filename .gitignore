@@ -8,3 +8,5 @@
 # Explicitly ignore some folders
 testdata
 testdata/*
+gcdata
+gcdata/*
