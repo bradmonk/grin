@@ -4,10 +4,18 @@ clc; close all; clear;
 cd(fileparts(which('GRINtoolbox.m')));
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
-%% GET TIF STACK
+%% IMPORT TIF STACK
 clc; close all; clear;
 
-[filename, pathname] = uigetfile({'*.tif*'},'File Selector');
+filename = '031016_gc33_green_keep.tif';
+pathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+xlsfilename = '031016 gc33 summary.xlsx';
+xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+
+
+% [filename, pathname] = uigetfile({'*.tif*'},'File Selector');
+grinano('import',[pathname , filename])
+
 
 FileTif=[pathname , filename];
 InfoImage=imfinfo(FileTif);
@@ -22,6 +30,18 @@ for i=1:NumberImages
    IMGS(:,:,i)=TifLink.read();
 end
 TifLink.close();
+disp('!done!')
+
+
+
+
+%% TRIM EDGES FROM IMAGE
+
+IMG = IMGS(:,:,1);
+
+IMGS = IMGS(9:end-8,9:end-8,:);
+
+grinano('trim',IMG,IMGS)
 
 
 
@@ -48,17 +68,16 @@ for nT = 1:10:1000
     view(hax2,[-40 2])
     zlim(hax2,[mn*.9 mx*1.2])
     
-    % drawnow
     pause(.1)
 end
 %----------------------
 
 
 
-
 %% IMPORT ASSOCIATED EXCEL DATA
 
-[xlsfilename, xlspathname] = uigetfile({'*.xls*'},'File Selector');
+% [xlsfilename, xlspathname] = uigetfile({'*.xls*'},'File Selector');
+grinano('importxls',[xlspathname , xlsfilename])
 
 [xlsN,xlsT,xlsR] = xlsread([xlspathname , xlsfilename]);
 
@@ -92,8 +111,8 @@ period depend on the 'delay to CS' period.
 
 frame_period    = xlsN(1,14);
 total_frames    = xlsN(1,15);
-CS_type         = xlsT(:,16);
-US_type         = xlsT(:,17);
+CS_type         = xlsT(2:end,16);
+US_type         = xlsT(2:end,17);
 delaytoCS       = xlsN(:,18);
 compressFrms    = xlsN(1,19);
 CS_length       = xlsN(1,20);
@@ -106,12 +125,12 @@ framesPerSec    = 1 / secPerFrame;              % frames per second
 secondsPerTrial = framesPerTrial * secPerFrame; % seconds per trial
 
 
-fprintf('\n\n In this dataset (''% s'') there are...', xlsfilename)
-fprintf('\n    total trials: %10.1f  ', total_trials)
-fprintf('\n    frames per trial: %7.1f  ', framesPerTrial)
-fprintf('\n    seconds per frame: %8.5f  ', secPerFrame)
-fprintf('\n    frames per second: %8.5f  ', framesPerSec)
-fprintf('\n    seconds per trial: %8.4f  \n\n', secondsPerTrial)
+
+
+grinano('xlsparams',total_trials, framesPerTrial, secPerFrame, framesPerSec, secondsPerTrial)
+
+
+
 
 
 
@@ -131,9 +150,72 @@ USframeL  = (delaytoCS+21) .* framesPerSec;  % US last frame in trial
 USframerL = round(USframeL);                 % round frame to integer
 
 
+
+
+
+
+
 %% SEPARATE EACH TRIAL TYPE (UNIQUE CS/US COMBOS)
 
 
+% concatinate strings in CS and US columns
+csus = cell(total_trials,1);
+for nn = 1:total_trials
+    
+    
+csus{nn} = [CS_type{nn} ' ' US_type{nn}];
+    
+    
+end
+
+% find unique CS+US combos
+uni_csus = unique(csus);
+
+sz_uni_csus = size(uni_csus,1);
+uni_csus_id = [1:sz_uni_csus]';
+
+TblA = table(uni_csus_id,uni_csus);
+
+disp('the unique CS US combinations are:')
+disp(TblA)
+
+TRIALTYPE.csus = csus;
+TRIALTYPE.id = zeros(total_trials,1);
+
+id = zeros(sz_uni_csus,total_trials);
+for mm = 1:sz_uni_csus
+    for nn = 1:total_trials
+    
+        id(mm,nn) = strcmp( TRIALTYPE.csus{nn} , uni_csus{mm} );
+
+    end
+end
+id = id';
+
+TRIALTYPE.tf = id;
+
+for mm = 1:sz_uni_csus
+    
+    ids = id(:, mm);
+    
+    ids(ids == 1) = mm;
+    
+    
+    id(:, mm) = ids;
+
+end
+
+sid = sum(id,2);
+TRIALTYPE.id = sid;
+
+disp('TRIALTYPE.csus'); disp(TRIALTYPE.csus(1:5))
+disp('TRIALTYPE.id'); disp(TRIALTYPE.id(1:5))
+disp('TRIALTYPE.tf'); disp(TRIALTYPE.tf(1:5,:))
+
+
+Tb = table(TRIALTYPE.csus,TRIALTYPE.id,TRIALTYPE.tf,...
+    'VariableNames',{'TT_csus' 'TT_id' 'TT_tf'});
+disp(Tb(1:7,:))
 
 
 
@@ -141,6 +223,59 @@ USframerL = round(USframeL);                 % round frame to integer
 
 
 
+
+
+
+%% --------------------  CURRENT STOPPING POINT  ------------------- %
+
+                               keyboard
+
+% ------------------------------------------------------------------ % 
+%%
+
+
+
+
+
+%% SEPARATE EACH TRIAL TYPE (UNIQUE CS/US COMBOS)
+
+
+Fend = framesPerTrial .* [1:total_trials];
+Fstart = Fend - framesPerTrial + 1;
+
+FrameRange = [Fstart' Fend'];
+
+
+IMGCSUS = cell(3,1);
+
+for mm = 1:sz_uni_csus
+    for nn = 1:total_trials
+
+    
+    ntf = sid == mm;
+
+    IMGCSUS{nn} = IMGS(:,:,FrameRange(ntf,1):FrameRange(ntf,2));
+
+    end
+end
+
+
+disp('Images are now separated into stacks for each unique CS+US combination')
+disp(TblA); disp('IMGCSUS:'); disp(IMGCSUS)
+pause(3)
+
+
+
+
+
+
+%% AVERAGE ACROSS TRIAL TYPES
+
+
+
+subplot()
+
+imagesc(IMGCSUS{3,1}(:,:,1))
 
 
 
@@ -150,7 +285,7 @@ USframerL = round(USframeL);                 % round frame to integer
 
 
 %% -- REMOVE BACKGROUND PIXELS
-
+keyboard
 
 hax2.ZLim
 hax1.XLim
