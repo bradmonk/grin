@@ -234,7 +234,7 @@ to visualze same info) about trial types.
 %% AVERAGE ACROSS SAME TRIAL TYPES
 
 
-IMG = IMGS(:,:,:,GRINstruct.tf(:,1));
+IMG = IMGS(:,:,:,GRINstruct.tf(:,2));
 muIMG = squeeze(mean(IMG,4));
 
 size(muIMG)
@@ -268,7 +268,7 @@ end
 
 
 ph1 = plot(ROImu);
-hax1.YLim = [100 300];
+hax1.YLim = [200 400];
 
 
 
