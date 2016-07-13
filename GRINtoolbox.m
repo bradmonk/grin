@@ -237,7 +237,7 @@ to visualze same info) about trial types.
 IMG = IMGS(:,:,:,GRINstruct.tf(:,1));
 muIMG = squeeze(mean(IMG,4));
 
-size(IMG)
+size(muIMG)
 
 
 
@@ -245,7 +245,7 @@ size(IMG)
 fh1=figure('Units','normalized','OuterPosition',[.40 .22 .59 .75],'Color','w');
 hax1 = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[]);
 
-ih1 = imagesc(mT1(:,:,1));
+ih1 = imagesc(muIMG(:,:,1));
 
 
 hROI = imfreehand(hax1);   
@@ -257,10 +257,10 @@ ROImask = hROI.createMask(ih1);
 
 
 
-for nn = 1:size(mT1,3)
+for nn = 1:size(muIMG,3)
 
 
-    ROI_INTENSITY = mT1(:,:,nn) .* ROImask;
+    ROI_INTENSITY = muIMG(:,:,nn) .* ROImask;
     ROImu(nn) = mean(ROI_INTENSITY(ROI_INTENSITY > 0));
 
 
