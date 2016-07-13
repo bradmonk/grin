@@ -1,4 +1,4 @@
-function [TRIALTYPE] = gettrialtypes(total_trials, CS_type, US_type)
+function [GRINstruct, GRINtable] = gettrialtypes(total_trials, CS_type, US_type, framesPerTrial)
 
 
 
@@ -23,20 +23,20 @@ TblA = table(uni_csus_id,uni_csus);
 disp('the unique CS US combinations are:')
 disp(TblA)
 
-TRIALTYPE.csus = csus;
-TRIALTYPE.id = zeros(total_trials,1);
+GRINstruct.csus = csus;
+GRINstruct.id = zeros(total_trials,1);
 
 id = zeros(sz_uni_csus,total_trials);
 for mm = 1:sz_uni_csus
     for nn = 1:total_trials
     
-        id(mm,nn) = strcmp( TRIALTYPE.csus{nn} , uni_csus{mm} );
+        id(mm,nn) = strcmp( GRINstruct.csus{nn} , uni_csus{mm} );
 
     end
 end
 id = id';
 
-TRIALTYPE.tf = id>0;
+GRINstruct.tf = id>0;
 
 for mm = 1:sz_uni_csus
     
@@ -50,22 +50,36 @@ for mm = 1:sz_uni_csus
 end
 
 sid = sum(id,2);
-TRIALTYPE.id = sid;
-
-disp('TRIALTYPE.csus'); disp(TRIALTYPE.csus(1:5))
-disp('TRIALTYPE.id'); disp(TRIALTYPE.id(1:5))
-disp('TRIALTYPE.tf'); disp(TRIALTYPE.tf(1:5,:))
+GRINstruct.id = sid;
 
 
-Tb = table(TRIALTYPE.csus,TRIALTYPE.id,TRIALTYPE.tf,...
-    'VariableNames',{'TT_csus' 'TT_id' 'TT_tf'});
-disp(Tb(1:7,:))
+Fend = framesPerTrial .* [1:total_trials];
+Fstart = Fend - framesPerTrial + 1;
+FrameRange = [Fstart' Fend'];
+GRINstruct.fr = FrameRange;
 
 
+frm = zeros(size(GRINstruct.fr,1),GRINstruct.fr(1,2))';
+for nn = 1:numel(frm)
+    
+    frm(nn) = nn;
+    
+end
+frm = frm';
+
+GRINstruct.frames = frm;
+
+GRINtable = table(GRINstruct.csus,GRINstruct.id,GRINstruct.tf,GRINstruct.fr,GRINstruct.frames,...
+    'VariableNames',{'CSUS' 'ID' 'TF' 'FrameRange' 'AllFrames'});
 
 
+disp('TRIALTYPE.csus'); disp(GRINstruct.csus(1:5))
+disp('TRIALTYPE.id'); disp(GRINstruct.id(1:5))
+disp('TRIALTYPE.tf'); disp(GRINstruct.tf(1:5,:))
+disp('TRIALTYPE.fr'); disp(GRINstruct.fr(1:5,:))
+disp('TRIALTYPE.frames'); disp(GRINstruct.frames(1:5,:))
 
-
+disp(GRINtable(1:7,:))
 
 
 end

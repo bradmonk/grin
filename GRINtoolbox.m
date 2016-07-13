@@ -183,16 +183,13 @@ USoffset  = round((adjustDelay+21) .* framesPerSec);  % US last frame in trial
 %% CREATE ID FOR EACH UNIQUE CS+US COMBO AND DETERMINE ROW 
 
 
-[TRIALTYPE] = gettrialtypes(total_trials, CS_type, US_type);
+[GRINstruct, GRINtable] = gettrialtypes(total_trials, CS_type, US_type, framesPerTrial);
 
-TRIALTYPE.csus
-TRIALTYPE.id
-TRIALTYPE.tf
 
-TRIALTYPEtable = table(TRIALTYPE.csus,TRIALTYPE.id,TRIALTYPE.tf,...
-    'VariableNames',{'TT_csus' 'TT_id' 'TT_tf'});
-disp(TRIALTYPEtable(1:7,:))
-
+GRINstruct.csus
+GRINstruct.id
+GRINstruct.tf
+GRINstruct.fr
 
 
 %{
@@ -233,34 +230,10 @@ USoffset
 %% CREATE ID FOR EACH UNIQUE CS+US COMBO AND DETERMINE ROW 
 
 
-
-
-
-
-
-Fend = framesPerTrial .* [1:total_trials];
-Fstart = Fend - framesPerTrial + 1;
-
-FrameRange = [Fstart' Fend'];
-
-
 % allFrames = [1:total_frames]';
 
-TRIALTYPE.tf
-TRIALTYPE.id
-TRIALTYPE.fr = FrameRange;
 
 
-
-frm = zeros(size(FrameRange,1),FrameRange(1,2))';
-for nn = 1:numel(frm)
-    
-    frm(nn) = nn;
-    
-end
-frm = frm';
-
-TRIALTYPE.fr = frm;
 
 
 
