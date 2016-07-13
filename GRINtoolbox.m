@@ -168,25 +168,16 @@ end
 
 %% DETERMINE FIRST AND LAST FRAME FOR CS / US FOR EACH TRIAL
 
-CSframeF  = round(adjustDelay .* framesPerSec);       % CS first frame in trial
+CSonset  = round(adjustDelay .* framesPerSec);       % CS first frame in trial
 
-CSframeL  = round((adjustDelay+10) .* framesPerSec);  % CS last frame in trial
+CSoffset  = round((adjustDelay+10) .* framesPerSec);  % CS last frame in trial
 
-USframeF  = round((adjustDelay+11) .* framesPerSec);  % US first frame in trial
+USonset  = round((adjustDelay+11) .* framesPerSec);  % US first frame in trial
 
-USframeL  = round((adjustDelay+21) .* framesPerSec);  % US last frame in trial
-
-
+USoffset  = round((adjustDelay+21) .* framesPerSec);  % US last frame in trial
 
 
 
-
-%% --------------------  CURRENT STOPPING POINT  ------------------- %
-
-                               keyboard
-
-% ------------------------------------------------------------------ % 
-%%
 
 
 %% CREATE ID FOR EACH UNIQUE CS+US COMBO AND DETERMINE ROW 
@@ -210,15 +201,33 @@ At this point everything is organized. The main image stack 'IMGS' is
 organized so that size(IMGS) will be something like: 240 240 100 48
 
 Where 
-    240x240 is the HEIGHT x WIDTH of the image.
-    100 is the number of images per trial
-    48 is the number of trials in the imaging session
+    240  height of each image in pixels
+    240  width of each image in pixels
+    100  number of images per trial
+    48   number of trials in imaging session
 
-The IMGS matrix has been circshift such that there are 
+The IMGS matrix has been circshift such that the time delay before each CS 
+has been equalized for all trials. The variables...
+
+CSonset
+CSoffset
+USonset
+USoffset
+
+... indicate the first and last frame for the CS/ onset/offset
 
 
 
 %}
+
+
+
+%% --------------------  CURRENT STOPPING POINT  ------------------- %
+
+                               keyboard
+
+% ------------------------------------------------------------------ % 
+%%
 
 
 %% CREATE ID FOR EACH UNIQUE CS+US COMBO AND DETERMINE ROW 
