@@ -185,11 +185,13 @@ USoffset  = round((adjustDelay+21) .* framesPerSec);  % US last frame in trial
 
 [GRINstruct, GRINtable] = gettrialtypes(total_trials, CS_type, US_type, framesPerTrial);
 
+% GRINstruct.csus
+% GRINstruct.id
+% GRINstruct.tf
+% GRINstruct.fr
+% GRINstruct.frames
 
-GRINstruct.csus
-GRINstruct.id
-GRINstruct.tf
-GRINstruct.fr
+GRINtable.AllFrames
 
 
 %{
@@ -211,7 +213,17 @@ CSoffset
 USonset
 USoffset
 
-... indicate the first and last frame for the CS/ onset/offset
+... indicate the first and last frame for the CS/US onset/offset
+
+
+GRINstruct and GRINtable contain redundant information (just different ways
+to visualze same info) about trial types. 
+
+% GRINstruct.csus
+% GRINstruct.id
+% GRINstruct.tf
+% GRINstruct.fr
+% GRINstruct.frames
 
 
 
@@ -219,77 +231,13 @@ USoffset
 
 
 
-%% --------------------  CURRENT STOPPING POINT  ------------------- %
-
-                               keyboard
-
-% ------------------------------------------------------------------ % 
-%%
-
-
-%% CREATE ID FOR EACH UNIQUE CS+US COMBO AND DETERMINE ROW 
-
-
-% allFrames = [1:total_frames]';
-
-
-
-
-
-
-
-% THIS SECTION IS HARD CODED IN TERMS OF UNIQUE CS/US PAIRS == 3
-
-IMG_T1 = IMGS(:,:,TRIALTYPE.fr(TRIALTYPE.tf(:,1),:));
-
-T1 = reshape(IMG_T1,240,240,100,[]);
-size(T1)
-
-
-IMG_T2 = IMGS(:,:,TRIALTYPE.fr(TRIALTYPE.tf(:,2),:));
-
-T2 = reshape(IMG_T2,240,240,100,[]);
-size(T2)
-
-IMG_T3 = IMGS(:,:,TRIALTYPE.fr(TRIALTYPE.tf(:,3),:));
-
-T3 = reshape(IMG_T3,240,240,100,[]);
-size(T3)
-
-
-
-disp('Images are now separated into stacks for each unique CS+US combination')
-disp(TblA);
-
-
-
-
-
-
-
-
-%% --------------------  CURRENT STOPPING POINT  ------------------- %
-
-                               keyboard
-
-% ------------------------------------------------------------------ % 
-%%
-
-
-
-
-
-%% SEPARATE EACH TRIAL TYPE (UNIQUE CS/US COMBOS)
-
-
-
-
 %% AVERAGE ACROSS SAME TRIAL TYPES
 
 
-mT1 = squeeze(mean(T2,4));
+IMG = IMGS(:,:,:,GRINstruct.tf(:,1));
+muIMG = squeeze(mean(IMG,4));
 
-size(mT1)
+size(IMG)
 
 
 
@@ -330,7 +278,12 @@ hax1.YLim = [100 300];
 
 
 
+%% --------------------  CURRENT STOPPING POINT  ------------------- %
 
+                               keyboard
+
+% ------------------------------------------------------------------ % 
+%%
 
 
 
