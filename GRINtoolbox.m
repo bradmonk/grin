@@ -4,6 +4,9 @@ clc; close all; clear;
 cd(fileparts(which('GRINtoolbox.m')));
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
+
+
+
 %% IMPORT TIF STACK
 clc; close all; clear;
 
@@ -110,7 +113,7 @@ period depend on the 'delay to CS' period.
 %}
 
 frame_period    = xlsN(1,14);
-total_frames    = xlsN(1,15);
+framesUncomp    = xlsN(1,15);
 CS_type         = xlsT(2:end,16);
 US_type         = xlsT(2:end,17);
 delaytoCS       = xlsN(:,18);
@@ -119,11 +122,11 @@ CS_length       = xlsN(1,20);
 
 
 total_trials    = size(xlsN,1);                 % total number of trials
-framesPerTrial  = total_frames / compressFrms;  % frames per trial
+framesPerTrial  = framesUncomp / compressFrms;  % frames per trial
 secPerFrame     = frame_period * compressFrms;  % seconds per frame
 framesPerSec    = 1 / secPerFrame;              % frames per second
 secondsPerTrial = framesPerTrial * secPerFrame; % seconds per trial
-
+total_frames    = total_trials * framesPerTrial;% total collected frames
 
 
 
@@ -133,91 +136,148 @@ grinano('xlsparams',total_trials, framesPerTrial, secPerFrame, framesPerSec, sec
 
 
 
+%% RESHAPE IMAGE STACK INTO SIZE: YPIXELS by XPIXELS in NFRAMES per NTRIALS
+
+
+
+IMGS = reshape(IMGS,size(IMGS,1),size(IMGS,2),framesPerTrial,[]);
+
+fprintf('\n\n IMGS matrix is now size: % 5.0d % 5.0d % 5.0d % 5.0d \n\n', size(IMGS));
+
+
+
+%% MAKE DELAY TO CS EQUAL TO 10 SECONDS FOR ALL TRIALS
+
+
+adjustDelay = 10;
+
+EqualizeCSdelay  = (delaytoCS-adjustDelay) .* framesPerSec; % CS first frame in trial
+EqualizerCSdelay = round(EqualizeCSdelay);                  % round frame to integer
+
+
+
+
+for nn = 1:size(IMGS,4)
+    
+    IMGS(:,:,:,nn) = circshift( IMGS(:,:,:,nn) , EqualizerCSdelay(nn) ,3);
+
+end
+
+
 
 
 %% DETERMINE FIRST AND LAST FRAME FOR CS / US FOR EACH TRIAL
 
-CSframeF  = delaytoCS .* framesPerSec;       % CS first frame in trial
-CSframerF = round(CSframeF);                 % round frame to integer
+CSframeF  = round(adjustDelay .* framesPerSec);       % CS first frame in trial
 
-CSframeL  = (delaytoCS+10) .* framesPerSec;  % CS last frame in trial
-CSframerL = round(CSframeL);                 % round frame to integer
+CSframeL  = round((adjustDelay+10) .* framesPerSec);  % CS last frame in trial
 
-USframeF  = (delaytoCS+11) .* framesPerSec;  % US first frame in trial
-USframerF = round(USframeF);                 % round frame to integer
+USframeF  = round((adjustDelay+11) .* framesPerSec);  % US first frame in trial
 
-USframeL  = (delaytoCS+21) .* framesPerSec;  % US last frame in trial
-USframerL = round(USframeL);                 % round frame to integer
+USframeL  = round((adjustDelay+21) .* framesPerSec);  % US last frame in trial
 
 
 
 
 
 
+%% --------------------  CURRENT STOPPING POINT  ------------------- %
 
-%% SEPARATE EACH TRIAL TYPE (UNIQUE CS/US COMBOS)
+                               keyboard
 
-
-% concatinate strings in CS and US columns
-csus = cell(total_trials,1);
-for nn = 1:total_trials
-    
-    
-csus{nn} = [CS_type{nn} ' ' US_type{nn}];
-    
-    
-end
-
-% find unique CS+US combos
-uni_csus = unique(csus);
-
-sz_uni_csus = size(uni_csus,1);
-uni_csus_id = [1:sz_uni_csus]';
-
-TblA = table(uni_csus_id,uni_csus);
-
-disp('the unique CS US combinations are:')
-disp(TblA)
-
-TRIALTYPE.csus = csus;
-TRIALTYPE.id = zeros(total_trials,1);
-
-id = zeros(sz_uni_csus,total_trials);
-for mm = 1:sz_uni_csus
-    for nn = 1:total_trials
-    
-        id(mm,nn) = strcmp( TRIALTYPE.csus{nn} , uni_csus{mm} );
-
-    end
-end
-id = id';
-
-TRIALTYPE.tf = id;
-
-for mm = 1:sz_uni_csus
-    
-    ids = id(:, mm);
-    
-    ids(ids == 1) = mm;
-    
-    
-    id(:, mm) = ids;
-
-end
-
-sid = sum(id,2);
-TRIALTYPE.id = sid;
-
-disp('TRIALTYPE.csus'); disp(TRIALTYPE.csus(1:5))
-disp('TRIALTYPE.id'); disp(TRIALTYPE.id(1:5))
-disp('TRIALTYPE.tf'); disp(TRIALTYPE.tf(1:5,:))
+% ------------------------------------------------------------------ % 
+%%
 
 
-Tb = table(TRIALTYPE.csus,TRIALTYPE.id,TRIALTYPE.tf,...
+%% CREATE ID FOR EACH UNIQUE CS+US COMBO AND DETERMINE ROW 
+
+
+[TRIALTYPE] = gettrialtypes(total_trials, CS_type, US_type);
+
+TRIALTYPE.csus
+TRIALTYPE.id
+TRIALTYPE.tf
+
+TRIALTYPEtable = table(TRIALTYPE.csus,TRIALTYPE.id,TRIALTYPE.tf,...
     'VariableNames',{'TT_csus' 'TT_id' 'TT_tf'});
-disp(Tb(1:7,:))
+disp(TRIALTYPEtable(1:7,:))
 
 
+
+%{
+
+At this point everything is organized. The main image stack 'IMGS' is
+organized so that size(IMGS) will be something like: 240 240 100 48
+
+Where 
+    240x240 is the HEIGHT x WIDTH of the image.
+    100 is the number of images per trial
+    48 is the number of trials in the imaging session
+
+The IMGS matrix has been circshift such that there are 
+
+
+
+%}
+
+
+%% CREATE ID FOR EACH UNIQUE CS+US COMBO AND DETERMINE ROW 
+
+
+
+
+
+
+
+Fend = framesPerTrial .* [1:total_trials];
+Fstart = Fend - framesPerTrial + 1;
+
+FrameRange = [Fstart' Fend'];
+
+
+% allFrames = [1:total_frames]';
+
+TRIALTYPE.tf
+TRIALTYPE.id
+TRIALTYPE.fr = FrameRange;
+
+
+
+frm = zeros(size(FrameRange,1),FrameRange(1,2))';
+for nn = 1:numel(frm)
+    
+    frm(nn) = nn;
+    
+end
+frm = frm';
+
+TRIALTYPE.fr = frm;
+
+
+
+
+% THIS SECTION IS HARD CODED IN TERMS OF UNIQUE CS/US PAIRS == 3
+
+IMG_T1 = IMGS(:,:,TRIALTYPE.fr(TRIALTYPE.tf(:,1),:));
+
+T1 = reshape(IMG_T1,240,240,100,[]);
+size(T1)
+
+
+IMG_T2 = IMGS(:,:,TRIALTYPE.fr(TRIALTYPE.tf(:,2),:));
+
+T2 = reshape(IMG_T2,240,240,100,[]);
+size(T2)
+
+IMG_T3 = IMGS(:,:,TRIALTYPE.fr(TRIALTYPE.tf(:,3),:));
+
+T3 = reshape(IMG_T3,240,240,100,[]);
+size(T3)
+
+
+
+disp('Images are now separated into stacks for each unique CS+US combination')
+disp(TblA);
 
 
 
@@ -240,42 +300,51 @@ disp(Tb(1:7,:))
 %% SEPARATE EACH TRIAL TYPE (UNIQUE CS/US COMBOS)
 
 
-Fend = framesPerTrial .* [1:total_trials];
-Fstart = Fend - framesPerTrial + 1;
-
-FrameRange = [Fstart' Fend'];
 
 
-IMGCSUS = cell(3,1);
+%% AVERAGE ACROSS SAME TRIAL TYPES
 
-for mm = 1:sz_uni_csus
-    for nn = 1:total_trials
+
+mT1 = squeeze(mean(T2,4));
+
+size(mT1)
+
+
+
+
+fh1=figure('Units','normalized','OuterPosition',[.40 .22 .59 .75],'Color','w');
+hax1 = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[]);
+
+ih1 = imagesc(mT1(:,:,1));
+
+
+hROI = imfreehand(hax1);   
+ROIpos = hROI.getPosition;
+ROIarea = polyarea(ROIpos(:,1),ROIpos(:,2));
 
     
-    ntf = sid == mm;
+ROImask = hROI.createMask(ih1);
 
-    IMGCSUS{nn} = IMGS(:,:,FrameRange(ntf,1):FrameRange(ntf,2));
 
-    end
+
+for nn = 1:size(mT1,3)
+
+
+    ROI_INTENSITY = mT1(:,:,nn) .* ROImask;
+    ROImu(nn) = mean(ROI_INTENSITY(ROI_INTENSITY > 0));
+
+
 end
 
 
-disp('Images are now separated into stacks for each unique CS+US combination')
-disp(TblA); disp('IMGCSUS:'); disp(IMGCSUS)
-pause(3)
+ph1 = plot(ROImu);
+hax1.YLim = [100 300];
 
 
 
 
 
 
-%% AVERAGE ACROSS TRIAL TYPES
-
-
-
-subplot()
-
-imagesc(IMGCSUS{3,1}(:,:,1))
 
 
 
