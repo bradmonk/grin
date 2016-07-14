@@ -10,9 +10,9 @@ disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 %% IMPORT TIF STACK
 clc; close all; clear;
 
-filename = '031016_gc33_green_keep.tif';
+filename = 'gc33_032316g.tif';
 pathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-xlsfilename = '031016 gc33 summary.xlsx';
+xlsfilename = 'gc33_032316.xlsx';
 xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 
 
@@ -64,7 +64,7 @@ mn = min(min(IMGS(:,:,1)));
 
 % colormap(customcmap(1))
 % for nT = 1:length(IMGS)
-for nT = 1:10:1000
+for nT = 1:20:1000
     % PLOT MESH SURF
     imagesc(IMGS(:,:,nT))
     mesh(hax2,IMGS(:,:,nT))
@@ -84,7 +84,7 @@ grinano('importxls',[xlspathname , xlsfilename])
 
 [xlsN,xlsT,xlsR] = xlsread([xlspathname , xlsfilename]);
 
-xlsR(1:4,14:20)
+xlsR(1:5,1:7)
 %{
 
 14              15              16      17      18              19          20
@@ -112,22 +112,21 @@ period depend on the 'delay to CS' period.
 
 %}
 
-frame_period    = xlsN(1,14);
-framesUncomp    = xlsN(1,15);
-CS_type         = xlsT(2:end,16);
-US_type         = xlsT(2:end,17);
-delaytoCS       = xlsN(:,18);
-compressFrms    = xlsN(1,19);
-CS_length       = xlsN(1,20);
+frame_period    = xlsN(1,1);
+framesUncomp    = xlsN(1,2);
+CS_type         = xlsT(2:end,3);
+US_type         = xlsT(2:end,4);
+delaytoCS       = xlsN(:,5);
+CS_length       = xlsN(1,6);
+compressFrms    = xlsN(1,7);
 
-
-total_trials    = size(xlsN,1);                 % total number of trials
-framesPerTrial  = framesUncomp / compressFrms;  % frames per trial
-secPerFrame     = frame_period * compressFrms;  % seconds per frame
-framesPerSec    = 1 / secPerFrame;              % frames per second
-secondsPerTrial = framesPerTrial * secPerFrame; % seconds per trial
-total_frames    = total_trials * framesPerTrial;% total collected frames
-
+total_trials    = size(xlsN,1);                     % total number of trials
+framesPerTrial  = framesUncomp / compressFrms;      % frames per trial
+secPerFrame     = frame_period * compressFrms;      % seconds per frame
+framesPerSec    = 1 / secPerFrame;                  % frames per second
+secondsPerTrial = framesPerTrial * secPerFrame;     % seconds per trial
+total_frames    = total_trials * framesPerTrial;    % total collected frames
+CS_lengthFrames = round(CS_length .* framesPerSec); % CS length in frames
 
 
 grinano('xlsparams',total_trials, framesPerTrial, secPerFrame, framesPerSec, secondsPerTrial)
@@ -148,18 +147,32 @@ fprintf('\n\n IMGS matrix is now size: % 5.0d % 5.0d % 5.0d % 5.0d \n\n', size(I
 
 %% MAKE DELAY TO CS EQUAL TO 10 SECONDS FOR ALL TRIALS
 
+% Here we are going to use circshift() to shift frames for each trial
+% from right to left as if they were on a circular timeline. For example...
+%
+% t = [1 2 3 4 5 6 7 8 9]
+%
+% circshift(t, -3, 2) 
+%
+% t = [4 5 6 7 8 9 1 2 3]
+%
+% except we will be shifting the 3rd dimension because images are 2D, and
+% time is the 3rd dim. To do this, set 'adjustDelay' to the number of
+% seconds you want to make all CS onsets from the beginning of the trial.
+% Basically we will use the known 'delay to CS' from the excel sheet 
+% to shift all CS onsets to zero seconds, then add the number of seconds
+% specified in 'adjustDelay' to each trial. These time values are converted
+% to frames for shifting purposes.
 
-adjustDelay = 10;
 
-EqualizeCSdelay  = (delaytoCS-adjustDelay) .* framesPerSec; % CS first frame in trial
-EqualizerCSdelay = round(EqualizeCSdelay);                  % round frame to integer
+adjustDelay = 10;   % Make all CS onsets this many seconds from trial start
 
-
+EqualizeCSdelay  = round((delaytoCS-adjustDelay) .* framesPerSec);
 
 
 for nn = 1:size(IMGS,4)
     
-    IMGS(:,:,:,nn) = circshift( IMGS(:,:,:,nn) , EqualizerCSdelay(nn) ,3);
+    IMGS(:,:,:,nn) = circshift( IMGS(:,:,:,nn) , -EqualizeCSdelay(nn) ,3);
 
 end
 
@@ -168,84 +181,82 @@ end
 
 %% DETERMINE FIRST AND LAST FRAME FOR CS / US FOR EACH TRIAL
 
-CSonset  = round(adjustDelay .* framesPerSec);       % CS first frame in trial
+CSonset  = round(adjustDelay .* framesPerSec);                % CS first frame in trial
 
-CSoffset  = round((adjustDelay+10) .* framesPerSec);  % CS last frame in trial
+CSoffset  = round((adjustDelay+CS_length) .* framesPerSec);   % CS last frame in trial
 
-USonset  = round((adjustDelay+11) .* framesPerSec);  % US first frame in trial
+USonset  = round((adjustDelay+CS_length+1) .* framesPerSec);  % US first frame in trial
 
-USoffset  = round((adjustDelay+21) .* framesPerSec);  % US last frame in trial
+USoffset  = round((adjustDelay+CS_length+2) .* framesPerSec); % US last frame in trial
 
 
-
+CSUSonoff = [CSonset CSoffset USonset USoffset];
 
 
 %% CREATE ID FOR EACH UNIQUE CS+US COMBO AND DETERMINE ROW 
 
+% Here we are creating the main CS+US identifiers to use with the image stacks
+% that are now in a 4D matrix 'IMGS'
+%
+%     {for example...
+%
+%     size(IMGS)    % 240   240   100    30 
+%
+%     where each of 30 trials includes 100 of 240x240 images}
+%
+% with all CS onsets aligned. This identifier will allow us to pull out
+% trials from the stack that correspond to a particular CS+US combo.
+% Essentially we want the identifier to be a logical array of values for
+% each unique CS+US combo to use on the 4th dim of IMGS.
+
+
 
 [GRINstruct, GRINtable] = gettrialtypes(total_trials, CS_type, US_type, framesPerTrial);
 
-% GRINstruct.csus
-% GRINstruct.id
-% GRINstruct.tf
-% GRINstruct.fr
-% GRINstruct.frames
-
-GRINtable.AllFrames
-
-
-%{
-
-At this point everything is organized. The main image stack 'IMGS' is
-organized so that size(IMGS) will be something like: 240 240 100 48
-
-Where 
-    240  height of each image in pixels
-    240  width of each image in pixels
-    100  number of images per trial
-    48   number of trials in imaging session
-
-The IMGS matrix has been circshift such that the time delay before each CS 
-has been equalized for all trials. The variables...
-
-CSonset
-CSoffset
-USonset
-USoffset
-
-... indicate the first and last frame for the CS/US onset/offset
-
-
-GRINstruct and GRINtable contain redundant information (just different ways
-to visualze same info) about trial types. 
-
-% GRINstruct.csus
-% GRINstruct.id
-% GRINstruct.tf
-% GRINstruct.fr
-% GRINstruct.frames
 
 
 
-%}
+% GRINstruct and GRINtable contain redundant information (just different ways
+% to visualze same info) about trial types.
+%     GRINstruct.csus:   {30x1 cell}
+%     GRINstruct.id:     [30x1 double]
+%     GRINstruct.tf:     [30x2 logical]
+%     GRINstruct.fr:     [30x2 double]
+%     GRINstruct.frames: [30x100 double]
+
+disp(GRINstruct)
+disp(GRINtable(1:10,:))
 
 
 
+keyboard
 %% AVERAGE ACROSS SAME TRIAL TYPES
 
 
-IMG = IMGS(:,:,:,GRINstruct.tf(:,2));
-muIMG = squeeze(mean(IMG,4));
+nCSUS = size(GRINstruct.tf,2);
 
-size(muIMG)
+muIMGS = zeros(size(IMGS,1), size(IMGS,2), size(IMGS,3), nCSUS);
+
+for tt = 1:nCSUS
+        
+    IMG = IMGS(:,:,:,GRINstruct.tf(:,tt)); size(IMG)
+    muIMGS(:,:,:,tt) = squeeze(mean(IMG,4));
+
+    
+end
+size(muIMGS)
+
+% previewstack(mu)
+previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff)
 
 
 
+%% PREVIEW AN ROI FOR A SINGLE TRIAL AVERAGED OVER TRIALS
 
 fh1=figure('Units','normalized','OuterPosition',[.40 .22 .59 .75],'Color','w');
 hax1 = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[]);
 
-ih1 = imagesc(muIMG(:,:,1));
+ih1 = imagesc(muIMGS(:,:,1,1));
 
 
 hROI = imfreehand(hax1);   
@@ -257,19 +268,31 @@ ROImask = hROI.createMask(ih1);
 
 
 
-for nn = 1:size(muIMG,3)
+for nn = 1:size(muIMGS,3)
 
 
-    ROI_INTENSITY = muIMG(:,:,nn) .* ROImask;
+    ROI_INTENSITY = muIMGS(:,:,nn,1) .* ROImask;
     ROImu(nn) = mean(ROI_INTENSITY(ROI_INTENSITY > 0));
 
 
 end
 
 
-ph1 = plot(ROImu);
-hax1.YLim = [200 400];
+close all
+fh1=figure('Units','normalized','OuterPosition',[.1 .1 .8 .7],'Color','w');
+hax1 = axes('Position',[.05 .05 .45 .9],'Color','none','XTick',[]);
+hax2 = axes('Position',[.52 .05 .45 .9],'Color','none','NextPlot','replacechildren');
 
+    axes(hax1)
+ih1 = imagesc(muIMGS(:,:,1,1));
+
+    axes(hax2)
+ph2 = plot(ROImu);
+    hax2.YLim = [100 300];
+    text(CSUSonoff(1),150,'\uparrow','FontSize',50)
+    text(CSUSonoff(1),110,'CS on','FontSize',18,'HorizontalAlignment','center')
+    text(CSUSonoff(2),150,'\uparrow','FontSize',50)
+    text(CSUSonoff(2),110,'CS off','FontSize',18,'HorizontalAlignment','center')
 
 
 
@@ -284,31 +307,6 @@ hax1.YLim = [200 400];
 
 % ------------------------------------------------------------------ % 
 %%
-
-
-
-
-%% -- REMOVE BACKGROUND PIXELS
-keyboard
-
-hax2.ZLim
-hax1.XLim
-hax1.YLim
-
-hist(IMGS{1}(:),20)
-hax1.CameraUpVector = [1 0 0];
-
-
-
-
-
-
-
-
-%% -- RECORD ANIMATION OF IMAGE Z-STACK (SAVES .avi FILE); REPLAY ANIMATION
-
-
-
 
 
 

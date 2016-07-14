@@ -1,6 +1,7 @@
 function [] = previewstack(IM, varargin)
 
-keyboard
+% keyboard
+
 
 if nargin > 1
     
