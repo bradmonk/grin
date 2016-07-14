@@ -35,7 +35,7 @@ end
 TifLink.close();
 disp('!done!')
 
-
+IMGS = mat2gray(IMGS);
 
 
 %% TRIM EDGES FROM IMAGE
@@ -251,6 +251,28 @@ previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff)
 
 
 
+
+
+
+%% CREATE AN IMAGE MONTAGE
+
+close all
+
+IM = squeeze(IMGS(:,:,1:100));
+
+IM = reshape(IM,size(IM,1),size(IM,2),1,size(IM,3));
+
+montage(IM,'Size',[10 10]);
+
+I = squeeze(IMGS(:,:,:,1));
+implay(I)
+
+
+
+
+
+
+
 %% PREVIEW AN ROI FOR A SINGLE TRIAL AVERAGED OVER TRIALS
 
 fh1=figure('Units','normalized','OuterPosition',[.40 .22 .59 .75],'Color','w');
@@ -307,6 +329,8 @@ ph2 = plot(ROImu);
 
 % ------------------------------------------------------------------ % 
 %%
+
+
 
 
 
