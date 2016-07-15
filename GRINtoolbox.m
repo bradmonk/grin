@@ -315,8 +315,6 @@ end
 size(muIMGS)
 size(IMG)
 
-% previewstack(mu)
-previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff)
 
 close all
 GRINcompare(IMG, muIMGS, 99)
@@ -423,6 +421,9 @@ for nn = 1:size(muIMGS,3)
 
 end
 
+
+% previewstack(mu)
+previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff, ROImu)
 
 close all
 fh1=figure('Units','normalized','OuterPosition',[.1 .1 .8 .7],'Color','w');

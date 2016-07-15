@@ -1,6 +1,6 @@
 function [] = previewstack(IM, varargin)
 
-% keyboard
+keyboard
 
 
 if nargin > 1
@@ -8,15 +8,17 @@ if nargin > 1
     fh1=figure('Units','normalized','OuterPosition',[.05 .05 .9 .7],'Color','w');
     hax1 = axes('Position',[.05 .05 .45 .9],'Color','none','XTick',[],'YTick',[]);
     hax2 = axes('Position',[.53 .05 .45 .9],'Color','none','XTick',[],'YTick',[]);
+    hax3 = axes('Position',[.53 .05 .45 .9],'Color','none','XTick',[],'YTick',[]);
     
-    
-    onoff = varargin{1};
+    [onoff fY] = deal(varargin{:});
     
     sz = size(IM);
     
     timeline = 1:sz(end);
     
     plot(hax2, timeline, ones(size(timeline)));
+    hold on;
+    plot(hax3, timeline, ones(size(timeline)));
     hold on;
     
     text(onoff(1),.90,'\uparrow','FontSize',50)
@@ -42,6 +44,7 @@ if nargin > 1
         ih.CData = IM(:,:,nT);
 
         sg.XData = nT;
+        sg.YData = nT;
 
         pause(.05)
     end
