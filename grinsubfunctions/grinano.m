@@ -45,7 +45,7 @@ switch scase
         
         st1 = {'rows(y)';'cols(x)';'frames'};
         sp1 = sprintf('\n  % 34.10s % s % s  \n', st1{1:3});
-        sp2 = sprintf('\n Imported image was size: %6.0f %8.0f %8.0f  \n', [size(var1) size(var2,3)]);
+        sp2 = sprintf('\n Imported image was size: %6.0f %8.0f %8.0f  \n', size(var1));
         sp3 = sprintf('\n Trimmed image is size: %8.0f %8.0f %8.0f  \n', size(var2));
         disp([sp1 sp2 sp3])
         

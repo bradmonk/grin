@@ -25,26 +25,15 @@ InfoImage=imfinfo(FileTif);
 mImage=InfoImage(1).Width;
 nImage=InfoImage(1).Height;
 NumberImages=length(InfoImage);
-IMGS=zeros(nImage,mImage,NumberImages,'double');
+IMG=zeros(nImage,mImage,NumberImages,'double');
  
 TifLink = Tiff(FileTif, 'r');
 for i=1:NumberImages
    TifLink.setDirectory(i);
-   IMGS(:,:,i)=TifLink.read();
+   IMG(:,:,i)=TifLink.read();
 end
 TifLink.close();
 disp('!done!')
-
-IMGS = mat2gray(IMGS);
-
-
-%% TRIM EDGES FROM IMAGE
-
-IMG = IMGS(:,:,1);
-
-IMGS = IMGS(9:end-8,9:end-8,:);
-
-grinano('trim',IMG,IMGS)
 
 
 
@@ -52,29 +41,100 @@ grinano('trim',IMG,IMGS)
 %% PREVIEW IMPORTED STACK
 close all
 
-fh1=figure('Units','normalized','OuterPosition',[.05 .05 .8 .6],'Color','w');
-hax1 = axes('Position',[.05 .05 .45 .9],'Color','none','XTick',[],'YTick',[]);
-hax2 = axes('Position',[.55 .05 .45 .9],'Color','none','XTick',[],'YTick',[]);
+% IMGg = mat2gray(IMG);
+% implay(IMGg);
 
-axes(hax1)
-imagesc(IMGS(:,:,1))
 
-mx = max(max(IMGS(:,:,1)));
-mn = min(min(IMGS(:,:,1)));
+%% PERFORM IMAGE SMOOTHING
+disp('PERFORMING IMAGE SMOOTHING')
 
-% colormap(customcmap(1))
-% for nT = 1:length(IMGS)
-for nT = 1:20:1000
-    % PLOT MESH SURF
-    imagesc(IMGS(:,:,nT))
-    mesh(hax2,IMGS(:,:,nT))
-    view(hax2,[-40 2])
-    zlim(hax2,[mn*.9 mx*1.2])
-    
-    pause(.1)
+
+% GRINmask([PEAK HEIGHT] [WIDTH] [SLOPE SD] [RESOLUTION] [doPLOT])
+Mask = GRINkernel(.8, 9, .14, .1, 1);
+
+IMGc = convn( IMG, Mask,'same');
+
+close all
+GRINcompare(IMG, IMGc, 100)
+
+
+
+
+%% TRIM EDGES FROM IMAGE
+disp('TRIMMING EDGES FROM IMAGE')
+
+trimAmount = 18;
+
+IMGt = IMGc((trimAmount+1):(end-trimAmount) , (trimAmount+1):(end-trimAmount) , :);
+
+grinano('trim',IMG,IMGt)
+
+close all
+GRINcompare(IMG, IMGt, 100)
+
+
+
+
+
+%% CREATE ROBERT BLOCK PROC
+disp('CREATING ROBERT BLOCK PROC (could take a few seconds)')
+
+% CLEAR FROM MEMORY IMAGE STACKS NOT BEING USED
+IMG = IMGt;
+clear IMGc
+clear IMGt
+
+
+fun = @(block_struct) mean(block_struct.data(:)) * ones(size(block_struct.data)); 
+
+IMGb = zeros(size(IMG));
+
+for nn = 1:size(IMG,3)
+
+    IMGb(:,:,nn) = blockproc(IMG(:,:,nn),[20 20],fun); 
+
 end
-%----------------------
 
+close all
+GRINcompare(IMG, IMGb, 100)
+
+
+%{
+% % This version is a few seconds faster but less flexible 
+% f = @(x) ones(400,1)*mean(x);
+% IMGb = zeros(size(IMG));
+% for nn = 1:size(IMG,3)
+%     IMGb(:,:,nn) = colfilt(IMG(:,:,nn),[20 20],'distinct',f);
+% end
+%}
+
+
+
+% CLEAR FROM MEMORY IMAGE STACKS NOT BEING USED
+IMG = IMGb;
+clear IMGb
+
+
+%% COMPUTE dF/F FOR ALL FRAMES
+disp('COMPUTING dF/F FOR ALL FRAMES')
+
+% As a shortcut and to retain the original frame number I am using
+% circshift to move the first image to the end of the image matrix
+
+im = circshift( IMG , -1 ,3);
+
+IMGf = (im - IMG) ./ im;
+IMGf(:,:,end) = IMGf(:,:,end-1);
+
+clear im
+
+
+close all
+GRINcompare(IMG, IMGf, 99, [.98 1.05], [8 2])
+
+% CLEAR FROM MEMORY IMAGE STACKS NOT BEING USED
+IMG = IMGf;
+clear IMGf
 
 
 %% IMPORT ASSOCIATED EXCEL DATA
@@ -139,9 +199,9 @@ grinano('xlsparams',total_trials, framesPerTrial, secPerFrame, framesPerSec, sec
 
 
 
-IMGS = reshape(IMGS,size(IMGS,1),size(IMGS,2),framesPerTrial,[]);
+IMG = reshape(IMG,size(IMG,1),size(IMG,2),framesPerTrial,[]);
 
-fprintf('\n\n IMGS matrix is now size: % 5.0d % 5.0d % 5.0d % 5.0d \n\n', size(IMGS));
+fprintf('\n\n IMG matrix is now size: % 5.0d % 5.0d % 5.0d % 5.0d \n\n', size(IMG));
 
 
 
@@ -170,9 +230,9 @@ adjustDelay = 10;   % Make all CS onsets this many seconds from trial start
 EqualizeCSdelay  = round((delaytoCS-adjustDelay) .* framesPerSec);
 
 
-for nn = 1:size(IMGS,4)
+for nn = 1:size(IMG,4)
     
-    IMGS(:,:,:,nn) = circshift( IMGS(:,:,:,nn) , -EqualizeCSdelay(nn) ,3);
+    IMG(:,:,:,nn) = circshift( IMG(:,:,:,nn) , -EqualizeCSdelay(nn) ,3);
 
 end
 
@@ -196,18 +256,18 @@ CSUSonoff = [CSonset CSoffset USonset USoffset];
 %% CREATE ID FOR EACH UNIQUE CS+US COMBO AND DETERMINE ROW 
 
 % Here we are creating the main CS+US identifiers to use with the image stacks
-% that are now in a 4D matrix 'IMGS'
+% that are now in a 4D matrix 'IMG'
 %
 %     {for example...
 %
-%     size(IMGS)    % 240   240   100    30 
+%     size(IMG)    % 240   240   100    30 
 %
 %     where each of 30 trials includes 100 of 240x240 images}
 %
 % with all CS onsets aligned. This identifier will allow us to pull out
 % trials from the stack that correspond to a particular CS+US combo.
 % Essentially we want the identifier to be a logical array of values for
-% each unique CS+US combo to use on the 4th dim of IMGS.
+% each unique CS+US combo to use on the 4th dim of IMG.
 
 
 
@@ -224,30 +284,48 @@ CSUSonoff = [CSonset CSoffset USonset USoffset];
 %     GRINstruct.fr:     [30x2 double]
 %     GRINstruct.frames: [30x100 double]
 
+
+disp('GRINstruct contains the following structural arrays:')
+disp('{  Example usage: GRINstruct.tf(:,1)  }')
 disp(GRINstruct)
+
+disp('GRINtable includes the following columns:')
 disp(GRINtable(1:10,:))
 
 
 
-keyboard
+
+
+
+
 %% AVERAGE ACROSS SAME TRIAL TYPES
 
 
 nCSUS = size(GRINstruct.tf,2);
 
-muIMGS = zeros(size(IMGS,1), size(IMGS,2), size(IMGS,3), nCSUS);
+muIMGS = zeros(size(IMG,1), size(IMG,2), size(IMG,3), nCSUS);
 
 for tt = 1:nCSUS
         
-    IMG = IMGS(:,:,:,GRINstruct.tf(:,tt)); size(IMG)
-    muIMGS(:,:,:,tt) = squeeze(mean(IMG,4));
+    im = IMG(:,:,:,GRINstruct.tf(:,tt));
+    muIMGS(:,:,:,tt) = squeeze(mean(im,4));
 
     
 end
 size(muIMGS)
+size(IMG)
 
 % previewstack(mu)
 previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff)
+
+close all
+GRINcompare(IMG, muIMGS, 99)
+
+% CLEAR FROM MEMORY IMAGE STACKS NOT BEING USED
+clear im
+
+
+
 
 
 
@@ -256,20 +334,66 @@ previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff)
 
 %% CREATE AN IMAGE MONTAGE
 
-close all
+muIMGS(1,1,:) = 0;
 
-IM = squeeze(IMGS(:,:,1:100));
-
+IM = squeeze(muIMGS(:,:,1:100));
 IM = reshape(IM,size(IM,1),size(IM,2),1,size(IM,3));
 
-montage(IM,'Size',[10 10]);
+close all
+fh1=figure('Units','normalized','OuterPosition',[.2 .05 .55 .90],'Color','w');
+hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
 
-I = squeeze(IMGS(:,:,:,1));
-implay(I)
+mh = montage(IM,'Size',[10 10]);
+colormap(parula)
+colorbar
+
+hax1.CLim = [-0.1  0.1];
+% hax1.CLimMode = 'auto';
+
+hax2 = axes('Position',[.05 .06 .82 .88],'Color','none');
+grid on
+
+% min(min(IMG(:,:,1)))
+% max(max(IMG(:,:,1)))
+
+disp('Reminder, frames for CSonset CSoffset USonset USoffset are...')
+disp(CSUSonoff)
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% --------------------  CURRENT STOPPING POINT  ------------------- %
+
+                               keyboard
+
+% ------------------------------------------------------------------ % 
 
 
 
@@ -334,13 +458,81 @@ ph2 = plot(ROImu);
 
 
 
+
+
+
+
+
+%{
+fh1=figure('Units','normalized','OuterPosition',[.1 .1 .5 .2],'Color','w');
+hax1 = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[],'YTick',[]);
+
+annotation(fh1,'textbox',...
+    [0.1 0.1 0.8 0.6],...
+    'String','Close this window to continue',...
+    'FontSize',36,...
+    'FontName','Helvetica',...
+    'FitBoxToText','off',...
+    'EdgeColor',[1 1 1]);
+
+implay(IMGSG);
+uiwait
+
+
+
+
+
+
+fh1=figure('Units','normalized','OuterPosition',[.05 .05 .8 .6],'Color','w');
+hax1 = axes('Position',[.05 .05 .45 .9],'Color','none','XTick',[],'YTick',[]);
+hax2 = axes('Position',[.55 .05 .45 .9],'Color','none','XTick',[],'YTick',[]);
+
+
+% I = squeeze(IMG(:,:,:,1));
+
+
+% I = IMGSG(:,:,1);
+% J = imadjust(I,stretchlim(I),[]);
+% imshow(I), figure, imshow(J)
+
+
+axes(hax1)
+imagesc(IMG(:,:,1))
+
+mx = max(max(IMG(:,:,1)));
+mn = min(min(IMG(:,:,1)));
+
+% colormap(customcmap(1))
+% for nT = 1:length(IMG)
+for nT = 1:20:1000
+    % PLOT MESH SURF
+    imagesc(IMG(:,:,nT))
+    mesh(hax2,IMG(:,:,nT))
+    view(hax2,[-40 2])
+    zlim(hax2,[mn*.9 mx*1.2])
+    
+    pause(.1)
+end
+%----------------------
+%}
+
+
+
+
+
+
+
+
+
+
+
+
 %% --- PERFORM CONVOLUTION WITH GAUSSIAN FILTER (gGRINs) ---
 
-doConvnFilter = 0;
-if doConvnFilter
+
 
   % MaskMaker([PEAK HEIGHT] [MASK SIZE] [SLOPE SD] [RESOLUTION] [doPLOT])
-  Mask = MaskMaker(2, 8, .1, .1, 1);
+  Mask = GRINmask(2, 8, .1, .1, 1);
   figure
     for nn = 1:numel(GRINs)
         
@@ -368,7 +560,7 @@ if doConvnFilter
         pause(.02)
     end
     %----------------------
-end
+
 
 
 

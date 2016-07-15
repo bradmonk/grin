@@ -20,7 +20,10 @@ uni_csus_id = [1:sz_uni_csus]';
 
 TblA = table(uni_csus_id,uni_csus);
 
-disp('the unique CS US combinations are:')
+
+% disp('    ')
+% disp('   Unique CS US combinations')
+% disp('     --------------------')
 disp(TblA)
 
 GRINstruct.csus = csus;
@@ -73,13 +76,13 @@ GRINtable = table(GRINstruct.csus,GRINstruct.id,GRINstruct.tf,GRINstruct.fr,GRIN
     'VariableNames',{'CSUS' 'ID' 'TF' 'FrameRange' 'AllFrames'});
 
 
-disp('TRIALTYPE.csus'); disp(GRINstruct.csus(1:5))
-disp('TRIALTYPE.id'); disp(GRINstruct.id(1:5))
-disp('TRIALTYPE.tf'); disp(GRINstruct.tf(1:5,:))
-disp('TRIALTYPE.fr'); disp(GRINstruct.fr(1:5,:))
-disp('TRIALTYPE.frames'); disp(GRINstruct.frames(1:5,:))
+% disp('TRIALTYPE.csus'); disp(GRINstruct.csus(1:5))
+% disp('TRIALTYPE.id'); disp(GRINstruct.id(1:5))
+% disp('TRIALTYPE.tf'); disp(GRINstruct.tf(1:5,:))
+% disp('TRIALTYPE.fr'); disp(GRINstruct.fr(1:5,:))
+% disp('TRIALTYPE.frames'); disp(GRINstruct.frames(1:5,:))
 
-disp(GRINtable(1:7,:))
+% disp(GRINtable(1:7,:))
 
 
 end
