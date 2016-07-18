@@ -4,57 +4,36 @@ function [] = GRINtoolboxGUI(varargin)
 
 Syntax
 -----------------------------------------------------
-    FLIMCCD()
-    FLIMCCD(datfilefdir)
+    GRINtoolboxGUI()
 
 
 Description
 -----------------------------------------------------
-    FLIMCCD() can be run with no arguments passed in. In this case user
-    will be prompted to select a directory which contains the FLIM dat 
-    file along with the corresponding CCD images. Optionally this function can 
-    be called using FLIMCCD(datfilefdir) where the full path to the data directory
-    is explicitly provided.
+
+    GRINtoolboxGUI() is run with no arguments passed in. The user
+    will be prompted to select a directory which contains the image data
+    tif stack along with the corresponding xls file.
     
 
 Useage Definitions
 -----------------------------------------------------
 
-
-    FLIMCCD()
-        launches a GUI that will first ask whether you want to compile
-        a dataset output from Bh SPC-Image. Specifically it requires
-        that...
-            - Color Coded VAlue
-            - Chi
-            - Pixel Intensities
-            - Color Coded Image
-        ...are exported from the FLIM analysis software. This GUI will also
-        ask the user if it wants to load one of these compiled .dat files.
-        If this 'Load data file' option is clicked, the user is prompted to
-        select a .dat file. After this the main FLIMCCD analysis GUI is
-        launched.
+    GRINtoolboxGUI()
+        launches a GUI to process image stack data from GRIN lens
+        experiments
  
 
 
 Example
 -----------------------------------------------------
 
-% Create 2D triangulated mesh
-    XY = randn(10,2);
-    TR2D = delaunayTriangulation(XY);
-    vrts = TR2D.Points;
-    tets = TR2D.ConnectivityList;
-
-    xmlmesh(vrts,tets,'xmlmesh_2D.xml')
-
+    TBD
 
 
 See Also
 -----------------------------------------------------
-http://bradleymonk.com/xmlmesh
-http://fenicsproject.org
->> web(fullfile(docroot, 'matlab/math/triangulation-representations.html'))
+>> web('http://bradleymonk.com/grin')
+>> web('http://imagej.net/Miji')
 
 
 Attribution
@@ -62,9 +41,9 @@ Attribution
 % Created by: Bradley Monk
 % email: brad.monk@gmail.com
 % website: bradleymonk.com
-% 2016.04.19
-
+% 2016.07.04
 %}
+%----------------------------------------------------
 
 clc; close all; clear all;
 % clearvars -except varargin
@@ -78,7 +57,6 @@ cd(thisfilepath);
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
 %% MANUALLY SET PER-SESSION PATH PARAMETERS IF WANTED
-
 
 
 %% ESTABLISH GLOBALS AND SET STARTING VALUES
@@ -137,10 +115,10 @@ global imgfilename imgpathname xlsfilename xlspathname
 
 
 
-
-%% INITIATE GUI HANDLES AND CREATE GUI FIGURE
-
-% ----- INITIAL SUBMENU GUI SETUP (GRIN TOOLBOX ~ MOTION CORRECTION) -----
+% -----------------------------------------------------------------
+%%     INITIATE GUI HANDLES AND CREATE SUBMENU GUI FIGURE
+% -----------------------------------------------------------------
+% INITIAL SUBMENU GUI SETUP (GRIN TOOLBOX ~ MOTION CORRECTION)
 
 initmenuh = figure('Units','normalized','OuterPosition',[.3 .4 .3 .2], ...
     'BusyAction', 'cancel','Menubar', 'none',...
@@ -155,8 +133,9 @@ motioncorrectionh = uicontrol('Parent', initmenuh, 'Units','normalized', 'Positi
     'Callback', @motioncorrection);
 
 
-
-% -------- MAIN FLIM ANALYSIS GUI WINDOW SETUP --------
+% -----------------------------------------------------------------
+%%           MAIN FLIM ANALYSIS GUI WINDOW SETUP 
+% -----------------------------------------------------------------
 
 % mainguih.CurrentCharacter = '+';
 mainguih = figure('Units', 'normalized','Position', [.1 .1 .8 .6], 'BusyAction',...
@@ -286,102 +265,17 @@ runCustomH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
     'Callback', @runCustom, 'Enable','off');
 
 
-
 % hsl = uicontrol('Style','slider')         
-         
-%{         
-smoothimgH = uicontrol('Parent', mainguih, 'Units', 'normalized', ...
-    'Position', [0.51 0.80 0.2 0.08], 'FontSize', 14, 'String', 'Smooth Images',...
-    'Callback', @smoothimg); 
-smoothimgtxtH = uicontrol('Parent', mainguih, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.86 0.2 0.03], 'FontSize', 11,'String', 'Smooth Amount (stdev)');
-smoothimgnumH = uicontrol('Parent', mainguih, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.73 0.81 0.15 0.05], 'FontSize', 14); 
 
 
 
-cropimgH = uicontrol('Parent', mainguih, 'Units', 'normalized', ...
-    'Position', [0.51 0.70 0.2 0.08], 'FontSize', 14, 'String', 'Crop Images',...
-    'Callback', @cropimg); 
-cropimgtxtH = uicontrol('Parent', mainguih, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.76 0.2 0.03], 'FontSize', 11,'String', 'Crop Amount (pixels)');
-cropimgnumH = uicontrol('Parent', mainguih, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.73 0.71 0.15 0.05], 'FontSize', 14); 
 
 
 
-imgblocksH = uicontrol('Parent', mainguih, 'Units', 'normalized', ...
-    'Position', [0.51 0.60 0.2 0.08], 'FontSize', 14, 'String', 'Block-Segment Images',...
-    'Callback', @imgblocks); 
-imgblockstxtH = uicontrol('Parent', mainguih, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.66 0.2 0.03], 'FontSize', 11,'String', 'Block Size (pixels)');
-imgblocksnumH = uicontrol('Parent', mainguih, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.73 0.61 0.15 0.05], 'FontSize', 14); 
-
-
-dFoverFH = uicontrol('Parent', mainguih, 'Units', 'normalized', ...
-    'Position', [0.51 0.50 0.2 0.08], 'FontSize', 14, 'String', 'Compute dF / F',...
-    'Callback', @dFoverF); 
-% dFoverFtxtH = uicontrol('Parent', mainguih, 'Style', 'Text', 'Units', 'normalized',...
-%     'Position', [0.71 0.56 0.2 0.03], 'FontSize', 11,'String', 'Block Size (pixels)');
-% dFoverFnumH = uicontrol('Parent', mainguih, 'Style', 'Edit', 'Units', 'normalized', ...
-%     'Position', [0.73 0.51 0.15 0.05], 'FontSize', 14); 
-
-reshapeDataH = uicontrol('Parent', mainguih, 'Units', 'normalized', ...
-    'Position', [0.51 0.40 0.2 0.08], 'FontSize', 13, 'String', 'Reshape stack by trial (4D matrix) ',...
-    'Callback', @reshapeData); 
-
-alignCSFramesH = uicontrol('Parent', mainguih, 'Units', 'normalized', ...
-    'Position', [0.51 0.30 0.2 0.08], 'FontSize', 14, 'String', 'Align frames by CS onset',...
-    'Callback', @alignCSframes);
-alignCSFramestxtH = uicontrol('Parent', mainguih, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.36 0.2 0.03], 'FontSize', 11,'String', 'Shift all CS onsets to this timepoint (sec)');
-alignCSFramesnumH = uicontrol('Parent', mainguih, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.73 0.31 0.15 0.05], 'FontSize', 14); 
-
-
-
-timepointMeansH = uicontrol('Parent', mainguih, 'Units', 'normalized', ...
-    'Position', [0.51 0.20 0.2 0.08], 'FontSize', 13, 'String', 'Compute same-timepoint means ',...
-    'Callback', @timepointMeans); 
-
-stimtypeh = uibuttongroup('Parent', mainguih, 'Visible','on',...
-                  'Units', 'normalized',...
-                  'Position',[0.73 0.21 0.15 0.06],...
-                  'SelectionChangedFcn',@stimselection);
-              
-% Create three radio buttons in the button group.
-stimtypeh1 = uicontrol(stimtypeh,'Style','radiobutton',...
-                  'String','CSxUS',...
-                  'Units', 'normalized',...
-                  'Position',[0.04 0.05 0.38 0.9],...
-                  'HandleVisibility','off');
-              
-stimtypeh2 = uicontrol(stimtypeh,'Style','radiobutton',...
-                  'String','CS',...
-                  'Units', 'normalized',...
-                  'Position',[0.42 0.05 0.3 0.9],...
-                  'HandleVisibility','off');
-
-stimtypeh3 = uicontrol(stimtypeh,'Style','radiobutton',...
-                  'String','US',...
-                  'Units', 'normalized',...
-                  'Position',[0.68 0.05 0.3 0.9],...
-                  'HandleVisibility','off');
-
-              
-              
-getROIstatsH = uicontrol('Parent', mainguih, 'Units', 'normalized', ...
-    'Position', [0.51 0.10 0.2 0.08], 'FontSize', 14, 'String', 'Compute ROI statistics ',...
-    'Callback', @getROIstats);               
-
-% hsl = uicontrol('Style','slider')
-
-%}
 
 % -----------------------------------------------------------------
-%% GUI TOOLBOX FUNCTIONS
-
+%%                     GUI TOOLBOX FUNCTIONS
+% -----------------------------------------------------------------
 
 
 function grinlenstoolbox(hObject, eventdata)

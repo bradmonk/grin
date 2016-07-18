@@ -1,6 +1,7 @@
 function [] = matfiji(tifimg)
 
-% http://imagej.net/Miji
+% web('http://imagej.net/Miji')
+web('http://imagej.net/Miji')
 
 [str,maxsize,endian] = computer;
 
