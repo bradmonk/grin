@@ -10,13 +10,15 @@ disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 %% IMPORT TIF STACK
 clc; close all; clear;
 
-filename = 'gc33_032316g.tif';
-pathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-xlsfilename = 'gc33_032316.xlsx';
-xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+% filename = 'gc33_032316g.tif';
+% pathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+% xlsfilename = 'gc33_032316.xlsx';
+% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 
+ 
+[filename, pathname] = uigetfile({'*.tif*'},'Select TIF stack to import');
+[xlsfilename, xlspathname] = uigetfile({'*.xls*'},'Select Excel sheet associated with the TIF stack');
 
-% [filename, pathname] = uigetfile({'*.tif*'},'File Selector');
 grinano('import',[pathname , filename])
 
 
@@ -386,12 +388,12 @@ disp(CSUSonoff)
 
 
 
-
-%% --------------------  CURRENT STOPPING POINT  ------------------- %
-
-                               keyboard
-
-% ------------------------------------------------------------------ % 
+% return
+% %% --------------------  CURRENT STOPPING POINT  ------------------- %
+% 
+%                                keyboard
+% 
+% % ------------------------------------------------------------------ % 
 
 
 
@@ -402,7 +404,7 @@ hax1 = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[]);
 
 ih1 = imagesc(muIMGS(:,:,1,1));
 
-
+disp('Use mouse to trace around a region of interest on the figure.')
 hROI = imfreehand(hax1);   
 ROIpos = hROI.getPosition;
 ROIarea = polyarea(ROIpos(:,1),ROIpos(:,2));
@@ -422,30 +424,7 @@ for nn = 1:size(muIMGS,3)
 end
 
 
-% previewstack(mu)
 previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff, ROImu)
-
-close all
-fh1=figure('Units','normalized','OuterPosition',[.1 .1 .8 .7],'Color','w');
-hax1 = axes('Position',[.05 .05 .45 .9],'Color','none','XTick',[]);
-hax2 = axes('Position',[.52 .05 .45 .9],'Color','none','NextPlot','replacechildren');
-
-    axes(hax1)
-ih1 = imagesc(muIMGS(:,:,1,1));
-
-    axes(hax2)
-ph2 = plot(ROImu);
-    hax2.YLim = [100 300];
-    text(CSUSonoff(1),150,'\uparrow','FontSize',50)
-    text(CSUSonoff(1),110,'CS on','FontSize',18,'HorizontalAlignment','center')
-    text(CSUSonoff(2),150,'\uparrow','FontSize',50)
-    text(CSUSonoff(2),110,'CS off','FontSize',18,'HorizontalAlignment','center')
-
-
-
-
-
-
 
 
 %% --------------------  CURRENT STOPPING POINT  ------------------- %
