@@ -277,8 +277,13 @@ getROIstatsH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
 
 
 openImageJH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.02 0.95 0.08], 'FontSize', 14, 'String', 'Open stack in ImageJ ',...
-    'Callback', @openImageJ, 'Enable','off');               
+    'Position', [0.03 0.02 0.45 0.08], 'FontSize', 14, 'String', 'Open stack in ImageJ ',...
+    'Callback', @openImageJ, 'Enable','off');
+
+
+runCustomH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
+    'Position', [0.53 0.02 0.45 0.08], 'FontSize', 14, 'String', 'Run Custom Function ',...
+    'Callback', @runCustom, 'Enable','off');
 
 
 
@@ -964,7 +969,19 @@ end
 
 
 
+function runCustom(boxidselecth, eventdata)
+disableButtons; pause(.02);
 
+    % TRIM EDGES FROM IMAGE
+    disp('RUNNING YOUR CUSTOM FUNCTION!')
+    
+    
+    grincustom(IMG, GRINstruct, GRINtable)
+
+        
+enableButtons        
+disp('Ready!')
+end
 
 
 
