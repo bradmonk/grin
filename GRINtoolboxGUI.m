@@ -126,10 +126,10 @@ muIMGS = [];
 
 global imgfilename imgpathname xlsfilename xlspathname
 
-imgfilename = 'gc33_032316g.tif';
-imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-xlsfilename = 'gc33_032316.xlsx';
-xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+% imgfilename = 'gc33_032316g.tif';
+% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+% xlsfilename = 'gc33_032316.xlsx';
+% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 
 
 
@@ -274,6 +274,11 @@ stimtypeh3 = uicontrol(stimtypeh,'Style','radiobutton',...
 getROIstatsH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.20 0.65 0.08], 'FontSize', 14, 'String', 'Compute ROI statistics ',...
     'Callback', @getROIstats, 'Enable','off');               
+
+
+openImageJH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.02 0.95 0.08], 'FontSize', 14, 'String', 'Open stack in ImageJ ',...
+    'Callback', @openImageJ, 'Enable','off');               
 
 
 
@@ -437,6 +442,7 @@ reshapeDataH.Enable = 'on';
 alignCSFramesH.Enable = 'on';
 timepointMeansH.Enable = 'on';
 getROIstatsH.Enable = 'on';
+openImageJH.Enable = 'on';
 % --------------------------------- 
 end
 function disableButtons()
@@ -449,6 +455,7 @@ reshapeDataH.Enable = 'off';
 alignCSFramesH.Enable = 'off';
 timepointMeansH.Enable = 'off';
 getROIstatsH.Enable = 'off';
+openImageJH.Enable = 'off';
 
 % smoothimgH.Enable = 'on';
 % cropimgH.Enable = 'on';
@@ -883,7 +890,7 @@ end
 
 
 function getROIstats(boxidselecth, eventdata)
-% disableButtons; pause(.02);
+disableButtons; pause(.02);
     
     % PREVIEW AN ROI FOR A SINGLE TRIAL AVERAGED OVER TRIALS
 
@@ -939,6 +946,21 @@ end
 
 
 
+
+
+function openImageJ(boxidselecth, eventdata)
+disableButtons; pause(.02);
+
+    % TRIM EDGES FROM IMAGE
+    disp('LAUNCHING ImageJ!')
+    
+    
+    matfiji(IMG)
+
+        
+enableButtons        
+disp('Ready!')
+end
 
 
 

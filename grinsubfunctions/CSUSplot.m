@@ -228,6 +228,6 @@ uicontrol('Style', 'text',...
 
 
 %%
-keyboard
+% keyboard
 %%
  end

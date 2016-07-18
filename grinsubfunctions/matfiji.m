@@ -1,25 +1,43 @@
-function [] = matfiji()
+function [] = matfiji(tifimg)
 
-javaaddpath 'C:\Program Files\MATLAB\R2014b\java\jar\mij.jar'
-javaaddpath 'C:\Program Files\MATLAB\R2014b\java\jar\ij.jar'
-MIJ.start('E:\Program Files (x86)\ImageJ')
-MIJ.setupExt('E:\Program Files (x86)\ImageJ');
+% http://imagej.net/Miji
 
-strr1=strcat('open=[Y:\\ShareData\\LABMEETINGS\\Steve\\GRIN lens data\\RM\\*.tif] starting=1 increment=1 scale=100 file=Ch2 or=[] sort');
-MIJ.run('Image Sequence...', strr1); %works!! will generate tif stack in imageJ
+[str,maxsize,endian] = computer;
 
 
-javaaddpath '/Applications/MATLAB_R2014b.app/java/jar/mij.jar';
-javaaddpath '/Applications/MATLAB_R2014b.app/java/jar/ij.jar';
-MIJ.start('/Applications/Fiji');
-MIJ.setupExt('/Applications/Fiji');
+if strcmp(str,'PCWIN') || strcmp(str,'PCWIN64')
+    
+    javaaddpath 'C:\Program Files\MATLAB\R2014b\java\jar\mij.jar'
+    javaaddpath 'C:\Program Files\MATLAB\R2014b\java\jar\ij.jar'
+    MIJ.start('E:\Program Files (x86)\ImageJ')
+    MIJ.setupExt('E:\Program Files (x86)\ImageJ');
+
+
+    % strr1=strcat('open=[Y:\\ShareData\\LABMEETINGS\\Steve\\GRIN lens data\\RM\\*.tif] starting=1 increment=1 scale=100 file=Ch2 or=[] sort');
+    % MIJ.run('Image Sequence...', strr1); %works!! will generate tif stack in imageJ
+
+    MIJ.createImage('result', tifimg, true);
+    
+end
+
+
+if strcmp(str,'MACI64')
+    
+    javaaddpath '/Applications/MATLAB_R2014b.app/java/jar/mij.jar';
+    javaaddpath '/Applications/MATLAB_R2014b.app/java/jar/ij.jar';
+    MIJ.start('/Applications/Fiji');
+    MIJ.setupExt('/Applications/Fiji');
+    
+    % strr1=strcat('open=[/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/031016_gc33_green_keep.tif]');
+    % MIJ.run('Image Sequence...', strr1); %works!! will generate tif stack in imageJ
+    
+    MIJ.createImage('result', tifimg, true);
+    
+end
 
 
 
 
-
-strr1=strcat('open=[/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/031016_gc33_green_keep.tif]');
-MIJ.run('Image Sequence...', strr1); %works!! will generate tif stack in imageJ
 
 
 end
