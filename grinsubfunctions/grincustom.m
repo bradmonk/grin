@@ -1,4 +1,4 @@
-function [varargout] = grincustom(IMG, GRINstruct, GRINtable)
+function [varargout] = grincustom(IMG, GRINstruct, GRINtable, customFunOrder)
 
 % WRITE YOUR CUSTOM CODE BELOW FOR PROCESSING GRIN DATA
 

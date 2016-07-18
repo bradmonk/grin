@@ -73,10 +73,11 @@ global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial
 global total_frames CS_lengthFrames
 global GRINstruct GRINtable
 
-global cropAmount blockSize previewNframes
+global cropAmount blockSize previewNframes customFunOrder
 cropAmount = 18;
 blockSize = 20;
 previewNframes = 25;
+customFunOrder = 1;
 
 global stimtype
 % CSxUS:1  CS:2  US:3
@@ -342,6 +343,7 @@ alignCSFramesH.Enable = 'on';
 timepointMeansH.Enable = 'on';
 getROIstatsH.Enable = 'on';
 openImageJH.Enable = 'on';
+runCustomH.Enable = 'on';
 % --------------------------------- 
 end
 function disableButtons()
@@ -355,6 +357,7 @@ alignCSFramesH.Enable = 'off';
 timepointMeansH.Enable = 'off';
 getROIstatsH.Enable = 'off';
 openImageJH.Enable = 'off';
+runCustomH.Enable = 'off';
 
 % smoothimgH.Enable = 'on';
 % cropimgH.Enable = 'on';
@@ -870,7 +873,7 @@ disableButtons; pause(.02);
     disp('RUNNING YOUR CUSTOM FUNCTION!')
     
     
-    grincustom(IMG, GRINstruct, GRINtable)
+    grincustom(IMG, GRINstruct, GRINtable, customFunOrder)
 
         
 enableButtons        
