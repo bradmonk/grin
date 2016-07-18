@@ -95,10 +95,10 @@ global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial
 global total_frames CS_lengthFrames
 global GRINstruct GRINtable
 
-global smoothAmount cropAmount blockSize
-smoothAmount = 11;
+global cropAmount blockSize previewNframes
 cropAmount = 18;
 blockSize = 20;
+previewNframes = 25;
 
 global stimtype
 % CSxUS:1  CS:2  US:3
@@ -108,6 +108,13 @@ stimtype = 'CSxUS';
 global CSonset CSoffset USonset USoffset CSUSonoff
 global CSonsetDelay
 CSonsetDelay = 10;
+
+
+global smoothHeight smoothWidth smoothSD smoothRes
+smoothHeight = .8;
+smoothWidth = 9;
+smoothSD = .14;
+smoothRes = .1;
 
 
 global muIMGS
@@ -365,9 +372,6 @@ getROIstatsH = uicontrol('Parent', mainguih, 'Units', 'normalized', ...
 % -----------------------------------------------------------------
 %% GUI TOOLBOX FUNCTIONS
 
-function motioncorrection(hObject, eventdata)
-   msgbox('Coming Soon!'); 
-end
 
 
 function grinlenstoolbox(hObject, eventdata)
@@ -383,7 +387,7 @@ function grinlenstoolbox(hObject, eventdata)
     %----------------------------------------------------
     imgLogo = imread('grinlogo.png');
     set(haxGRIN, 'XLim', [1 size(imgLogo,2)], 'YLim', [1 size(imgLogo,1)]);
-    set(smoothimgnumH, 'String', num2str(smoothAmount));
+    set(smoothimgnumH, 'String', num2str(smoothSD));
     set(cropimgnumH, 'String', num2str(cropAmount));
     set(imgblocksnumH, 'String', num2str(blockSize));
     set(alignCSFramesnumH, 'String', num2str(CSonsetDelay));
@@ -579,21 +583,32 @@ end
 function smoothimg(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
-
-
     % PERFORM IMAGE SMOOTHING
-    
     disp('PERFORMING IMAGE SMOOTHING')
 
+    
+    smoothSD = str2num(smoothimgnumH.String);
+    % smoothHeight = .8;
+    % smoothWidth = 9;
+    % smoothSD = .16;
+    % smoothRes = .1;
+    
 
     % GRINmask([PEAK HEIGHT] [WIDTH] [SLOPE SD] [RESOLUTION] [doPLOT])
-    Mask = GRINkernel(.8, 9, .14, .1, 1);
+    % Mask = GRINkernel(.8, 9, .14, .1, 1);
+    Mask = GRINkernel(smoothHeight, smoothWidth, smoothSD, smoothRes, 1);
+    pause(.5)
+    % IMGmsk = IMG(:,:,1);
+    % IMGmsk(1:size(Mask),1:size(Mask)) = Mask;
+    % figure; imagesc(IMGmsk);
+    
+    
 
     IMGc = convn( IMG, Mask,'same');
 
 
         % VISUALIZE AND ANNOTATE
-        GRINcompare(IMG, IMGc, 100)
+        GRINcompare(IMG, IMGc, previewNframes)
         mainguih.HandleVisibility = 'off';
         close all;
         mainguih.HandleVisibility = 'on';
@@ -618,6 +633,9 @@ disableButtons; pause(.02);
 
     % TRIM EDGES FROM IMAGE
     disp('TRIMMING EDGES FROM IMAGE')
+    
+    
+    cropAmount = str2num(cropimgnumH.String);
 
     IMGt = IMG((cropAmount+1):(end-cropAmount) , (cropAmount+1):(end-cropAmount) , :);
 
@@ -625,7 +643,7 @@ disableButtons; pause(.02);
         grinano('trim',IMG,IMGt)
         fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
         fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGt)));
-        GRINcompare(IMG, IMGt, 100)
+        GRINcompare(IMG, IMGt, previewNframes)
         mainguih.HandleVisibility = 'off';
         close all;
         mainguih.HandleVisibility = 'on';
@@ -651,6 +669,10 @@ disableButtons; pause(.02);
     % CREATE ROBERT BLOCK PROC
     disp('SEGMENTING IMGAGES INTO BLOCKS (blockproc could take a few seconds)')
 
+    blockSize = str2num(imgblocksnumH.String);
+    
+    
+    
     fun = @(block_struct) mean(block_struct.data(:)) * ones(size(block_struct.data)); 
 
     IMGb = zeros(size(IMG));
@@ -670,7 +692,7 @@ disableButtons; pause(.02);
         % VISUALIZE AND ANNOTATE
         fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
         fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGb)));
-        GRINcompare(IMG, IMGb, 100)
+        GRINcompare(IMG, IMGb, previewNframes)
         mainguih.HandleVisibility = 'off';
         close all;
         mainguih.HandleVisibility = 'on';
@@ -713,7 +735,7 @@ disableButtons; pause(.02);
         % VISUALIZE AND ANNOTATE
         fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
         fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGf)));
-        GRINcompare(IMG, IMGf, 99, [.98 1.05], [8 2])
+        GRINcompare(IMG, IMGf, previewNframes, [.98 1.05], [8 2])
         mainguih.HandleVisibility = 'off';
         close all;
         mainguih.HandleVisibility = 'on';
@@ -763,7 +785,8 @@ disableButtons; pause(.02);
 
     % MAKE DELAY TO CS EQUAL TO t SECONDS FOR ALL TRIALS
 
-    CSonsetDelay = 10;   % Make all CS onsets this many seconds from trial start
+    % Make all CS onsets this many seconds from trial start
+    CSonsetDelay = str2num(alignCSFramesnumH.String);
 
     EqualizeCSdelay  = round((delaytoCS-CSonsetDelay) .* framesPerSec);
 
@@ -810,25 +833,31 @@ disableButtons; pause(.02);
     % AVERAGE ACROSS SAME TIMEPOINTS
     nCSUS = size(GRINstruct.tf,2);
     szIMG = size(IMG);
-        
-    if numel(szIMG) == 4
-        muIMGS = zeros(szIMG(1), szIMG(2), szIMG(3), nCSUS);
-        for tt = 1:nCSUS
-            im = IMG(:,:,:,GRINstruct.tf(:,tt));
-            muIMGS(:,:,:,tt) = squeeze(mean(im,4));
-        end
-    else
+    
+    % Check that input is 4D
+    if numel(szIMG) ~= 4
         ms = {'Stack must be 4D to compute timepoint means',...
               ['Stack is currently: ' num2str(szIMG)]};
         msgbox(ms, 'invalid stack size','custom',imgLogo(80:140,60:120,:));
         return
     end
+    
+    
+    
+    % Perform averaging for each (nCSUS) unique trial type
+    % This will create a matrix 'muIMGS' of size [h,w,f,nCSUS]
+    muIMGS = zeros(szIMG(1), szIMG(2), szIMG(3), nCSUS);
+    for tt = 1:nCSUS
+        im = IMG(:,:,:,GRINstruct.tf(:,tt));
+        muIMGS(:,:,:,tt) = squeeze(mean(im,4));
+    end
+
 
     
         % VISUALIZE AND ANNOTATE
         fprintf('\n\n IMG matrix retains size: % s ', num2str(size(IMG)));
         fprintf('\n muIMGS matrix is now size: % s \n\n', num2str(size(muIMGS)));
-        GRINcompare(IMG, muIMGS, 99)
+        GRINcompare(IMG, muIMGS, previewNframes)
         mainguih.HandleVisibility = 'off';
         close all;
         mainguih.HandleVisibility = 'on';
@@ -845,8 +874,16 @@ end
 
 
 
+
+
+
+
+
+
+
+
 function getROIstats(boxidselecth, eventdata)
-disableButtons; pause(.02);
+% disableButtons; pause(.02);
     
     % PREVIEW AN ROI FOR A SINGLE TRIAL AVERAGED OVER TRIALS
 
@@ -862,16 +899,27 @@ disableButtons; pause(.02);
 
 
     ROImask = hROI.createMask(ih1);
+    
+    ROI_INTENSITY = muIMGS(:,:,1,1) .* ROImask;
+    figure; imagesc(ROI_INTENSITY); colorbar;
 
 
 
-    for nn = 1:size(muIMGS,3)
 
+    % Here we are computing the average intensity for the selected ROI
+    % N.B. here it is assumed that a pixel value (actually dF/F value)
+    % has virtually a zero probability of equaling exactly zero; this
+    % allows us to multiply the mask T/F matrix by the image matrix
+    % and disclude from the average all pixels that equal exactly zero
+    
+    ROImu = zeros(size(muIMGS,4),size(muIMGS,3));
+    for mm = 1:size(muIMGS,4)
+        for nn = 1:size(muIMGS,3)
+        
+        ROI_INTENSITY = muIMGS(:,:,nn,mm) .* ROImask;
+        ROImu(mm,nn) = mean(ROI_INTENSITY(ROI_INTENSITY ~= 0));
 
-        ROI_INTENSITY = muIMGS(:,:,nn,1) .* ROImask;
-        ROImu(nn) = mean(ROI_INTENSITY(ROI_INTENSITY > 0));
-
-
+        end
     end
 
     CSUSplot(ROImu', GRINstruct);
@@ -910,6 +958,137 @@ end
 
 
 % --------  FUNCTIONS IM CONSIDERING  ----------
+
+function motioncorrection(hObject, eventdata)
+   msgbox('Coming Soon!'); 
+   return
+   
+   %===============================================
+%% MOTION Stabilization
+% clc; clear all; close all;
+
+% Input video file which needs to be stabilized.
+% filename = 'shaky_car.avi';
+filename = 'GRIN_zstack.avi';
+
+hVideoSource = vision.VideoFileReader(filename, ...
+          'ImageColorSpace', 'Intensity','VideoOutputDataType', 'double');
+
+
+% Create geometric translator object used to compensate for movement.
+hTranslate = vision.GeometricTranslator( ...
+       'OutputSize', 'Same as input image', 'OffsetSource', 'Input port');
+
+
+% Create template matcher object to compute location of best target match
+% in frame. Use location to find translation between successive frames.
+hTM = vision.TemplateMatcher('ROIInputPort', true, ...
+                            'BestMatchNeighborhoodOutputPort', true);
+                        
+
+% Create object to display the original video and the stabilized video.
+hVideoOut = vision.VideoPlayer('Name', 'Video Stabilization');
+hVideoOut.Position(1) = round(0.4*hVideoOut.Position(1));
+hVideoOut.Position(2) = round(1.5*(hVideoOut.Position(2)));
+hVideoOut.Position(3:4) = [900 550];
+
+
+    imgA = step(hVideoSource); % Read first frame into imgA
+    figure
+    imagesc(imgA);
+    title('USE MOUSE TO DRAW BOX AROUND BEST STABILIZATION OBJECT')
+    h1 = imrect;
+    pos1 = round(getPosition(h1)); % [xmin ymin width height]
+    
+
+% Here we initialize some variables used in the processing loop.
+
+pos.template_orig = [pos1(1) pos1(2)]; % [x y] upper left corner
+pos.template_size = [pos1(3:4)];    % [width height]
+pos.search_border = [10 10];        % max horizontal and vertical displacement
+
+pos.template_center = floor((pos.template_size-1)/2);
+pos.template_center_pos = (pos.template_orig + pos.template_center - 1);
+fileInfo = info(hVideoSource);
+W = fileInfo.VideoSize(1); % Width in pixels
+H = fileInfo.VideoSize(2); % Height in pixels
+BorderCols = [1:pos.search_border(1)+4 W-pos.search_border(1)+4:W];
+BorderRows = [1:pos.search_border(2)+4 H-pos.search_border(2)+4:H];
+sz = fileInfo.VideoSize;
+TargetRowIndices = ...
+  pos.template_orig(2)-1:pos.template_orig(2)+pos.template_size(2)-2;
+TargetColIndices = ...
+  pos.template_orig(1)-1:pos.template_orig(1)+pos.template_size(1)-2;
+SearchRegion = pos.template_orig - pos.search_border - 1;
+Offset = [0 0];
+Target = zeros(20,20);
+% Target = zeros(18,22);
+firstTime = true;
+
+
+
+% Stream Processing Loop
+
+% Processing loop using objects created above to perform stabilization
+nn = 0;
+while ~isDone(hVideoSource)
+nn = nn+1;
+
+    input = step(hVideoSource);
+
+    % Find location of Target in the input video frame
+    if firstTime
+      Idx = int32(pos.template_center_pos);
+      MotionVector = [0 0];
+      firstTime = false;
+    else
+      IdxPrev = Idx;
+
+      ROI = [SearchRegion, pos.template_size+2*pos.search_border];
+      Idx = step(hTM, input, Target, ROI);
+      
+      MotionVector = double(Idx-IdxPrev);
+    end
+
+    [Offset, SearchRegion] = updatesearch(sz, MotionVector, ...
+        SearchRegion, Offset, pos);
+
+    % Translate video frame to offset the camera motion
+    Stabilized = step(hTranslate, input, fliplr(Offset));
+
+    Target = Stabilized(TargetRowIndices, TargetColIndices);
+
+    % Add black border for display
+    Stabilized(:, BorderCols) = minmin;
+    Stabilized(BorderRows, :) = minmin;
+
+    TargetRect = [pos.template_orig-Offset, pos.template_size];
+    SearchRegionRect = [SearchRegion, pos.template_size + 2*pos.search_border];
+
+    % Draw rectangles on input to show target and search region
+    input = insertShape(input, 'Rectangle', [TargetRect; SearchRegionRect],...
+                        'Color', 'white');
+    % Display the offset (displacement) values on the input image
+    txt = sprintf('(%+05.1f,%+05.1f)', Offset);
+    input = insertText(input(:,:,1),[191 215],txt,'FontSize',16, ...
+                    'TextColor', 'white', 'BoxOpacity', 0);
+    % Display video
+    step(hVideoOut, [input(:,:,1) Stabilized]);
+
+    
+    sGRINs{nn} = Stabilized;
+end
+
+% Release hVideoSource
+release(hVideoSource);
+% ===============================================
+
+
+   
+end
+
+
+
 
 % function mainGUIclosereq(src,callbackdata)
 %{

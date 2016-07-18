@@ -88,13 +88,14 @@ if doMASKfig
     disp(Mask);
     
     fh96=figure('Units','normalized','OuterPosition',[.05 .05 .6 .8],'Color','w');
-    hax97 = axes('Position',[.05 .55 .30 .40],'Color','none');
+    hax97 = axes('Position',[.05 .55 .33 .40],'Color','none');
     hax98 = axes('Position',[.04 .08 .32 .42],'Color','none');
     hax99 = axes('Position',[.45 .05 .50 .90],'Color','none');
     
         %----------------%
         axes(hax97)
     ph5 = imagesc(Mask); 
+    colorbar
         axis equal;
         
         axes(hax98)
