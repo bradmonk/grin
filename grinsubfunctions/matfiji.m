@@ -1,7 +1,8 @@
 function [] = matfiji(tifimg)
 
+% web('http://bigwww.epfl.ch/sage/soft/mij/')
 % web('http://imagej.net/Miji')
-web('http://imagej.net/Miji')
+
 
 [str,maxsize,endian] = computer;
 
@@ -37,6 +38,15 @@ if strcmp(str,'MACI64')
 end
 
 
+    
+    
+    fhij=figure('Units','normalized','OuterPosition',[.02 .4 .2 .3],'Color','w');
+    annotation(fhij,'textbox',[0.05 0.05 0.9 0.9],...
+    'String',{'Close this window when done working with FIJI'},...
+    'FontSize',18,'FontName','Helvetica','FitBoxToText','off');
+    
+    uiwait
+    MIJ.exit
 
 
 

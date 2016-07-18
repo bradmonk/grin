@@ -1,47 +1,48 @@
 function [] = GRINtoolboxGUI(varargin)
 %% GRINtoolboxGUI.m - GRIN LENS IMAGING TOOLBOX
 %{
-
-Syntax
------------------------------------------------------
-    GRINtoolboxGUI()
-
-
-Description
------------------------------------------------------
-
-    GRINtoolboxGUI() is run with no arguments passed in. The user
-    will be prompted to select a directory which contains the image data
-    tif stack along with the corresponding xls file.
-    
-
-Useage Definitions
------------------------------------------------------
-
-    GRINtoolboxGUI()
-        launches a GUI to process image stack data from GRIN lens
-        experiments
- 
-
-
-Example
------------------------------------------------------
-
-    TBD
-
-
-See Also
------------------------------------------------------
->> web('http://bradleymonk.com/grin')
->> web('http://imagej.net/Miji')
-
-
-Attribution
------------------------------------------------------
-% Created by: Bradley Monk
-% email: brad.monk@gmail.com
-% website: bradleymonk.com
-% 2016.07.04
+% 
+% Syntax
+% -----------------------------------------------------
+%     GRINtoolboxGUI()
+% 
+% 
+% Description
+% -----------------------------------------------------
+% 
+%     GRINtoolboxGUI() is run with no arguments passed in. The user
+%     will be prompted to select a directory which contains the image data
+%     tif stack along with the corresponding xls file.
+%     
+% 
+% Useage Definitions
+% -----------------------------------------------------
+% 
+%     GRINtoolboxGUI()
+%         launches a GUI to process image stack data from GRIN lens
+%         experiments
+%  
+% 
+% 
+% Example
+% -----------------------------------------------------
+% 
+%     TBD
+% 
+% 
+% See Also
+% -----------------------------------------------------
+% >> web('http://bradleymonk.com/grintoolbox')
+% >> web('http://imagej.net/Miji')
+% >> web('http://bigwww.epfl.ch/sage/soft/mij/')
+% 
+% 
+% Attribution
+% -----------------------------------------------------
+% % Created by: Bradley Monk
+% % email: brad.monk@gmail.com
+% % website: bradleymonk.com
+% % 2016.07.04
 %}
 %----------------------------------------------------
 
@@ -79,9 +80,11 @@ blockSize = 20;
 previewNframes = 25;
 customFunOrder = 1;
 
-global stimtype
+global stimtype stimnum CSUSvals
 % CSxUS:1  CS:2  US:3
-stimtype = 'CSxUS'; 
+stimnum = 1;
+stimtype = 'CS'; 
+CSUSvals = {'CS','US'};
 
 
 global CSonset CSoffset USonset USoffset CSUSonoff
@@ -105,10 +108,10 @@ muIMGS = [];
 
 global imgfilename imgpathname xlsfilename xlspathname
 
-% imgfilename = 'gc33_032316g.tif';
-% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-% xlsfilename = 'gc33_032316.xlsx';
-% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+imgfilename = 'gc33_032316g.tif';
+imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+xlsfilename = 'gc33_032316.xlsx';
+xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 
 
 
@@ -228,26 +231,31 @@ timepointMeansH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.30 0.55 0.08], 'FontSize', 13, 'String', 'Compute same-timepoint means ',...
     'Callback', @timepointMeans, 'Enable','off');
 
-% RADIO BUTTON GROUP FOR TIMEPOINT MEANS
-stimtypeh = uibuttongroup('Parent', IPpanelH, 'Visible','on',...
-                  'Units', 'normalized',...
-                  'Position',[0.63 0.31 0.35 0.06],...
-                  'SelectionChangedFcn',@stimselection);              
-stimtypeh1 = uicontrol(stimtypeh,'Style','radiobutton',...
-                  'String','CSxUS',...
-                  'Units', 'normalized',...
-                  'Position',[0.04 0.05 0.38 0.9],...
-                  'HandleVisibility','off');
-stimtypeh2 = uicontrol(stimtypeh,'Style','radiobutton',...
-                  'String','CS',...
-                  'Units', 'normalized',...
-                  'Position',[0.42 0.05 0.3 0.9],...
-                  'HandleVisibility','off');
-stimtypeh3 = uicontrol(stimtypeh,'Style','radiobutton',...
-                  'String','US',...
-                  'Units', 'normalized',...
-                  'Position',[0.68 0.05 0.3 0.9],...
-                  'HandleVisibility','off');
+% % RADIO BUTTON GROUP FOR TIMEPOINT MEANS
+% stimtypeh = uibuttongroup('Parent', IPpanelH, 'Visible','on',...
+%                   'Units', 'normalized',...
+%                   'Position',[0.63 0.31 0.35 0.06],...
+%                   'SelectionChangedFcn',@stimselection);              
+% stimtypeh1 = uicontrol(stimtypeh,'Style','radiobutton',...
+%                   'String','CSxUS',...
+%                   'Units', 'normalized',...
+%                   'Position',[0.04 0.05 0.38 0.9],...
+%                   'HandleVisibility','off');
+% stimtypeh2 = uicontrol(stimtypeh,'Style','radiobutton',...
+%                   'String','CS',...
+%                   'Units', 'normalized',...
+%                   'Position',[0.42 0.05 0.3 0.9],...
+%                   'HandleVisibility','off');
+% stimtypeh3 = uicontrol(stimtypeh,'Style','radiobutton',...
+%                   'String','US',...
+%                   'Units', 'normalized',...
+%                   'Position',[0.68 0.05 0.3 0.9],...
+%                   'HandleVisibility','off');
+              
+CSUSpopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
+                  'Units', 'normalized', 'String', {'CS','US'},...
+                  'Position', [0.65 0.31 0.34 0.05],...
+                  'Callback', @CSUSpopup);
 
               
               
@@ -296,13 +304,11 @@ function grinlenstoolbox(hObject, eventdata)
     set(cropimgnumH, 'String', num2str(cropAmount));
     set(imgblocksnumH, 'String', num2str(blockSize));
     set(alignCSFramesnumH, 'String', num2str(CSonsetDelay));
-    stimtypeh.SelectedObject = stimtypeh1; % Set radiobutton to stamp
-    stimtype = stimtypeh.SelectedObject.String;
     
-    % set(haxGRIN, 'XLim', [1 size(imgLogo,2)]);
-    % set(haxGRIN, 'YLim', [1 size(imgLogo,1)]);
-    % set(stampSizeH, 'String', num2str(stampSize));
-    % stimtypeh.SelectedObject = stimtypeh4; % Set radiobutton to stamp
+    
+    
+    % Set radiobuttons
+    % stimtypeh.SelectedObject = stimtypeh1; 
     % stimtype = stimtypeh.SelectedObject.String;
     %----------------------------------------------------
     
@@ -342,8 +348,14 @@ reshapeDataH.Enable = 'on';
 alignCSFramesH.Enable = 'on';
 timepointMeansH.Enable = 'on';
 getROIstatsH.Enable = 'on';
-openImageJH.Enable = 'on';
 runCustomH.Enable = 'on';
+
+if numel(size(IMG)) > 1 && numel(size(IMG)) < 4;
+    openImageJH.Enable = 'on';
+else
+    openImageJH.Enable = 'off';
+end
+
 % --------------------------------- 
 end
 function disableButtons()
@@ -356,8 +368,8 @@ reshapeDataH.Enable = 'off';
 alignCSFramesH.Enable = 'off';
 timepointMeansH.Enable = 'off';
 getROIstatsH.Enable = 'off';
-openImageJH.Enable = 'off';
 runCustomH.Enable = 'off';
+openImageJH.Enable = 'off';
 
 % smoothimgH.Enable = 'on';
 % cropimgH.Enable = 'on';
@@ -372,8 +384,26 @@ end
 
 
 
+% POPUP MENU CALLBACK
+function CSUSpopup(hObject, eventdata)
+
+    if numel(GRINtable) > 0 
+        disp('reminder of CS/US combos...')
+        GRINtable(1:7,1:2)
+        % GRINstruct
+    end
+        
+    stimnum = CSUSpopupH.Value;
+
+    % CSUSvals = unique(GRINstruct.csus);
+    % set(CSUSpopupH, 'String', CSUSvals);
+
+end
 
 
+
+
+% RADIO BUTTON CALLBACK
 function stimselection(source,callbackdata)
         
     % strcmp(stimtypeh.SelectedObject.String,'CSxUS')
@@ -478,7 +508,10 @@ function importimgstack(hObject, eventdata)
     disp(GRINtable(1:10,:))
 
     
-    
+   
+        
+     CSUSvals = unique(GRINstruct.csus);
+     set(CSUSpopupH, 'String', CSUSvals);
     
     
     
@@ -526,6 +559,7 @@ disableButtons; pause(.02);
 
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+
 
 enableButtons        
 disp('Ready!')
@@ -682,8 +716,8 @@ disableButtons; pause(.02);
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
 
-        
-enableButtons        
+
+enableButtons
 disp('Ready!')
 end
 
@@ -856,10 +890,51 @@ disableButtons; pause(.02);
     % TRIM EDGES FROM IMAGE
     disp('LAUNCHING ImageJ!')
     
-    
+    % tifimg = IMG;
     matfiji(IMG)
-
         
+
+    
+%{    
+% ----------------------------------------
+    [str,maxsize,endian] = computer;
+
+
+if strcmp(str,'PCWIN') || strcmp(str,'PCWIN64')
+    
+    javaaddpath 'C:\Program Files\MATLAB\R2014b\java\jar\mij.jar'
+    javaaddpath 'C:\Program Files\MATLAB\R2014b\java\jar\ij.jar'
+    MIJ.start('E:\Program Files (x86)\ImageJ')
+    MIJ.setupExt('E:\Program Files (x86)\ImageJ');
+
+
+    % strr1=strcat('open=[Y:\\ShareData\\LABMEETINGS\\Steve\\GRIN lens data\\RM\\*.tif] starting=1 increment=1 scale=100 file=Ch2 or=[] sort');
+    % MIJ.run('Image Sequence...', strr1); %works!! will generate tif stack in imageJ
+
+    MIJ.createImage('result', IMG, true);
+    
+end
+
+
+if strcmp(str,'MACI64')
+    
+    javaaddpath '/Applications/MATLAB_R2014b.app/java/jar/mij.jar';
+    javaaddpath '/Applications/MATLAB_R2014b.app/java/jar/ij.jar';
+    MIJ.start('/Applications/Fiji');
+    MIJ.setupExt('/Applications/Fiji');
+    
+    % strr1=strcat('open=[/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/031016_gc33_green_keep.tif]');
+    % MIJ.run('Image Sequence...', strr1); %works!! will generate tif stack in imageJ
+    
+    MIJ.createImage('result', IMG, true);
+    
+end
+% ----------------------------------------    
+%}    
+    
+    
+    
+return
 enableButtons        
 disp('Ready!')
 end
