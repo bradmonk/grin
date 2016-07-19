@@ -50,6 +50,7 @@ clc; close all; clear all; clear java;
 % clearvars -except varargin
 
 % Change the current folder to the folder of this .m file.
+global thisfilepath
 thisfile = 'GRINtoolboxGUI.m';
 thisfilepath = fileparts(which(thisfile));
 cd(thisfilepath);
@@ -283,7 +284,7 @@ runCustomH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
 
 
 
-
+enableButtons
 
 
 % -----------------------------------------------------------------
@@ -436,13 +437,14 @@ function importimgstack(hObject, eventdata)
         disp('image stack path was set manually')
     else
         [imgfilename, imgpathname] = uigetfile({'*.tif*'},...
-            'Select image stack to import');        
+        'Select image stack to import', thisfilepath);        
     end
+    
     if xlsfilename
         disp('xls data path was set manually')
     else
         [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
-            'Select Excel file associated with the TIF stack');
+        'Select Excel file associated with the TIF stack', imgpathname);
     end
     
     
