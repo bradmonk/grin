@@ -46,7 +46,7 @@ function [] = GRINtoolboxGUI(varargin)
 %}
 %----------------------------------------------------
 
-clc; close all; clear all;
+clc; close all; clear all; clear java;
 % clearvars -except varargin
 
 % Change the current folder to the folder of this .m file.
@@ -200,7 +200,7 @@ imgblocksH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.70 0.65 0.08], 'FontSize', 14, 'String', 'Block-Segment Images',...
     'Callback', @imgblocks, 'Enable','off'); 
 imgblockstxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.76 0.27 0.03], 'FontSize', 11,'String', 'Block Size (pixels)');
+    'Position', [0.71 0.76 0.27 0.03], 'FontSize', 11,'String', 'Tile Size (pixels)');
 imgblocksnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
     'Position', [0.71 0.71 0.27 0.05], 'FontSize', 14); 
 
@@ -216,6 +216,10 @@ dFoverFH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
 reshapeDataH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.50 0.65 0.08], 'FontSize', 13, 'String', 'Reshape stack by trial (4D matrix) ',...
     'Callback', @reshapeData, 'Enable','off'); 
+unshapeDataH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
+    'Position', [0.71 0.51 0.27 0.06], 'FontSize', 10, 'String', 'Undo reshape (make 3D) ',...
+    'Callback', @unshapeData, 'Enable','off'); 
+
 
 alignCSFramesH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.40 0.65 0.08], 'FontSize', 14, 'String', 'Align frames by CS onset',...
@@ -345,6 +349,7 @@ cropimgH.Enable = 'on';
 imgblocksH.Enable = 'on';
 dFoverFH.Enable = 'on';
 reshapeDataH.Enable = 'on';
+unshapeDataH.Enable = 'on';
 alignCSFramesH.Enable = 'on';
 timepointMeansH.Enable = 'on';
 getROIstatsH.Enable = 'on';
@@ -365,6 +370,7 @@ cropimgH.Enable = 'off';
 imgblocksH.Enable = 'off';
 dFoverFH.Enable = 'off';
 reshapeDataH.Enable = 'off';
+unshapeDataH.Enable = 'off';
 alignCSFramesH.Enable = 'off';
 timepointMeansH.Enable = 'off';
 getROIstatsH.Enable = 'off';
@@ -516,7 +522,7 @@ function importimgstack(hObject, eventdata)
     
     
 enableButtons
-disp('Ready!')
+disp('Image stack and xls data import completed!')
 end
 
 
@@ -562,7 +568,7 @@ disableButtons; pause(.02);
 
 
 enableButtons        
-disp('Ready!')
+disp('Image smoothing completed!')
 end
 
 
@@ -584,8 +590,8 @@ disableButtons; pause(.02);
 
         % VISUALIZE AND ANNOTATE
         grinano('trim',IMG,IMGt)
-        fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
-        fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGt)));
+        % fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
+        % fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGt)));
         GRINcompare(IMG, IMGt, previewNframes)
         mainguih.HandleVisibility = 'off';
         close all;
@@ -598,7 +604,7 @@ disableButtons; pause(.02);
 
         
 enableButtons        
-disp('Ready!')
+disp('Crop Images completed!')
 end
 
 
@@ -639,7 +645,6 @@ disableButtons; pause(.02);
         mainguih.HandleVisibility = 'off';
         close all;
         mainguih.HandleVisibility = 'on';
-        disp('Done!')
     
     IMG = IMGb;
 
@@ -648,7 +653,7 @@ disableButtons; pause(.02);
 
         
 enableButtons        
-disp('Ready!')        
+disp('Block-Segment Images completed!')        
 end
 
 
@@ -662,8 +667,6 @@ disableButtons; pause(.02);
 
     % COMPUTE dF/F FOR ALL FRAMES
     disp('COMPUTING dF/F FOR ALL FRAMES')
-
-    % keyboard
     
     % As a shortcut and to retain the original frame number I am using
     % circshift to move the first image to the end of the image matrix
@@ -682,7 +685,6 @@ disableButtons; pause(.02);
         mainguih.HandleVisibility = 'off';
         close all;
         mainguih.HandleVisibility = 'on';
-        disp('Done!')
     
     IMG = IMGf;
     
@@ -691,7 +693,7 @@ disableButtons; pause(.02);
 
         
 enableButtons        
-disp('Ready!')
+disp('dF/F computation completed!')
 end
 
 
@@ -718,8 +720,39 @@ disableButtons; pause(.02);
 
 
 enableButtons
-disp('Ready!')
+disp('Reshape stack by trial completed!')
 end
+
+
+
+function unshapeData(boxidselecth, eventdata)
+disableButtons; pause(.02);
+
+    % RESHAPE IMAGE STACK INTO SIZE: YPIXELS by XPIXELS in NTOTALFRAMES
+    
+    IMGr = reshape(IMG,size(IMG,1),size(IMG,2),[]);
+        
+    
+        % VISUALIZE AND ANNOTATE
+        fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
+        fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGr)));
+    
+    IMG = IMGr;
+        
+        axes(haxGRIN)
+        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+
+
+enableButtons
+disp('Undo reshape (make 3D) completed!')
+end
+
+
+
+
+
+
+
 
 
 
@@ -763,7 +796,7 @@ disableButtons; pause(.02);
 
         
 enableButtons
-disp('Ready!')
+disp('Align frames by CS onset completed!')
 end
 
 
@@ -812,7 +845,7 @@ disableButtons; pause(.02);
         phGRIN = imagesc(muIMGS(:,:,1,1) , 'Parent', haxGRIN);
 
 enableButtons        
-disp('Ready!')
+disp('Compute same-timepoint means completed!')
 end
 
 
@@ -870,7 +903,8 @@ disableButtons; pause(.02);
     % previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff, ROImu)
     
     
-enableButtons    
+enableButtons
+disp('Compute ROI statistics completed!')
 end
 
 
@@ -933,10 +967,10 @@ end
 %}    
     
     
-    
+GRINtoolboxGUI    
 return
 enableButtons        
-disp('Ready!')
+disp('ImageJ (FIJI) processes completed!')
 end
 
 
@@ -952,7 +986,7 @@ disableButtons; pause(.02);
 
         
 enableButtons        
-disp('Ready!')
+disp('Run custom function completed!')
 end
 
 
