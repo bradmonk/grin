@@ -1,4 +1,4 @@
-function [] = formatXLS
+function [xlsdata] = formatXLS(varargin)
 %% formatXLS
 
 

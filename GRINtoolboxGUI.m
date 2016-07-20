@@ -75,11 +75,12 @@ global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial
 global total_frames CS_lengthFrames
 global GRINstruct GRINtable
 
-global cropAmount blockSize previewNframes customFunOrder
+global cropAmount blockSize previewNframes customFunOrder baselineTime
 cropAmount = 18;
 blockSize = 20;
 previewNframes = 25;
 customFunOrder = 1;
+baselineTime = 10;
 
 global stimtype stimnum CSUSvals
 % CSxUS:1  CS:2  US:3
@@ -212,29 +213,37 @@ imgblocksnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normali
     'Position', [0.71 0.71 0.27 0.05], 'FontSize', 14); 
 
 
-dFoverFH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.60 0.65 0.08], 'FontSize', 14, 'String', 'Compute dF / F',...
-    'Callback', @dFoverF, 'Enable','off'); 
-% dFoverFtxtH = uicontrol('Parent', mainguih, 'Style', 'Text', 'Units', 'normalized',...
-%     'Position', [0.71 0.56 0.2 0.03], 'FontSize', 11,'String', 'Block Size (pixels)');
-% dFoverFnumH = uicontrol('Parent', mainguih, 'Style', 'Edit', 'Units', 'normalized', ...
-%     'Position', [0.73 0.51 0.15 0.05], 'FontSize', 14); 
+
 
 reshapeDataH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.50 0.65 0.08], 'FontSize', 13, 'String', 'Reshape stack by trial (4D matrix) ',...
+    'Position', [0.03 0.60 0.65 0.08], 'FontSize', 13, 'String', 'Reshape stack by trial (4D matrix) ',...
     'Callback', @reshapeData, 'Enable','off'); 
 unshapeDataH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.71 0.51 0.27 0.06], 'FontSize', 10, 'String', 'Undo reshape (make 3D) ',...
+    'Position', [0.71 0.61 0.27 0.06], 'FontSize', 10, 'String', 'Undo reshape (make 3D) ',...
     'Callback', @unshapeData, 'Enable','off'); 
 
 
+
 alignCSFramesH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.40 0.65 0.08], 'FontSize', 14, 'String', 'Align frames by CS onset',...
+    'Position', [0.03 0.50 0.65 0.08], 'FontSize', 14, 'String', 'Align frames by CS onset',...
     'Callback', @alignCSframes, 'Enable','off');
 alignCSFramestxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.46 0.27 0.03], 'FontSize', 11,'String', 'Delay to CS onset (sec)');
+    'Position', [0.71 0.56 0.27 0.03], 'FontSize', 11,'String', 'Delay to CS onset (sec)');
 alignCSFramesnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.71 0.41 0.27 0.05], 'FontSize', 14); 
+    'Position', [0.71 0.51 0.27 0.05], 'FontSize', 14); 
+
+
+
+dFoverFH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.40 0.65 0.08], 'FontSize', 14, 'String', 'Compute dF / F',...
+    'Callback', @dFoverF, 'Enable','off'); 
+dFoverFtxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', [0.71 0.46 0.27 0.03], 'FontSize', 11,'String', 'Baseline time (s)');
+dFoverFnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
+    'Position', [0.71 0.41 0.27 0.05], 'FontSize', 14);
+
+
+
 
 
 
@@ -242,26 +251,7 @@ timepointMeansH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.30 0.55 0.08], 'FontSize', 13, 'String', 'Compute same-timepoint means ',...
     'Callback', @timepointMeans, 'Enable','off');
 
-% % RADIO BUTTON GROUP FOR TIMEPOINT MEANS
-% stimtypeh = uibuttongroup('Parent', IPpanelH, 'Visible','on',...
-%                   'Units', 'normalized',...
-%                   'Position',[0.63 0.31 0.35 0.06],...
-%                   'SelectionChangedFcn',@stimselection);              
-% stimtypeh1 = uicontrol(stimtypeh,'Style','radiobutton',...
-%                   'String','CSxUS',...
-%                   'Units', 'normalized',...
-%                   'Position',[0.04 0.05 0.38 0.9],...
-%                   'HandleVisibility','off');
-% stimtypeh2 = uicontrol(stimtypeh,'Style','radiobutton',...
-%                   'String','CS',...
-%                   'Units', 'normalized',...
-%                   'Position',[0.42 0.05 0.3 0.9],...
-%                   'HandleVisibility','off');
-% stimtypeh3 = uicontrol(stimtypeh,'Style','radiobutton',...
-%                   'String','US',...
-%                   'Units', 'normalized',...
-%                   'Position',[0.68 0.05 0.3 0.9],...
-%                   'HandleVisibility','off');
+
               
 CSUSpopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
                   'Units', 'normalized', 'String', {'CS','US'},...
@@ -285,12 +275,16 @@ runCustomH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
     'Callback', @runCustom, 'Enable','off');
 
 
-% hsl = uicontrol('Style','slider')         
-
-
-
 
 % enableButtons
+
+
+
+
+
+
+
+
 
 
 % -----------------------------------------------------------------
@@ -298,6 +292,12 @@ runCustomH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
 % -----------------------------------------------------------------
 
 
+
+
+
+%----------------------------------------------------
+%   INITIAL GRIN TOOLBOX FUNCTION TO POPULATE GUI
+%----------------------------------------------------
 function grinlenstoolbox(hObject, eventdata)
 %Load file triggers uiresume; the initial menu is set to invisible. Prompts
 %user for file to load, copies the datastack from the file; sets the image 
@@ -315,6 +315,7 @@ function grinlenstoolbox(hObject, eventdata)
     set(cropimgnumH, 'String', num2str(cropAmount));
     set(imgblocksnumH, 'String', num2str(blockSize));
     set(alignCSFramesnumH, 'String', num2str(CSonsetDelay));
+    set(dFoverFnumH, 'String', num2str(baselineTime));
     
     
     
@@ -340,6 +341,28 @@ end
 
 
 
+
+
+
+
+%----------------------------------------------------
+%        FORMAT XLS DATASHEETS
+%----------------------------------------------------
+function formatXLS()
+    
+    msgbox('Coming Soon!'); 
+   return
+   
+   xlsdata = formatXLS(varargin);
+     
+end
+
+
+
+
+%----------------------------------------------------
+%        ENABLE AND DISABLE GUI BUTTONS
+%----------------------------------------------------
 function enableButtons()
 % --- Enable - Disable Buttons ---
 % smoothimgH.Enable = 'off';
@@ -370,6 +393,7 @@ end
 
 % --------------------------------- 
 end
+
 function disableButtons()
 % --- Enable - Disable Buttons ---
 smoothimgH.Enable = 'off';
@@ -397,7 +421,12 @@ end
 
 
 
-% POPUP MENU CALLBACK
+
+
+
+%----------------------------------------------------
+%        CSUS DROPDOWN MENU CALLBACK
+%----------------------------------------------------
 function CSUSpopup(hObject, eventdata)
 
     if numel(GRINtable) > 0 
@@ -416,7 +445,9 @@ end
 
 
 
-% RADIO BUTTON CALLBACK
+%----------------------------------------------------
+%        RADIO BUTTON CALLBACK
+%----------------------------------------------------
 function stimselection(source,callbackdata)
         
     % strcmp(stimtypeh.SelectedObject.String,'CSxUS')
@@ -425,6 +456,28 @@ function stimselection(source,callbackdata)
     display(['Previous Stim: ' callbackdata.OldValue.String]);
     display(['Current Stim: ' callbackdata.NewValue.String]);
     display('------------------');
+    
+    
+    % % RADIO BUTTON GROUP FOR TIMEPOINT MEANS
+    % stimtypeh = uibuttongroup('Parent', IPpanelH, 'Visible','on',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.63 0.31 0.35 0.06],...
+    %                   'SelectionChangedFcn',@stimselection);              
+    % stimtypeh1 = uicontrol(stimtypeh,'Style','radiobutton',...
+    %                   'String','CSxUS',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.04 0.05 0.38 0.9],...
+    %                   'HandleVisibility','off');
+    % stimtypeh2 = uicontrol(stimtypeh,'Style','radiobutton',...
+    %                   'String','CS',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.42 0.05 0.3 0.9],...
+    %                   'HandleVisibility','off');
+    % stimtypeh3 = uicontrol(stimtypeh,'Style','radiobutton',...
+    %                   'String','US',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.68 0.05 0.3 0.9],...
+    %                   'HandleVisibility','off');
 
 end
 
@@ -436,7 +489,9 @@ end
 
 
 
-
+%----------------------------------------------------
+%        IMPORT IMAGE STACK MAIN FUNCTION
+%----------------------------------------------------
 function importimgstack(hObject, eventdata)
     
     if imgfilename
@@ -566,6 +621,12 @@ end
 
 
 
+
+
+
+%----------------------------------------------------
+%        SMOOTH IMAGES
+%----------------------------------------------------
 function smoothimg(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
@@ -583,15 +644,14 @@ disableButtons; pause(.02);
     % GRINmask([PEAK HEIGHT] [WIDTH] [SLOPE SD] [RESOLUTION] [doPLOT])
     % Mask = GRINkernel(.8, 9, .14, .1, 1);
     Mask = GRINkernel(smoothHeight, smoothWidth, smoothSD, smoothRes, 1);
-    pause(.5)
+    pause(.2)
     % IMGmsk = IMG(:,:,1);
     % IMGmsk(1:size(Mask),1:size(Mask)) = Mask;
     % figure; imagesc(IMGmsk);
     
-    
-
+    mbh = msgbox('Performing convolution smoothing, please wait...');
     IMGc = convn( IMG, Mask,'same');
-
+    close(mbh);
 
         % VISUALIZE AND ANNOTATE
         GRINcompare(IMG, IMGc, previewNframes)
@@ -614,7 +674,9 @@ end
 
 
 
-
+%----------------------------------------------------
+%        CROP IMAGES
+%----------------------------------------------------
 function cropimg(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
@@ -650,6 +712,10 @@ end
 
 
 
+
+%----------------------------------------------------
+%        CREATE IMAGE TILES
+%----------------------------------------------------
 function imgblocks(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
@@ -703,24 +769,37 @@ end
 
 
 
+%----------------------------------------------------
+%        deltaF OVER F
+%----------------------------------------------------
 function dFoverF(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
     % COMPUTE dF/F FOR ALL FRAMES
     disp('COMPUTING dF/F FOR ALL FRAMES')
     
-    % As a shortcut and to retain the original frame number I am using
-    % circshift to move the first image to the end of the image matrix
-
-    % im = circshift( IMG , -1 ,3);
-    % IMGf = (im - IMG) ./ im;
-    % IMGf(:,:,end) = IMGf(:,:,end-1); % this just duplicates the last frame
+    
+    if numel(size(IMG)) == 3
         
-    im = repmat(mean(IMG,3),1,1,size(IMG,3));
-    IMGf = (IMG - im) ./ im;
+        % As a shortcut and to retain the original frame number I am using
+        % circshift to move the first image to the end of the image matrix
+        im = circshift( IMG , -1 ,3);
+        IMGf = (im - IMG) ./ im;
+        IMGf(:,:,end) = IMGf(:,:,end-1); % this just duplicates the last frame
     
+        % muIMG = mean(IMG(:,:,1:baselineTime),3);
+        % im = repmat(muIMG,1,1,size(IMG,3));
+        % IMGf = (IMG - im) ./ im;
     
+    elseif numel(size(IMG)) == 4
+        
+        muIMG = mean(IMG(:,:,1:baselineTime,:),3);
+        im = repmat(muIMG,1,1,size(IMG,3));
+        IMGf = (IMG - im) ./ im;
+        
+    end
 
+    
     
     
         % VISUALIZE AND ANNOTATE
@@ -745,6 +824,11 @@ end
 
 
 
+
+
+%----------------------------------------------------
+%        RESHAPE DATA BY TRIALS
+%----------------------------------------------------
 function reshapeData(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
@@ -770,6 +854,12 @@ end
 
 
 
+
+
+
+%----------------------------------------------------
+%        UNDO RESHAPE DATA
+%----------------------------------------------------
 function unshapeData(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
@@ -800,7 +890,9 @@ end
 
 
 
-
+%----------------------------------------------------
+%        ALIGN CS FRAMES BY CS ONSET
+%----------------------------------------------------
 function alignCSframes(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
@@ -847,6 +939,11 @@ end
 
 
 
+
+
+%----------------------------------------------------
+%        GET TIMEPOINT MEANS
+%----------------------------------------------------
 function timepointMeans(boxidselecth, eventdata)
 disableButtons; pause(.02);    
     
@@ -899,10 +996,9 @@ end
 
 
 
-
-
-
-
+%----------------------------------------------------
+%        GET ROI STATISTICS
+%----------------------------------------------------
 function getROIstats(boxidselecth, eventdata)
 disableButtons; pause(.02);
     
@@ -960,9 +1056,9 @@ end
 
 
 
-
-
-
+%----------------------------------------------------
+%        OPEN IMAGEJ API
+%----------------------------------------------------
 function openImageJ(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
@@ -1020,6 +1116,14 @@ end
 
 
 
+
+
+
+
+
+%----------------------------------------------------
+%        RUN CUSTOM FUNCTION
+%----------------------------------------------------
 function runCustom(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
@@ -1047,600 +1151,136 @@ end
 
 
 
-% --------  FUNCTIONS IM CONSIDERING  ----------
+%----------------------------------------------------
+%        MOTION CORRECTION
+%----------------------------------------------------
 
 function motioncorrection(hObject, eventdata)
    msgbox('Coming Soon!'); 
    return
    
-   %===============================================
-%% MOTION Stabilization
-% clc; clear all; close all;
+    % clc; clear all; close all;
 
-% Input video file which needs to be stabilized.
-% filename = 'shaky_car.avi';
-filename = 'GRIN_zstack.avi';
+    % Input video file which needs to be stabilized.
+    % filename = 'shaky_car.avi';
+    filename = 'GRIN_zstack.avi';
 
-hVideoSource = vision.VideoFileReader(filename, ...
-          'ImageColorSpace', 'Intensity','VideoOutputDataType', 'double');
+    hVideoSource = vision.VideoFileReader(filename, ...
+              'ImageColorSpace', 'Intensity','VideoOutputDataType', 'double');
 
 
-% Create geometric translator object used to compensate for movement.
-hTranslate = vision.GeometricTranslator( ...
-       'OutputSize', 'Same as input image', 'OffsetSource', 'Input port');
+    % Create geometric translator object used to compensate for movement.
+    hTranslate = vision.GeometricTranslator( ...
+           'OutputSize', 'Same as input image', 'OffsetSource', 'Input port');
 
 
-% Create template matcher object to compute location of best target match
-% in frame. Use location to find translation between successive frames.
-hTM = vision.TemplateMatcher('ROIInputPort', true, ...
-                            'BestMatchNeighborhoodOutputPort', true);
-                        
-
-% Create object to display the original video and the stabilized video.
-hVideoOut = vision.VideoPlayer('Name', 'Video Stabilization');
-hVideoOut.Position(1) = round(0.4*hVideoOut.Position(1));
-hVideoOut.Position(2) = round(1.5*(hVideoOut.Position(2)));
-hVideoOut.Position(3:4) = [900 550];
+    % Create template matcher object to compute location of best target match
+    % in frame. Use location to find translation between successive frames.
+    hTM = vision.TemplateMatcher('ROIInputPort', true, ...
+                                'BestMatchNeighborhoodOutputPort', true);
 
 
-    imgA = step(hVideoSource); % Read first frame into imgA
-    figure
-    imagesc(imgA);
-    title('USE MOUSE TO DRAW BOX AROUND BEST STABILIZATION OBJECT')
-    h1 = imrect;
-    pos1 = round(getPosition(h1)); % [xmin ymin width height]
-    
+    % Create object to display the original video and the stabilized video.
+    hVideoOut = vision.VideoPlayer('Name', 'Video Stabilization');
+    hVideoOut.Position(1) = round(0.4*hVideoOut.Position(1));
+    hVideoOut.Position(2) = round(1.5*(hVideoOut.Position(2)));
+    hVideoOut.Position(3:4) = [900 550];
 
-% Here we initialize some variables used in the processing loop.
 
-pos.template_orig = [pos1(1) pos1(2)]; % [x y] upper left corner
-pos.template_size = [pos1(3:4)];    % [width height]
-pos.search_border = [10 10];        % max horizontal and vertical displacement
+        imgA = step(hVideoSource); % Read first frame into imgA
+        figure
+        imagesc(imgA);
+        title('USE MOUSE TO DRAW BOX AROUND BEST STABILIZATION OBJECT')
+        h1 = imrect;
+        pos1 = round(getPosition(h1)); % [xmin ymin width height]
 
-pos.template_center = floor((pos.template_size-1)/2);
-pos.template_center_pos = (pos.template_orig + pos.template_center - 1);
-fileInfo = info(hVideoSource);
-W = fileInfo.VideoSize(1); % Width in pixels
-H = fileInfo.VideoSize(2); % Height in pixels
-BorderCols = [1:pos.search_border(1)+4 W-pos.search_border(1)+4:W];
-BorderRows = [1:pos.search_border(2)+4 H-pos.search_border(2)+4:H];
-sz = fileInfo.VideoSize;
-TargetRowIndices = ...
-  pos.template_orig(2)-1:pos.template_orig(2)+pos.template_size(2)-2;
-TargetColIndices = ...
-  pos.template_orig(1)-1:pos.template_orig(1)+pos.template_size(1)-2;
-SearchRegion = pos.template_orig - pos.search_border - 1;
-Offset = [0 0];
-Target = zeros(20,20);
-% Target = zeros(18,22);
-firstTime = true;
+
+    % Here we initialize some variables used in the processing loop.
+
+    pos.template_orig = [pos1(1) pos1(2)]; % [x y] upper left corner
+    pos.template_size = [pos1(3:4)];    % [width height]
+    pos.search_border = [10 10];        % max horizontal and vertical displacement
+
+    pos.template_center = floor((pos.template_size-1)/2);
+    pos.template_center_pos = (pos.template_orig + pos.template_center - 1);
+    fileInfo = info(hVideoSource);
+    W = fileInfo.VideoSize(1); % Width in pixels
+    H = fileInfo.VideoSize(2); % Height in pixels
+    BorderCols = [1:pos.search_border(1)+4 W-pos.search_border(1)+4:W];
+    BorderRows = [1:pos.search_border(2)+4 H-pos.search_border(2)+4:H];
+    sz = fileInfo.VideoSize;
+    TargetRowIndices = ...
+      pos.template_orig(2)-1:pos.template_orig(2)+pos.template_size(2)-2;
+    TargetColIndices = ...
+      pos.template_orig(1)-1:pos.template_orig(1)+pos.template_size(1)-2;
+    SearchRegion = pos.template_orig - pos.search_border - 1;
+    Offset = [0 0];
+    Target = zeros(20,20);
+    % Target = zeros(18,22);
+    firstTime = true;
 
 
 
-% Stream Processing Loop
+    % Stream Processing Loop
 
-% Processing loop using objects created above to perform stabilization
-nn = 0;
-while ~isDone(hVideoSource)
-nn = nn+1;
+    % Processing loop using objects created above to perform stabilization
+    nn = 0;
+    while ~isDone(hVideoSource)
+    nn = nn+1;
 
-    input = step(hVideoSource);
+        input = step(hVideoSource);
 
-    % Find location of Target in the input video frame
-    if firstTime
-      Idx = int32(pos.template_center_pos);
-      MotionVector = [0 0];
-      firstTime = false;
-    else
-      IdxPrev = Idx;
+        % Find location of Target in the input video frame
+        if firstTime
+          Idx = int32(pos.template_center_pos);
+          MotionVector = [0 0];
+          firstTime = false;
+        else
+          IdxPrev = Idx;
 
-      ROI = [SearchRegion, pos.template_size+2*pos.search_border];
-      Idx = step(hTM, input, Target, ROI);
-      
-      MotionVector = double(Idx-IdxPrev);
+          ROI = [SearchRegion, pos.template_size+2*pos.search_border];
+          Idx = step(hTM, input, Target, ROI);
+
+          MotionVector = double(Idx-IdxPrev);
+        end
+
+        [Offset, SearchRegion] = updatesearch(sz, MotionVector, ...
+            SearchRegion, Offset, pos);
+
+        % Translate video frame to offset the camera motion
+        Stabilized = step(hTranslate, input, fliplr(Offset));
+
+        Target = Stabilized(TargetRowIndices, TargetColIndices);
+
+        % Add black border for display
+        Stabilized(:, BorderCols) = minmin;
+        Stabilized(BorderRows, :) = minmin;
+
+        TargetRect = [pos.template_orig-Offset, pos.template_size];
+        SearchRegionRect = [SearchRegion, pos.template_size + 2*pos.search_border];
+
+        % Draw rectangles on input to show target and search region
+        input = insertShape(input, 'Rectangle', [TargetRect; SearchRegionRect],...
+                            'Color', 'white');
+        % Display the offset (displacement) values on the input image
+        txt = sprintf('(%+05.1f,%+05.1f)', Offset);
+        input = insertText(input(:,:,1),[191 215],txt,'FontSize',16, ...
+                        'TextColor', 'white', 'BoxOpacity', 0);
+        % Display video
+        step(hVideoOut, [input(:,:,1) Stabilized]);
+
+
+        sGRINs{nn} = Stabilized;
     end
 
-    [Offset, SearchRegion] = updatesearch(sz, MotionVector, ...
-        SearchRegion, Offset, pos);
-
-    % Translate video frame to offset the camera motion
-    Stabilized = step(hTranslate, input, fliplr(Offset));
-
-    Target = Stabilized(TargetRowIndices, TargetColIndices);
-
-    % Add black border for display
-    Stabilized(:, BorderCols) = minmin;
-    Stabilized(BorderRows, :) = minmin;
-
-    TargetRect = [pos.template_orig-Offset, pos.template_size];
-    SearchRegionRect = [SearchRegion, pos.template_size + 2*pos.search_border];
-
-    % Draw rectangles on input to show target and search region
-    input = insertShape(input, 'Rectangle', [TargetRect; SearchRegionRect],...
-                        'Color', 'white');
-    % Display the offset (displacement) values on the input image
-    txt = sprintf('(%+05.1f,%+05.1f)', Offset);
-    input = insertText(input(:,:,1),[191 215],txt,'FontSize',16, ...
-                    'TextColor', 'white', 'BoxOpacity', 0);
-    % Display video
-    step(hVideoOut, [input(:,:,1) Stabilized]);
-
-    
-    sGRINs{nn} = Stabilized;
-end
-
-% Release hVideoSource
-release(hVideoSource);
-% ===============================================
-
-
+    % Release hVideoSource
+    release(hVideoSource);
+    % ===============================================
    
 end
 
 
 
-
-% function mainGUIclosereq(src,callbackdata)
-%{
-function mainGUIclosereq(src,callbackdata)
-
-whoIsTryingToClose = callbackdata.Source.Name;
-disp(whoIsTryingToClose)
-
-    if strcmp(whoIsTryingToClose,'mainGUIwindow')
-
-       selection = questdlg('Close This Figure?',...
-          'Close Request Function',...
-          'Yes','No','Yes'); 
-       switch selection, 
-          case 'Yes',
-             delete(gcf)
-          case 'No'
-          return 
-       end
-       
-    else
-        
-        return
-
-    end
-   
-end
-%}
-% ------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-% --------  COMPILE  ~  LOAD  ~  SAVE  ----------
-
-% TBD
-
-
-
-
-
-
-% --------  TEMPORARY NOTES AND OTHER GARBAGE  ----------
-
-% FUNCTIONS FROM A SIMILAR GUI
-%{
-function getROI(boxidselecth, eventdata)
-
-    ROInum = str2num(boxidh.String);
-
-    lftthresholdMIN = str2double(lftthresholdMINh.String);
-    lftthresholdMAX = str2double(lftthresholdMAXh.String);
-        
-    intPminmax = prctile(intensity(:),...
-        [str2double(intThreshMin.String) str2double(intThreshMax.String)]);
-    
-    chimin = str2double(chiminh.String);
-    chimax = str2double(chimaxh.String);
-    
-    
-    if strcmp(stimtypeh.SelectedObject.String,'rectangle')
-        
-        hROI = imrect(haxFLIM);
-        
-        ROIpos = hROI.getPosition;
-        
-        ROIarea = ROIpos(3) * ROIpos(4);
-        
-    elseif strcmp(stimtypeh.SelectedObject.String,'elipse')
-        
-        hROI = imellipse(haxFLIM);
-        
-        ROIpos = hROI.getPosition;
-        
-        ROIarea = pi * (.5*ROIpos(3)) * (.5*ROIpos(4));
-        
-    elseif strcmp(stimtypeh.SelectedObject.String,'stamp')
-        
-        % [x,y] = FLIMginput(2,'custom');
-
-        hROI = impoint;
-        ROIpos = hROI.getPosition;
-        delete(hROI)
-        hROI = imellipse(haxFLIM, [ROIpos-round(stampSize/2) stampSize stampSize]);
-        
-        ROIarea = pi * (stampSize/2)^2;
-        
-    else % strcmp(stimtypeh.SelectedObject.String,'freehand')
-        
-        hROI = imfreehand(haxFLIM);
-        
-        ROIpos = hROI.getPosition;
-        ROIarea = polyarea(ROIpos(:,1),ROIpos(:,2));
-    end
-    
-    
-    hROIs{ROInum} = hROI;    
-    
-    ROImask       = hROI.createMask(phFLIM);
-
-    ChiGood       = (chi >= chimin & chi <= chimax);
-    IntensityGood = (intensity >= intPminmax(1) & intensity <= intPminmax(2));
-    LifeGood      = (lifetime >= lftthresholdMIN & lifetime <= lftthresholdMAX);
-    AllGood       = (ChiGood .* IntensityGood .* LifeGood) > 0;
-    
-    ROI_LIFETIME  = lifetime .* AllGood .* ROImask;
-    ROI_INTENSITY = intensity .* AllGood .* ROImask;
-    ROI_CHI       = chi .* AllGood .* ROImask;
-    
-    ROI_imgG      = imgG .* AllGood .* ROImask;
-    ROI_imgR      = imgR .* AllGood .* ROImask;
-    
-    
-    
-    ROI_LIFETIME_MEAN  = mean(ROI_LIFETIME(ROI_LIFETIME > 0));
-    ROI_INTENSITY_MEAN = mean(ROI_INTENSITY(ROI_INTENSITY > 0));
-    ROI_CHI_MEAN       = mean(ROI_CHI(ROI_CHI > 0));
-    ROI_imgG_MEAN       = mean(ROI_imgG(ROI_imgG > 0))*1000;
-    ROI_imgR_MEAN       = mean(ROI_imgR(ROI_imgR > 0))*1000;
-    
-    
-    flimdata{ROInum} = {ROI_LIFETIME, ROI_INTENSITY, ROI_CHI,...
-                        ROI_LIFETIME_MEAN, ROI_INTENSITY_MEAN, ROI_CHI_MEAN, ...
-                        ROIarea, ROI_imgG_MEAN, ROI_imgR_MEAN};
-                    
-                    
-                    
-    fprintf('\n Life: % 5.5g \n Inte: % 5.5g \n Chi: % 5.5g \n Area: % 5.5g \n GFP: % 5.5g \n RFP: % 5.5g \n\n',...
-                ROI_LIFETIME_MEAN, ROI_INTENSITY_MEAN,ROI_CHI_MEAN,ROIarea,...
-                ROI_imgG_MEAN, ROI_imgR_MEAN)
-
-            
-
-    doagainROI = questdlg('Select next ROI?', 'Select next ROI?', 'Yes', 'No', 'No');
-    switch doagainROI
-       case 'Yes'
-            set(boxidh,'String',num2str((str2num(boxidh.String)+1)) );
-            getROI
-       case 'No'
-           set(boxidh,'String',num2str((str2num(boxidh.String)+1)) );
-           % keyboard
-    end
-
-    set(gcf,'Pointer','arrow')
-
-end
-
-
-
-function GetMouseLoc(boxidselecth, eventdata)
-
-% set(gcf,'Pointer','hand')
-
-        if(saveROI(str2double(get(boxidh, 'String')),1)==0)
-            %[x, y] = ginput(2);
-            [x,y] = FLIMginput(2,'custom');
-            x1=x(1);
-            y1=y(1);
-            x2=x(2);
-            y2=y(2);
-            calcROIcoor(x1, y1, x2, y2, str2double(get(boxidh, 'String')));
-        else 
-            duplicateROI = questdlg('Box already exists. Overwrite?', 'Duplicate ROI', 'Yes', 'No', 'No');
-            switch duplicateROI
-                case 'Yes'
-                    [x, y] = ginput(2);
-                    x1=x(1);
-                    y1=y(1);
-                    x2=x(2);
-                    y2=y(2);
-                    calcROIcoor(x1, y1, x2, y2, str2double(get(boxidh, 'String')));
-                case 'No'
-            end
-        end
-
-        doagainROI = questdlg('Select next ROI?', 'Select next ROI?', 'Yes', 'No', 'No');
-        switch doagainROI
-           case 'Yes'
-                set(boxidh,'String',num2str((str2num(boxidh.String)+1)) );
-                GetMouseLoc
-           case 'No'
-        end
-
-set(gcf,'Pointer','arrow')
-
-end
-
-
-
-function closelftintenw(hObject, eventdata)
-%Closelftintenw sets both lifetime image and intensity image windows to
-%invisible. The initial menu becomes visible again for further selection. 
-    
-       set(mainguih, 'Visible', 'Off');
-       set(initmenuh, 'Visible', 'On');
-       saveROI = zeros(200, 17);
-       saveData = zeros(200, 9);
-       datastack = zeros(1,1,3,'double');
-       lifetime = zeros(1, 1);
-       intensity = zeros(1, 1);
-       chi = zeros(1, 1);
-       lifetimeimage = zeros(1, 1);
-       intensityimage = zeros(1, 1);
-       xdim = 0;
-       ydim = 0;
-end
-
-
-
-function keypresszoom(hObject, eventData, key)
-    
-    
-
-    
-        % --- ZOOM ---
-        
-        if strcmp(mainguih.CurrentCharacter,'=')
-            
-            % IN THE FUTURE USE MOUSE LOCATION TO ZOOM
-            % INTO A SPECIFIC POINT. TO QUERY MOUSE LOCATION
-            % USE THE METHOD: mainguih.CurrentPoint
-            
-            zoom(1.5)
-        end
-        
-        if strcmp(mainguih.CurrentCharacter,'-')
-            zoom(.5)
-        end
-                
-        
-        % --- PAN ---
-        
-        if strcmp(mainguih.CurrentCharacter,'p')
-
-            pan('on')        
-            % h = pan;
-            % h.ActionPreCallback = @myprecallback;
-            % h.ActionPostCallback = @mypostcallback;
-            % h.Enable = 'on';
-        end
-        if strcmp(mainguih.CurrentCharacter,'o')
-            pan('off')        
-        end
-        
-        if strcmp(mainguih.CurrentCharacter,'f')
-            haxGRIN.XLim = haxGRIN.XLim+20;
-            haxCCDR.XLim = haxCCDR.XLim+20;
-            haxFLIM.XLim = haxFLIM.XLim+20;
-        end
-        
-        if strcmp(mainguih.CurrentCharacter,'s')
-            haxGRIN.XLim = haxGRIN.XLim-20;
-            haxCCDR.XLim = haxCCDR.XLim-20;
-            haxFLIM.XLim = haxFLIM.XLim-20;
-        end
-        
-        if strcmp(mainguih.CurrentCharacter,'e')
-            haxGRIN.YLim = haxGRIN.YLim+20;
-            haxCCDR.YLim = haxCCDR.YLim+20;
-            haxFLIM.YLim = haxFLIM.YLim+20;
-        end
-        
-        if strcmp(mainguih.CurrentCharacter,'d')
-            haxGRIN.YLim = haxGRIN.YLim-20;
-            haxCCDR.YLim = haxCCDR.YLim-20;
-            haxFLIM.YLim = haxFLIM.YLim-20;
-        end
-        
-        
-        % --- RESET ZOOM & PAN ---
-        
-        if strcmp(mainguih.CurrentCharacter,'0')
-            zoom out
-            zoom reset
-            haxGRIN.XLim = imXlim;
-            haxGRIN.YLim = imYlim;
-            haxCCDR.XLim = imXlim;
-            haxCCDR.YLim = imYlim;
-            haxFLIM.XLim = imXlim;
-            haxFLIM.YLim = imYlim;
-        end
-        
-        
-end
-
-
-
-function boxselection(source,callbackdata)
-    
-    % callbackdata.OldValue.String
-    % stimtypeh.SelectedObject.String
-    % stimtype = callbackdata.NewValue.String;
-    
-    display(['Previous: ' callbackdata.OldValue.String]);
-    display(['Current: ' callbackdata.NewValue.String]);
-    display('------------------');
-
-end
-
-
-
-function getStampSize(boxidselecth, eventdata)
-    
-    stampSize = stampSizeH.String;
-
-   disp(['Stamp size is now:' num2str(stampSize)])
-
-end
-
-%}
-%{
-function saveFile(savefileh, eventData)
-    
-    
-    prepForSave(savefileh, eventData)
-    
-
-    cd(datfilefdir);
-
-    saveDatafilename = inputdlg('Enter a filename to save data','file name',1,...
-                                {datfilef(1:end-4)});
-
-    Datafilename = char(strcat(saveDatafilename));
-
-    maglevel = str2double(magh.String);
-    
-    if numel(dpos) < 1; % If dendrite size was manually selected, numel(dpos) > 1
-        dendritesize = maglevel*5;
-    end
-    
-    
-    
-    for nn = 1:size(flimdata,2)
-        
-        VxD = flimdata{1,nn}{7} ./ (.5 .* dendritesize).^2;
-        
-        dVOL = VxD .* 0;
-        
-        flimdat(nn,:) = [flimdata{1,nn}{4:end} maglevel dendritesize VxD dVOL];        
-        ROInames{nn} = num2str(nn);        
-    end
-    
-    
-    
-    flimtab = array2table(flimdat);
-    flimtab.Properties.VariableNames = {'LIFETIME' 'INTENSITY' 'CHISQR' 'VOLUME' ...
-                                        'GFP' 'RFP' 'MAG' 'DSIZE' 'VxD' 'dVOL'};
-    flimtab.Properties.RowNames = ROInames;
-    
-    
-    
-    writetable(flimtab,[Datafilename '.csv'],'WriteRowNames',true)
-    disp('Data saved successfully!')
-    % msgbox('Data saved successfully');
-
-
-%     OpenFLIMdataTool = questdlg('Open FLIMX plots?',...
-%                                 'Open FLIMX plots?',...
-%                                 'Yes', 'No', 'No');
-%                             
-%     switch OpenFLIMdataTool
-%        case 'Yes'
-%             assignin('base','FXdata',flimdata)
-%             assignin('base','FXdat',flimdat)
-%             assignin('base','FXcsv',flimtab)
-%             disp('Welcome to the FLIMXplots toolbox')
-%             %edit FLIMXplots.m
-%             FLIMXplots(flimdata,flimdat,flimtab,Datafilename)
-%             close all
-%        case 'No'
-%     end
-
-    cd(home);
-
-
-end
-%}
-%{
-function grinlenstoolbox(hObject, eventdata)
-%Load file triggers uiresume; the initial menu is set to invisible. Prompts
-%user for file to load, copies the datastack from the file; sets the image 
-%windows to visible, and plots the images.    
-
-    set(initmenuh, 'Visible', 'Off');
-    set(mainguih, 'Visible', 'On');
-    
-    
-    %----------------------------------------------------
-    %           SET USER-EDITABLE GUI VALUES
-    %----------------------------------------------------
-    set(intThreshMin, 'String', num2str(intenseThreshMIN));
-    set(intThreshMax, 'String', num2str(intenseThreshMAX));
-
-    set(intThreshMin, 'String', num2str(intenseThreshMIN));
-    set(intThreshMax, 'String', num2str(intenseThreshMAX));
-
-    set(lftthresholdMINh, 'String', num2str(lifeThreshMIN));
-    set(lftthresholdMAXh, 'String', num2str(lifeThreshMAX));
-
-    set(chiminh, 'String', num2str(chiThreshMIN));
-    set(chimaxh, 'String', num2str(chiThreshMAX));
-
-    set(magh, 'String', num2str(magnification));
-
-    set(mainguih, 'Name', datfilef);
-    set(boxidh, 'String', int2str(1));
-    set(haxGRIN, 'XLim', [1 size(imgG,2)], 'YLim', [1 size(imgG,1)]);
-    % set(haxGRIN, 'YLim', [1 ydim]);
-    set(haxCCDR, 'XLim', [1 size(imgR,2)], 'YLim', [1 size(imgR,1)]);
-    % set(haxCCDR, 'YLim', [1 ydim]);
-    set(haxFLIM, 'XLim', [1 xdim]);
-    set(haxFLIM, 'YLim', [1 ydim]);
-    
-    
-    set(stampSizeH, 'String', num2str(stampSize));
-    stimtypeh.SelectedObject = stimtypeh4; % Set radiobutton to stamp
-    % stimtype = stimtypeh.SelectedObject.String;
-    %----------------------------------------------------
-    
-    
-    
-    
-    %----------------------------------------------------
-    %                   DRAW IMAGE
-    %----------------------------------------------------
-    
-    axes(haxGRIN)
-    colormap(haxGRIN,hot)
-    phGRIN = imagesc(imgG , 'Parent', haxGRIN);
-              pause(1)
-              
-    axes(haxCCDR)
-    colormap(haxCCDR,hot)
-    phCCDR = imagesc(imgR, 'Parent', haxCCDR);
-        pause(1)
-        
-    axes(haxFLIM)    
-    colormap(haxFLIM,hot)
-    phFLIM = imagesc(intensity, 'Parent', haxFLIM,...
-                  [prctile(intensity(:),intenseThreshMIN) prctile(intensity(:),intenseThreshMAX)]);
-        pause(1)
-        axes(haxFLIM)
-    
-    pause(.2)
-    imXlim = haxFLIM.XLim;
-    imYlim = haxFLIM.YLim;
-    
-
-
-end
-
-
-
-%}
 
 
 end
