@@ -68,12 +68,14 @@ disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
 global mainguih imgLogo
 
+global GRINstruct GRINtable
+
 global IMG xlsN xlsT xlsR
 
 global frame_period framesUncomp CS_type US_type delaytoCS CS_length compressFrms
 global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial 
 global total_frames CS_lengthFrames
-global GRINstruct GRINtable
+
 
 global cropAmount blockSize previewNframes customFunOrder baselineTime
 cropAmount = 18;
@@ -603,6 +605,7 @@ function importimgstack(hObject, eventdata)
     % CREATE ID FOR EACH UNIQUE CS+US COMBO AND DETERMINE ROW 
     [GRINstruct, GRINtable] = gettrialtypes(total_trials, CS_type, US_type, framesPerTrial);
 
+    GRINstruct.file  = imgfilename;
 
     disp('GRINstruct contains the following structural arrays:')
     disp('{  Example usage: GRINstruct.tf(:,1)  }')
@@ -923,6 +926,9 @@ disableButtons; pause(.02);
     USonset  = round((CSonsetDelay+CS_length+1) .* framesPerSec);  % US first frame in trial
     USoffset  = round((CSonsetDelay+CS_length+2) .* framesPerSec); % US last frame in trial
     CSUSonoff = [CSonset CSoffset USonset USoffset];
+    
+    GRINstruct.CSUSonoff = CSUSonoff;
+    
     fprintf(['\n\n (in frames)...\n   CSon: % 6.1d \n   CSoff: % 5.1d ',...
              '\n   USon: % 6.1d \n   USoff: % 5.1d '],CSUSonoff);
     
