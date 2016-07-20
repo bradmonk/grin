@@ -614,12 +614,11 @@ function importimgstack(hObject, eventdata)
     disp('GRINtable includes the following columns:')
     disp(GRINtable(1:10,:))
 
-    
-   
+    CSonsetDelay = min(delaytoCS);
+    set(alignCSFramesnumH, 'String', num2str(CSonsetDelay));
         
      CSUSvals = unique(GRINstruct.csus);
      set(CSUSpopupH, 'String', CSUSvals);
-    
     
     
 enableButtons
