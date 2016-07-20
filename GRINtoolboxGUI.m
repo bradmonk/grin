@@ -673,10 +673,14 @@ disableButtons; pause(.02);
     % As a shortcut and to retain the original frame number I am using
     % circshift to move the first image to the end of the image matrix
 
-    im = circshift( IMG , -1 ,3);
-
-    IMGf = (im - IMG) ./ im;
-    IMGf(:,:,end) = IMGf(:,:,end-1);
+    % im = circshift( IMG , -1 ,3);
+    % IMGf = (im - IMG) ./ im;
+    % IMGf(:,:,end) = IMGf(:,:,end-1); % this just duplicates the last frame
+        
+    im = repmat(mean(IMG,3),1,1,size(IMG,3));
+    IMGf = (IMG - im) ./ im;
+    
+    
 
     
     
