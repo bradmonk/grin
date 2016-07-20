@@ -125,17 +125,23 @@ global imgfilename imgpathname xlsfilename xlspathname
 % -----------------------------------------------------------------
 % INITIAL SUBMENU GUI SETUP (GRIN TOOLBOX ~ MOTION CORRECTION)
 
-initmenuh = figure('Units','normalized','OuterPosition',[.3 .4 .3 .2], ...
+initmenuh = figure('Units','normalized','OuterPosition',[.25 .4 .4 .2], ...
     'BusyAction', 'cancel','Menubar', 'none',...
     'Name', 'GRIN analysis', 'Tag', 'GRIN analysis');
 
-grinlenstoolboxh = uicontrol('Parent', initmenuh, 'Units','normalized', 'Position', [.05 .05 .45 .9],...
-    'String', 'Start GRIN lens toolbox', 'FontSize', 14, 'Tag', 'Start GRIN lens toolbox',...
+grinlenstoolboxh = uicontrol('Parent', initmenuh, 'Units','normalized', 'Position', [.03 .05 .47 .9],...
+    'String', 'Start GRIN lens toolbox', 'FontSize', 16, 'Tag', 'Start GRIN lens toolbox',...
     'Callback', @grinlenstoolbox);
 
-motioncorrectionh = uicontrol('Parent', initmenuh, 'Units','normalized', 'Position', [.52 .05 .45 .9],...
+motioncorrectionh = uicontrol('Parent', initmenuh, 'Units','normalized', 'Position', [.52 .51 .45 .44],...
     'String', 'Perform motion correction', 'FontSize', 14, 'Tag', 'Perform motion correction',...
     'Callback', @motioncorrection);
+
+
+formatXLSH = uicontrol('Parent', initmenuh, 'Units','normalized', 'Position', [.52 .05 .45 .44],...
+    'String', 'Multiformat XLS sheets', 'FontSize', 14, 'Tag', 'Multiformat XLS sheets',...
+    'Callback', @formatXLS);
+
 
 
 % -----------------------------------------------------------------
@@ -284,7 +290,7 @@ runCustomH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
 
 
 
-enableButtons
+% enableButtons
 
 
 % -----------------------------------------------------------------
@@ -440,11 +446,41 @@ function importimgstack(hObject, eventdata)
         'Select image stack to import', thisfilepath);        
     end
     
+    % keyboard
+    
+    
     if xlsfilename
         disp('xls data path was set manually')
     else
-        [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
-        'Select Excel file associated with the TIF stack', imgpathname);
+    
+        if numel(imgfilename) == 16
+
+            xlsFiles = dir([imgpathname, imgfilename(1:end-5) '*.xls*']);
+
+        elseif numel(imgfilename) == 15
+
+            xlsFiles = dir([imgpathname, imgfilename(1:end-4) '*.xls*']);
+
+        end
+
+        if numel(xlsFiles) == 1
+
+            choice = questdlg({'Matching xls file found.', 'Would you like to import:',...
+                               xlsFiles.name}, ...
+                               'Import XLS file', ...
+                               'Yes','No (import manually)','Yes');
+            switch choice
+                case 'Yes'
+                    disp([choice ' importing xls data...'])
+                    xlsfilename = xlsFiles.name;
+                    xlspathname = imgpathname;
+                case 'No (import manually)'
+                    [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
+                    'Select Excel file associated with the TIF stack', imgpathname);
+            end
+
+        end
+    
     end
     
     
@@ -630,16 +666,19 @@ disableButtons; pause(.02);
 
     sz = size(IMG,3);
     progresstimer('Segmenting images into blocks...')
+    % hwb = waitbar(0,'Segmenting image into tiles...');
     for nn = 1:sz
 
         IMGb(:,:,nn) = blockproc(IMG(:,:,nn),[blockSize blockSize],fun);
         
         if ~mod(nn,100)
+            % waitbar(nn/sz)
             progresstimer(nn/sz)
         end
     
     end
-
+    
+        % close(hwb)
         % VISUALIZE AND ANNOTATE
         fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
         fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGb)));
