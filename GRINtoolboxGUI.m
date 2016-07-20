@@ -262,7 +262,10 @@ CSUSpopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
               
 getROIstatsH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.20 0.65 0.08], 'FontSize', 14, 'String', 'Compute ROI statistics ',...
-    'Callback', @getROIstats, 'Enable','off');               
+    'Callback', @getROIstats, 'Enable','off');
+plotROIstatsH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
+    'Position', [0.71 0.21 0.27 0.06], 'FontSize', 10, 'String', 'Plot all stats',...
+    'Callback', @plotROIstats, 'Enable','off'); 
 
 
 openImageJH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
@@ -383,6 +386,7 @@ unshapeDataH.Enable = 'on';
 alignCSFramesH.Enable = 'on';
 timepointMeansH.Enable = 'on';
 getROIstatsH.Enable = 'on';
+plotROIstatsH.Enable = 'on';
 runCustomH.Enable = 'on';
 
 if numel(size(IMG)) > 1 && numel(size(IMG)) < 4;
@@ -405,6 +409,7 @@ unshapeDataH.Enable = 'off';
 alignCSFramesH.Enable = 'off';
 timepointMeansH.Enable = 'off';
 getROIstatsH.Enable = 'off';
+plotROIstatsH.Enable = 'off';
 runCustomH.Enable = 'off';
 openImageJH.Enable = 'off';
 
@@ -1044,6 +1049,72 @@ disableButtons; pause(.02);
     % previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff, ROImu)
     
     
+enableButtons
+disp('Compute ROI statistics completed!')
+end
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        GET ROI STATISTICS
+%----------------------------------------------------
+function plotROIstats(boxidselecth, eventdata)
+disableButtons; pause(.02);
+
+    % keyboard
+
+    blockSize = str2num(imgblocksnumH.String);
+
+    tv1 = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
+    
+    tv2 = squeeze(reshape(tv1,numel(tv1(:,:,1)),[],size(tv1,3),size(tv1,4)));
+    
+    tv3 = tv2(:,:,1);
+
+
+
+	%==============================================%
+	Mu = mean(tv3,1);
+    Sd = std(tv3,0,1);
+    Se = Sd./sqrt(numel(Mu));
+	y_Mu = Mu';
+    x_Mu = (1:numel(Mu))';
+    % e_Mu = Se';
+    e_Mu = Sd';
+	xx_Mu = 1:0.1:max(x_Mu);
+	yy_Mu = spline(x_Mu,y_Mu,xx_Mu);
+    ee_Mu = spline(x_Mu,e_Mu,xx_Mu);
+
+    
+    
+    fh1=figure('Units','normalized','OuterPosition',[.1 .1 .8 .6],'Color','w');
+    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax1.YLim = [-.1 .1];
+    hax2 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax2.YLim = [-.1 .1];
+    axis off; hold on;    
+
+
+    axes(hax1)
+    plot(tv2(:,:,1)')
+    pause(.2)
+
+    axes(hax2)    
+    [ph1, po1] = envlineplot(xx_Mu',yy_Mu', ee_Mu','cmap',[.1 .95 .4],...
+                            'alpha','transparency', 0.6);
+    pause(.2)
+
+    hax1.YLim = [-.15 .15];
+    hax2.YLim = [-.15 .15];
+    pause(.2)
+
+
+
 enableButtons
 disp('Compute ROI statistics completed!')
 end
