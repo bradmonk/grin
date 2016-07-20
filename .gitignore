@@ -1,6 +1,7 @@
 # OS X temporary files
 .DS_Store
 *.m~
+*.mat
 *.aux
 *.log
 *.out
