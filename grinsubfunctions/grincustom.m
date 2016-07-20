@@ -1,28 +1,21 @@
 function [varargout] = grincustom(IMG, GRINstruct, GRINtable, customFunOrder)
 
-% WRITE YOUR CUSTOM CODE BELOW FOR PROCESSING GRIN DATA
+%% EXPORT VARIABLES TO WORKSPACE
 
-%% CUSTOM CODE
-
-
-
-
-
-
-
-
+checkLabels = {'Save IMG to variable named:' ...
+               'Save GRINstruct to variable named:' ...
+               'Save GRINtable to variable named:'}; 
+varNames = {'IMG','GRINstruct','GRINtable'}; 
+items = {IMG,GRINstruct,GRINtable};
+export2wsdlg(checkLabels,varNames,items,...
+             'Save Variables to Workspace');
 
 
+         
+%% CALL YOUR CUSTOM FUNCTIONS BELOW
+
+% mycustomfunctioncalls(IMG,GRINstruct,GRINtable);
 
 
-
-
-
-
-
-
-
-
-%%
 end
 %% EOF
