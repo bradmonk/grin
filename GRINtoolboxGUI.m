@@ -55,6 +55,10 @@ thisfile = 'GRINtoolboxGUI.m';
 thisfilepath = fileparts(which(thisfile));
 cd(thisfilepath);
 
+addpath(genpath(thisfilepath))
+
+% rmpath(genpath([thisfilepath,'/.git']))
+
 
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
@@ -112,10 +116,10 @@ muIMGS = [];
 
 global imgfilename imgpathname xlsfilename xlspathname
 
-imgfilename = 'gc33_032316g.tif';
-imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-xlsfilename = 'gc33_032316.xlsx';
-xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+% imgfilename = 'gc33_032316g.tif';
+% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+% xlsfilename = 'gc33_032316.xlsx';
+% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 
 
 
