@@ -103,7 +103,7 @@ smoothSD = .14;
 smoothRes = .1;
 
 
-global muIMGS
+global muIMGS phGRIN
 muIMGS = [];
 
 
@@ -112,10 +112,10 @@ muIMGS = [];
 
 global imgfilename imgpathname xlsfilename xlspathname
 
-% imgfilename = 'gc33_032316g.tif';
-% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-% xlsfilename = 'gc33_032316.xlsx';
-% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+imgfilename = 'gc33_032316g.tif';
+imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+xlsfilename = 'gc33_032316.xlsx';
+xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 
 
 
@@ -147,12 +147,12 @@ formatXLSH = uicontrol('Parent', initmenuh, 'Units','normalized', 'Position', [.
 
 
 
-% -----------------------------------------------------------------
-%%           MAIN FLIM ANALYSIS GUI WINDOW SETUP 
-% -----------------------------------------------------------------
+%########################################################################
+%%              MAIN FLIM ANALYSIS GUI WINDOW SETUP 
+%########################################################################
 
 % mainguih.CurrentCharacter = '+';
-mainguih = figure('Units', 'normalized','Position', [.1 .1 .8 .6], 'BusyAction',...
+mainguih = figure('Units', 'normalized','Position', [.05 .1 .85 .65], 'BusyAction',...
     'cancel', 'Name', 'mainguih', 'Tag', 'mainguih','Visible', 'Off'); 
      % 'KeyPressFcn', {@keypresszoom,1}, 'CloseRequestFcn',{@mainGUIclosereq}
      % intimagewhtb = uitoolbar(mainguih);
@@ -160,124 +160,213 @@ mainguih = figure('Units', 'normalized','Position', [.1 .1 .8 .6], 'BusyAction',
 
 % -------- MAIN FIGURE WINDOW --------
 haxGRIN = axes('Parent', mainguih, 'NextPlot', 'replacechildren',...
-    'Position', [0.05 0.05 0.45 0.9], 'PlotBoxAspectRatio', [1 1 1], ...
+    'Position', [0.01 0.02 0.40 0.85], 'PlotBoxAspectRatio', [1 1 1], ...
     'XColor','none','YColor','none','YDir','reverse'); 
     % ,'XDir','reverse',...
     
 % -------- IMPORT IMAGE STACK & EXCEL DATA BUTTON --------
 importimgstackH = uicontrol('Parent', mainguih, 'Units', 'normalized', ...
-    'Position', [0.51 0.90 0.47 0.08], 'FontSize', 14, ...
+    'Position', [0.01 0.90 0.40 0.08], 'FontSize', 14, ...
     'String', 'Import Image Stack & Excel Data', ...
     'Callback', @importimgstack);
 
 
 
+imgsliderH = uicontrol('Parent', mainguih, 'Units', 'normalized','Style','slider',...
+	'Max',100,'Min',1,'Value',1,'SliderStep',[0.01 0.10],...
+	'Position', [0.01 0.86 0.40 0.03], 'Callback', @imgslider);
 
 
 
 
 
 
-
-
-% -------- IMAGE PROCESSING PANEL --------
+%----------------------------------------------------
+%           IMAGE PROCESSING PANEL
+%----------------------------------------------------
 IPpanelH = uipanel('Title','Image Processing','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
-    'Position', [0.51 0.05 0.45 0.8]); % 'Visible', 'Off',
+    'Position', [0.43 0.25 0.35 0.73]); % 'Visible', 'Off',
+
+
+
+runallIPH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.86 0.95 0.10], 'FontSize', 13, 'String', 'Run All Selected Processes',...
+    'Callback', @runallIP, 'Enable','off'); 
+
+checkbox1H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.02 0.71 .05 .05] ,'String','', 'Value',1);
+checkbox2H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.02 0.61 .05 .05] ,'String','', 'Value',1);
+checkbox3H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.02 0.51 .05 .05] ,'String','', 'Value',1);
+checkbox4H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.02 0.41 .05 .05] ,'String','', 'Value',1);
+checkbox5H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.02 0.31 .05 .05] ,'String','', 'Value',1);
+checkbox6H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.02 0.21 .05 .05] ,'String','', 'Value',1);
+checkbox7H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.02 0.11 .05 .05] ,'String','', 'Value',1);
 
 
 smoothimgH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.90 0.65 0.08], 'FontSize', 14, 'String', 'Smooth Images',...
+    'Position', [0.08 0.70 0.60 0.08], 'FontSize', 13, 'String', 'Smooth Images',...
     'Callback', @smoothimg, 'Enable','off'); 
 smoothimgtxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.96 0.27 0.03], 'FontSize', 11,'String', 'Smooth Amount (stdev)');
+    'Position', [0.71 0.76 0.27 0.03], 'FontSize', 11,'String', 'Smooth Amount (std)');
 smoothimgnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.71 0.91 0.27 0.05], 'FontSize', 14); 
+    'Position', [0.71 0.71 0.27 0.05], 'FontSize', 13); 
 
 
 
 cropimgH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.80 0.65 0.08], 'FontSize', 14, 'String', 'Crop Images',...
+    'Position', [0.08 0.60 0.60 0.08], 'FontSize', 13, 'String', 'Crop Images',...
     'Callback', @cropimg, 'Enable','off'); 
 cropimgtxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.86 0.27 0.03], 'FontSize', 11,'String', 'Crop Amount (pixels)');
+    'Position', [0.71 0.66 0.27 0.03], 'FontSize', 11,'String', 'Crop Amount (pxl)');
 cropimgnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.71 0.81 0.27 0.05], 'FontSize', 14); 
+    'Position', [0.71 0.61 0.27 0.05], 'FontSize', 13); 
 
 
 
 imgblocksH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.70 0.65 0.08], 'FontSize', 14, 'String', 'Block-Segment Images',...
+    'Position', [0.08 0.50 0.60 0.08], 'FontSize', 13, 'String', 'Block-Segment Images',...
     'Callback', @imgblocks, 'Enable','off'); 
 imgblockstxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.76 0.27 0.03], 'FontSize', 11,'String', 'Tile Size (pixels)');
+    'Position', [0.71 0.56 0.27 0.03], 'FontSize', 11,'String', 'Tile Size (pxl)');
 imgblocksnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.71 0.71 0.27 0.05], 'FontSize', 14); 
+    'Position', [0.71 0.51 0.27 0.05], 'FontSize', 13); 
 
 
 
 
 reshapeDataH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.60 0.65 0.08], 'FontSize', 13, 'String', 'Reshape stack by trial (4D matrix) ',...
+    'Position', [0.08 0.40 0.60 0.08], 'FontSize', 13, 'String', 'Reshape stack by trial (4D) ',...
     'Callback', @reshapeData, 'Enable','off'); 
 unshapeDataH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.71 0.61 0.27 0.06], 'FontSize', 10, 'String', 'Undo reshape (make 3D) ',...
+    'Position', [0.71 0.41 0.27 0.06], 'FontSize', 10, 'String', 'Undo reshape (3D) ',...
     'Callback', @unshapeData, 'Enable','off'); 
 
 
 
 alignCSFramesH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.50 0.65 0.08], 'FontSize', 14, 'String', 'Align frames by CS onset',...
+    'Position', [0.08 0.30 0.60 0.08], 'FontSize', 13, 'String', 'Align frames by CS onset',...
     'Callback', @alignCSframes, 'Enable','off');
 alignCSFramestxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.56 0.27 0.03], 'FontSize', 11,'String', 'Delay to CS onset (sec)');
+    'Position', [0.71 0.36 0.27 0.03], 'FontSize', 11,'String', 'Delay to CS onset (s)');
 alignCSFramesnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.71 0.51 0.27 0.05], 'FontSize', 14); 
+    'Position', [0.71 0.31 0.27 0.05], 'FontSize', 13); 
 
 
 
 dFoverFH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.40 0.65 0.08], 'FontSize', 14, 'String', 'Compute dF / F',...
+    'Position', [0.08 0.20 0.60 0.08], 'FontSize', 13, 'String', 'Compute dF / F',...
     'Callback', @dFoverF, 'Enable','off'); 
 dFoverFtxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.46 0.27 0.03], 'FontSize', 11,'String', 'Baseline time (s)');
+    'Position', [0.71 0.26 0.27 0.03], 'FontSize', 11,'String', 'Baseline time (s)');
 dFoverFnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.71 0.41 0.27 0.05], 'FontSize', 14);
-
-
-
+    'Position', [0.71 0.21 0.27 0.05], 'FontSize', 13);
 
 
 
 timepointMeansH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.30 0.55 0.08], 'FontSize', 13, 'String', 'Compute same-timepoint means ',...
-    'Callback', @timepointMeans, 'Enable','off');
-
-
-              
+    'Position', [0.08 0.10 0.60 0.08], 'FontSize', 13, 'String', 'Compute trial means ',...
+    'Callback', @timepointMeans, 'Enable','off');              
 CSUSpopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
-                  'Units', 'normalized', 'String', {'CS','US'},...
-                  'Position', [0.65 0.31 0.34 0.05],...
-                  'Callback', @CSUSpopup);
+    'Units', 'normalized', 'String', {'CS','US'},...
+    'Position', [0.70 0.11 0.28 0.05],...
+    'Callback', @CSUSpopup);
+
 
               
+
+%----------------------------------------------------
+%           DATA GRAPHS AND FIGURES PANEL
+%----------------------------------------------------
+graphspanelH = uipanel('Title','Graphs and Figures','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],...
+    'Position', [0.43 0.02 0.35 0.20]); % 'Visible', 'Off',
               
-getROIstatsH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.20 0.65 0.08], 'FontSize', 14, 'String', 'Compute ROI statistics ',...
+getROIstatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.65 0.45 0.28], 'FontSize', 12, 'String', 'Select ROI & Plot',...
     'Callback', @getROIstats, 'Enable','off');
-plotROIstatsH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.71 0.21 0.27 0.06], 'FontSize', 10, 'String', 'Plot all stats',...
+plotROIstatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
+    'Position', [0.53 0.65 0.45 0.28], 'FontSize', 12, 'String', 'Plot Tile Data',...
     'Callback', @plotROIstats, 'Enable','off'); 
 
 
-openImageJH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.02 0.45 0.08], 'FontSize', 14, 'String', 'Open stack in ImageJ ',...
+
+%----------------------------------------------------
+%    CUSTOM FUNCTIONS PANEL
+%----------------------------------------------------
+customfunpanelH = uipanel('Title','Custom Code & Data Exploration','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],...
+    'Position', [0.80 0.64 0.18 0.34]); % 'Visible', 'Off',
+              
+runCustomAH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function A',...
+    'Callback', @runCustomA);
+
+runCustomBH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function B',...
+    'Callback', @runCustomB);
+
+runCustomCH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function C',...
+    'Callback', @runCustomC);
+
+runCustomDH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function D',...
+    'Callback', @runCustomD);
+
+
+
+
+
+%----------------------------------------------------
+%    DATA EXPLORATION & API PANEL
+%----------------------------------------------------
+explorepanelH = uipanel('Title','Data Exploration & API','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],...
+    'Position', [0.80 0.25 0.18 0.34]); % 'Visible', 'Off',
+              
+openImageJH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Open stack in ImageJ ',...
     'Callback', @openImageJ, 'Enable','off');
 
+exploreAH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', 'Explore Data A',...
+    'Callback', @exploreA, 'Enable','off');
 
-runCustomH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.53 0.02 0.45 0.08], 'FontSize', 14, 'String', 'Run Custom Function ',...
-    'Callback', @runCustom, 'Enable','off');
+exploreBH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Explore Data B',...
+    'Callback', @exploreB, 'Enable','off');
+
+exploreCH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Explore Data C',...
+    'Callback', @exploreC, 'Enable','off');
+
+
+
+%----------------------------------------------------
+%    SAVE AND EXPORT DATA
+%----------------------------------------------------
+exportpanelH = uipanel('Title','I/O','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],...
+    'Position', [0.80 0.02 0.18 0.20]); % 'Visible', 'Off',
+              
+exportvarsH = uicontrol('Parent', exportpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.65 0.95 0.28], 'FontSize', 13, 'String', 'Export Vars to Workspace ',...
+    'Callback', @exportvars);
+
+savedatasetH = uicontrol('Parent', exportpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.34 0.95 0.28], 'FontSize', 13, 'String', 'Save Dataset',...
+    'Callback', @savedataset);
+
+loadmatdataH = uicontrol('Parent', exportpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.03 0.95 0.28], 'FontSize', 13, 'String', 'Load .mat Dataset',...
+    'Callback', @loadmatdata);
 
 
 
@@ -286,7 +375,7 @@ runCustomH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
 
 
 
-
+grinlenstoolbox()
 
 
 
@@ -343,151 +432,6 @@ function grinlenstoolbox(hObject, eventdata)
 
 disp('Ready!')        
 end
-
-
-
-
-
-
-
-%----------------------------------------------------
-%        FORMAT XLS DATASHEETS
-%----------------------------------------------------
-function formatXLS()
-    
-    msgbox('Coming Soon!'); 
-   return
-   
-   xlsdata = formatXLS(varargin);
-     
-end
-
-
-
-
-%----------------------------------------------------
-%        ENABLE AND DISABLE GUI BUTTONS
-%----------------------------------------------------
-function enableButtons()
-% --- Enable - Disable Buttons ---
-% smoothimgH.Enable = 'off';
-% cropimgH.Enable = 'off';
-% imgblocksH.Enable = 'off';
-% dFoverFH.Enable = 'off';
-% reshapeDataH.Enable = 'off';
-% alignCSFramesH.Enable = 'off';
-% timepointMeansH.Enable = 'off';
-% getROIstatsH.Enable = 'off';
-
-smoothimgH.Enable = 'on';
-cropimgH.Enable = 'on';
-imgblocksH.Enable = 'on';
-dFoverFH.Enable = 'on';
-reshapeDataH.Enable = 'on';
-unshapeDataH.Enable = 'on';
-alignCSFramesH.Enable = 'on';
-timepointMeansH.Enable = 'on';
-getROIstatsH.Enable = 'on';
-plotROIstatsH.Enable = 'on';
-runCustomH.Enable = 'on';
-
-if numel(size(IMG)) > 1 && numel(size(IMG)) < 4;
-    openImageJH.Enable = 'on';
-else
-    openImageJH.Enable = 'off';
-end
-
-% --------------------------------- 
-end
-
-function disableButtons()
-% --- Enable - Disable Buttons ---
-smoothimgH.Enable = 'off';
-cropimgH.Enable = 'off';
-imgblocksH.Enable = 'off';
-dFoverFH.Enable = 'off';
-reshapeDataH.Enable = 'off';
-unshapeDataH.Enable = 'off';
-alignCSFramesH.Enable = 'off';
-timepointMeansH.Enable = 'off';
-getROIstatsH.Enable = 'off';
-plotROIstatsH.Enable = 'off';
-runCustomH.Enable = 'off';
-openImageJH.Enable = 'off';
-
-% smoothimgH.Enable = 'on';
-% cropimgH.Enable = 'on';
-% imgblocksH.Enable = 'on';
-% dFoverFH.Enable = 'on';
-% reshapeDataH.Enable = 'on';
-% alignCSFramesH.Enable = 'on';
-% timepointMeansH.Enable = 'on';
-% getROIstatsH.Enable = 'on';
-% --------------------------------- 
-end
-
-
-
-
-
-
-%----------------------------------------------------
-%        CSUS DROPDOWN MENU CALLBACK
-%----------------------------------------------------
-function CSUSpopup(hObject, eventdata)
-
-    if numel(GRINtable) > 0 
-        disp('reminder of CS/US combos...')
-        GRINtable(1:7,1:2)
-        % GRINstruct
-    end
-        
-    stimnum = CSUSpopupH.Value;
-
-    % CSUSvals = unique(GRINstruct.csus);
-    % set(CSUSpopupH, 'String', CSUSvals);
-
-end
-
-
-
-
-%----------------------------------------------------
-%        RADIO BUTTON CALLBACK
-%----------------------------------------------------
-function stimselection(source,callbackdata)
-        
-    % strcmp(stimtypeh.SelectedObject.String,'CSxUS')
-    stimtype = stimtypeh.SelectedObject.String;
-    
-    display(['Previous Stim: ' callbackdata.OldValue.String]);
-    display(['Current Stim: ' callbackdata.NewValue.String]);
-    display('------------------');
-    
-    
-    % % RADIO BUTTON GROUP FOR TIMEPOINT MEANS
-    % stimtypeh = uibuttongroup('Parent', IPpanelH, 'Visible','on',...
-    %                   'Units', 'normalized',...
-    %                   'Position',[0.63 0.31 0.35 0.06],...
-    %                   'SelectionChangedFcn',@stimselection);              
-    % stimtypeh1 = uicontrol(stimtypeh,'Style','radiobutton',...
-    %                   'String','CSxUS',...
-    %                   'Units', 'normalized',...
-    %                   'Position',[0.04 0.05 0.38 0.9],...
-    %                   'HandleVisibility','off');
-    % stimtypeh2 = uicontrol(stimtypeh,'Style','radiobutton',...
-    %                   'String','CS',...
-    %                   'Units', 'normalized',...
-    %                   'Position',[0.42 0.05 0.3 0.9],...
-    %                   'HandleVisibility','off');
-    % stimtypeh3 = uicontrol(stimtypeh,'Style','radiobutton',...
-    %                   'String','US',...
-    %                   'Units', 'normalized',...
-    %                   'Position',[0.68 0.05 0.3 0.9],...
-    %                   'HandleVisibility','off');
-
-end
-
 
 
 
@@ -572,7 +516,8 @@ function importimgstack(hObject, eventdata)
               pause(1)
     
     
-              
+    % imgslider.Max = size(IMG);
+    % imgsliderH.SliderStep = [1 size(IMG)]
               
               
               
@@ -624,6 +569,156 @@ function importimgstack(hObject, eventdata)
 enableButtons
 disp('Image stack and xls data import completed!')
 end
+
+
+
+
+%----------------------------------------------------
+%        FORMAT XLS DATASHEETS
+%----------------------------------------------------
+function formatXLS()
+    
+    msgbox('Coming Soon!'); 
+   return
+   
+   xlsdata = formatXLS(varargin);
+     
+end
+
+
+
+
+%----------------------------------------------------
+%        ENABLE AND DISABLE GUI BUTTONS
+%----------------------------------------------------
+function enableButtons()
+% --- Enable - Disable Buttons ---
+% smoothimgH.Enable = 'off';
+% cropimgH.Enable = 'off';
+% imgblocksH.Enable = 'off';
+% dFoverFH.Enable = 'off';
+% reshapeDataH.Enable = 'off';
+% alignCSFramesH.Enable = 'off';
+% timepointMeansH.Enable = 'off';
+% getROIstatsH.Enable = 'off';
+
+smoothimgH.Enable = 'on';
+cropimgH.Enable = 'on';
+imgblocksH.Enable = 'on';
+dFoverFH.Enable = 'on';
+reshapeDataH.Enable = 'on';
+unshapeDataH.Enable = 'on';
+alignCSFramesH.Enable = 'on';
+timepointMeansH.Enable = 'on';
+getROIstatsH.Enable = 'on';
+plotROIstatsH.Enable = 'on';
+runallIPH.Enable = 'on';
+
+if numel(size(IMG)) > 1 && numel(size(IMG)) < 4;
+    openImageJH.Enable = 'on';
+else
+    openImageJH.Enable = 'off';
+end
+
+% --------------------------------- 
+end
+
+function disableButtons()
+% --- Enable - Disable Buttons ---
+smoothimgH.Enable = 'off';
+cropimgH.Enable = 'off';
+imgblocksH.Enable = 'off';
+dFoverFH.Enable = 'off';
+reshapeDataH.Enable = 'off';
+unshapeDataH.Enable = 'off';
+alignCSFramesH.Enable = 'off';
+timepointMeansH.Enable = 'off';
+getROIstatsH.Enable = 'off';
+plotROIstatsH.Enable = 'off';
+runallIPH.Enable = 'off';
+openImageJH.Enable = 'off';
+
+% smoothimgH.Enable = 'on';
+% cropimgH.Enable = 'on';
+% imgblocksH.Enable = 'on';
+% dFoverFH.Enable = 'on';
+% reshapeDataH.Enable = 'on';
+% alignCSFramesH.Enable = 'on';
+% timepointMeansH.Enable = 'on';
+% getROIstatsH.Enable = 'on';
+% --------------------------------- 
+end
+
+
+
+
+
+
+%----------------------------------------------------
+%        CSUS DROPDOWN MENU CALLBACK
+%----------------------------------------------------
+function CSUSpopup(hObject, eventdata)
+
+    if numel(GRINtable) > 0 
+        disp('reminder of CS/US combos...')
+        GRINtable(1:7,1:2)
+        % GRINstruct
+    end
+        
+    stimnum = CSUSpopupH.Value;
+
+    % CSUSvals = unique(GRINstruct.csus);
+    % set(CSUSpopupH, 'String', CSUSvals);
+
+end
+
+
+
+
+%----------------------------------------------------
+%        RADIO BUTTON CALLBACK
+%----------------------------------------------------
+function stimselection(source,callbackdata)
+        
+    % strcmp(stimtypeh.SelectedObject.String,'CSxUS')
+    stimtype = stimtypeh.SelectedObject.String;
+    
+    display(['Previous Stim: ' callbackdata.OldValue.String]);
+    display(['Current Stim: ' callbackdata.NewValue.String]);
+    display('------------------');
+    
+    
+    % % RADIO BUTTON GROUP FOR TIMEPOINT MEANS
+    % stimtypeh = uibuttongroup('Parent', IPpanelH, 'Visible','on',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.63 0.31 0.35 0.06],...
+    %                   'SelectionChangedFcn',@stimselection);              
+    % stimtypeh1 = uicontrol(stimtypeh,'Style','radiobutton',...
+    %                   'String','CSxUS',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.04 0.05 0.38 0.9],...
+    %                   'HandleVisibility','off');
+    % stimtypeh2 = uicontrol(stimtypeh,'Style','radiobutton',...
+    %                   'String','CS',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.42 0.05 0.3 0.9],...
+    %                   'HandleVisibility','off');
+    % stimtypeh3 = uicontrol(stimtypeh,'Style','radiobutton',...
+    %                   'String','US',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.68 0.05 0.3 0.9],...
+    %                   'HandleVisibility','off');
+
+end
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1130,6 +1225,185 @@ end
 
 
 
+%----------------------------------------------------
+%        RUN CUSTOM FUNCTION
+%----------------------------------------------------
+function runCustomA(boxidselecth, eventdata)
+% disableButtons; pause(.02);
+
+    disp('RUNNING YOUR CUSTOM FUNCTION!')
+        
+    grincustomA(IMG, GRINstruct, GRINtable, customFunOrder)
+    
+enableButtons        
+disp('Run custom function completed!')
+end
+
+function runCustomB(boxidselecth, eventdata)
+% disableButtons; pause(.02);
+
+    disp('RUNNING YOUR CUSTOM FUNCTION!')
+        
+    grincustomB(IMG, GRINstruct, GRINtable, customFunOrder)
+    
+enableButtons        
+disp('Run custom function completed!')
+end
+
+function runCustomC(boxidselecth, eventdata)
+% disableButtons; pause(.02);
+
+    disp('RUNNING YOUR CUSTOM FUNCTION!')
+        
+    grincustomC(IMG, GRINstruct, GRINtable, customFunOrder)
+    
+enableButtons        
+disp('Run custom function completed!')
+end
+
+function runCustomD(boxidselecth, eventdata)
+% disableButtons; pause(.02);
+
+    disp('RUNNING YOUR CUSTOM FUNCTION!')
+        
+    grincustomD(IMG, GRINstruct, GRINtable, customFunOrder)
+    
+enableButtons        
+disp('Run custom function completed!')
+end
+
+
+
+%----------------------------------------------------
+%        EXPORT DATA TO BASE WORKSPACE
+%----------------------------------------------------
+function exportvars(boxidselecth, eventdata)
+% disableButtons; pause(.02);
+
+    if GRINstruct
+        checkLabels = {'Save IMG to variable named:' ...
+                   'Save GRINstruct to variable named:' ...
+                   'Save GRINtable to variable named:'}; 
+        varNames = {'IMG','GRINstruct','GRINtable'}; 
+        items = {IMG,GRINstruct,GRINtable};
+        export2wsdlg(checkLabels,varNames,items,...
+                     'Save Variables to Workspace');
+
+        disp('Main VARS exported to base workspace')
+    else
+        disp('no variables available to export')
+    end
+    
+enableButtons        
+end
+
+
+%----------------------------------------------------
+%        SAVE DATA TO .MAT FILE
+%----------------------------------------------------
+function savedataset(boxidselecth, eventdata)
+% disableButtons; pause(.02);
+
+    if size(IMG,3) > 1
+            
+        uisave({IMG,GRINstruct,GRINtable},...
+               [GRINstruct.file(1:end-4),'.mat'])
+
+        disp('Dataset saved!')
+    else
+        disp('No data to save')
+    end
+    
+enableButtons        
+end
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        LOAD .mat DATA
+%----------------------------------------------------
+function loadmatdata(boxidselecth, eventdata)
+% disableButtons; pause(.02);
+
+    [filename, pathname] = uigetfile( ...
+    {'*.mat',...
+   '*.mat','MAT-files (*.mat)'}, ...
+   'Select a .mat datafile');
+    
+    load([pathname, filename])
+
+
+disp('Dataset loaded!')
+enableButtons        
+end
+
+
+
+
+
+%----------------------------------------------------
+%        LOAD .mat DATA
+%----------------------------------------------------
+function runallIP(boxidselecth, eventdata)
+disableButtons; pause(.02);
+        
+
+    if checkbox1H.Value
+        smoothimg
+    end
+    
+    if checkbox2H.Value
+        cropimg
+    end
+    
+    if checkbox3H.Value
+        imgblocks
+    end
+
+    if checkbox4H.Value
+        reshapeData
+    end
+
+    if checkbox5H.Value
+        alignCSframes
+    end
+
+    if checkbox6H.Value
+        dFoverF
+    end
+
+    if checkbox7H.Value
+        timepointMeans
+    end
+
+
+    
+disp('ALL SELECTED FUNCTIONS FINISHED RUNNING!')
+enableButtons        
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 %----------------------------------------------------
@@ -1191,27 +1465,40 @@ disp('ImageJ (FIJI) processes completed!')
 end
 
 
-
-
-
-
-
-
 %----------------------------------------------------
-%        RUN CUSTOM FUNCTION
+%        DATA EXPLORATION FUNCTIONS
 %----------------------------------------------------
-function runCustom(boxidselecth, eventdata)
-disableButtons; pause(.02);
+function exploreA(boxidselecth, eventdata)
+% disableButtons; pause(.02);
 
-    % TRIM EDGES FROM IMAGE
-    disp('RUNNING YOUR CUSTOM FUNCTION!')
+    disp('RUNNING DATA EXPLORER A!')
+    disp('COMING SOON!')
     
     
-    grincustom(IMG, GRINstruct, GRINtable, customFunOrder)
-
-        
 enableButtons        
-disp('Run custom function completed!')
+disp('Data explorer function completed!')
+end
+
+function exploreB(boxidselecth, eventdata)
+% disableButtons; pause(.02);
+
+    disp('RUNNING DATA EXPLORER B!')
+    disp('COMING SOON!')
+    
+    
+enableButtons        
+disp('Data explorer function completed!')
+end
+
+function exploreC(boxidselecth, eventdata)
+% disableButtons; pause(.02);
+
+    disp('RUNNING DATA EXPLORER C!')
+    disp('COMING SOON!')
+    
+    
+enableButtons        
+disp('Data explorer function completed!')
 end
 
 
@@ -1219,9 +1506,34 @@ end
 
 
 
+%----------------------------------------------------
+%        IMAGE SIDER CALLBACK
+%----------------------------------------------------
+function imgslider(hObject, eventdata)
 
+% Hints: hObject.Value returns position of slider
+%        hObject.Min and hObject.Max determine range of slider
+% sunel = get(handles.sunelslider,'value'); % Get current light elev.
+% sunaz = get(hObject,'value');   % Varies from -180 -> 0 deg
 
+slideVal = ceil(imgsliderH.Value);
 
+if size(IMG,3) > 99
+
+    phGRIN = imagesc(IMG(:,:,slideVal) , 'Parent', haxGRIN);
+              pause(.05)
+
+    disp(['image' num2str(slideVal)])
+    
+else
+    
+    disp('There must be at least 100 images in the stack')
+    disp('(per trial) to use the slider; currently there are')
+    disp(size(IMG,3))
+
+end
+
+end
 
 
 
