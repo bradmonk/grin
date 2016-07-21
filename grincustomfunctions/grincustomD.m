@@ -1,4 +1,4 @@
-function [varargout] = grincustom(IMG, GRINstruct, GRINtable, customFunOrder)
+function [varargout] = grincustomD(IMG, GRINstruct, GRINtable)
 
 %% EXPORT VARIABLES TO WORKSPACE
 
