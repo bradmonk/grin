@@ -55,14 +55,22 @@ thisfile = 'GRINtoolboxGUI.m';
 thisfilepath = fileparts(which(thisfile));
 cd(thisfilepath);
 
-addpath(genpath(thisfilepath))
+% addpath(genpath(thisfilepath))
 
 % rmpath(genpath([thisfilepath,'/.git']))
 
 
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
-%% MANUALLY SET PER-SESSION PATH PARAMETERS IF WANTED
+%% MANUALLY SET PER-SESSION PATH PARAMETERS IF WANTED (OPTIONAL)
+
+global imgfilename imgpathname xlsfilename xlspathname
+
+imgfilename = 'gc33_031916g.tif';
+imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+xlsfilename = 'gc33_031916.xlsx';
+xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+
 
 
 %% ESTABLISH GLOBALS AND SET STARTING VALUES
@@ -72,21 +80,19 @@ disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
 global mainguih imgLogo
 
-global GRINstruct GRINtable
-
-global IMG xlsN xlsT xlsR
+global IMG GRINstruct GRINtable xlsN xlsT xlsR
 
 global frame_period framesUncomp CS_type US_type delaytoCS CS_length compressFrms
 global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial 
 global total_frames CS_lengthFrames
 
 
-global cropAmount blockSize previewNframes customFunOrder baselineTime
+global cropAmount blockSize previewNframes customFunOrder 
 cropAmount = 18;
 blockSize = 20;
 previewNframes = 25;
 customFunOrder = 1;
-baselineTime = 10;
+
 
 global stimtype stimnum CSUSvals
 % CSxUS:1  CS:2  US:3
@@ -96,8 +102,9 @@ CSUSvals = {'CS','US'};
 
 
 global CSonset CSoffset USonset USoffset CSUSonoff
-global CSonsetDelay
+global CSonsetDelay baselineTime
 CSonsetDelay = 10;
+baselineTime = 10;
 
 
 global smoothHeight smoothWidth smoothSD smoothRes
@@ -107,19 +114,11 @@ smoothSD = .14;
 smoothRes = .1;
 
 
-global muIMGS phGRIN
+global muIMGS phGRIN previewStacknum
+global IMGcMax IMGcMaxInd IMGcMin IMGcMinInd
 muIMGS = [];
+previewStacknum = 25;
 
-
-
-%% MANUALLY SET PATH TO IMG STACK AND EXCEL FILE (OPTIONAL)
-
-global imgfilename imgpathname xlsfilename xlspathname
-
-% imgfilename = 'gc33_032316g.tif';
-% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-% xlsfilename = 'gc33_032316.xlsx';
-% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 
 
 
@@ -299,6 +298,17 @@ plotROIstatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
     'Position', [0.53 0.65 0.45 0.28], 'FontSize', 12, 'String', 'Plot Tile Data',...
     'Callback', @plotROIstats, 'Enable','off'); 
 
+previewStackH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.05 0.40 0.28], 'FontSize', 12, 'String', 'Preview Image Stack',...
+    'Callback', @previewStack, 'Enable','off');
+previewStacktxtH = uicontrol('Parent', graphspanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', [0.45 0.29 0.15 0.13], 'FontSize', 11,'String', 'Frames');
+previewStacknumH = uicontrol('Parent', graphspanelH, 'Style', 'Edit', 'Units', 'normalized', ...
+    'Position', [0.45 0.09 0.15 0.20], 'FontSize', 13);
+previewStackcbH = uicontrol('Parent', graphspanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.62 0.12 .14 .14] ,'String','', 'Value',1);
+previewStacktxtH = uicontrol('Parent', graphspanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', [.66 0.10 .28 .15], 'FontSize', 10,'String', 'Postprocessing Previews');
 
 
 %----------------------------------------------------
@@ -414,7 +424,7 @@ function grinlenstoolbox(hObject, eventdata)
     set(imgblocksnumH, 'String', num2str(blockSize));
     set(alignCSFramesnumH, 'String', num2str(CSonsetDelay));
     set(dFoverFnumH, 'String', num2str(baselineTime));
-    
+    set(previewStacknumH, 'String', num2str(previewStacknum));
     
     
     % Set radiobuttons
@@ -565,6 +575,8 @@ function importimgstack(hObject, eventdata)
 
     CSonsetDelay = min(delaytoCS);
     set(alignCSFramesnumH, 'String', num2str(CSonsetDelay));
+    baselineTime = CSonsetDelay;
+    set(dFoverFnumH, 'String', num2str(baselineTime));
         
      CSUSvals = unique(GRINstruct.csus);
      set(CSUSpopupH, 'String', CSUSvals);
@@ -596,61 +608,44 @@ end
 %        ENABLE AND DISABLE GUI BUTTONS
 %----------------------------------------------------
 function enableButtons()
-% --- Enable - Disable Buttons ---
-% smoothimgH.Enable = 'off';
-% cropimgH.Enable = 'off';
-% imgblocksH.Enable = 'off';
-% dFoverFH.Enable = 'off';
-% reshapeDataH.Enable = 'off';
-% alignCSFramesH.Enable = 'off';
-% timepointMeansH.Enable = 'off';
-% getROIstatsH.Enable = 'off';
 
-smoothimgH.Enable = 'on';
-cropimgH.Enable = 'on';
-imgblocksH.Enable = 'on';
-dFoverFH.Enable = 'on';
-reshapeDataH.Enable = 'on';
-unshapeDataH.Enable = 'on';
-alignCSFramesH.Enable = 'on';
-timepointMeansH.Enable = 'on';
-getROIstatsH.Enable = 'on';
-plotROIstatsH.Enable = 'on';
-runallIPH.Enable = 'on';
+    smoothimgH.Enable = 'on';
+    cropimgH.Enable = 'on';
+    imgblocksH.Enable = 'on';
+    dFoverFH.Enable = 'on';
+    reshapeDataH.Enable = 'on';
+    unshapeDataH.Enable = 'on';
+    alignCSFramesH.Enable = 'on';
+    timepointMeansH.Enable = 'on';
+    getROIstatsH.Enable = 'on';
+    plotROIstatsH.Enable = 'on';
+    runallIPH.Enable = 'on';
+    previewStackH.Enable = 'on';
 
-if numel(size(IMG)) > 1 && numel(size(IMG)) < 4;
-    openImageJH.Enable = 'on';
-else
-    openImageJH.Enable = 'off';
-end
+    if numel(size(IMG)) > 1 && numel(size(IMG)) < 4;
+        openImageJH.Enable = 'on';
+    else
+        openImageJH.Enable = 'off';
+    end
 
-% --------------------------------- 
 end
 
 function disableButtons()
-% --- Enable - Disable Buttons ---
-smoothimgH.Enable = 'off';
-cropimgH.Enable = 'off';
-imgblocksH.Enable = 'off';
-dFoverFH.Enable = 'off';
-reshapeDataH.Enable = 'off';
-unshapeDataH.Enable = 'off';
-alignCSFramesH.Enable = 'off';
-timepointMeansH.Enable = 'off';
-getROIstatsH.Enable = 'off';
-plotROIstatsH.Enable = 'off';
-runallIPH.Enable = 'off';
-openImageJH.Enable = 'off';
+    
+    smoothimgH.Enable = 'off';
+    cropimgH.Enable = 'off';
+    imgblocksH.Enable = 'off';
+    dFoverFH.Enable = 'off';
+    reshapeDataH.Enable = 'off';
+    unshapeDataH.Enable = 'off';
+    alignCSFramesH.Enable = 'off';
+    timepointMeansH.Enable = 'off';
+    getROIstatsH.Enable = 'off';
+    plotROIstatsH.Enable = 'off';
+    runallIPH.Enable = 'off';
+    openImageJH.Enable = 'off';
+    previewStackH.Enable = 'off';
 
-% smoothimgH.Enable = 'on';
-% cropimgH.Enable = 'on';
-% imgblocksH.Enable = 'on';
-% dFoverFH.Enable = 'on';
-% reshapeDataH.Enable = 'on';
-% alignCSFramesH.Enable = 'on';
-% timepointMeansH.Enable = 'on';
-% getROIstatsH.Enable = 'on';
-% --------------------------------- 
 end
 
 
@@ -760,12 +755,16 @@ disableButtons; pause(.02);
     close(mbh);
 
         % VISUALIZE AND ANNOTATE
-        GRINcompare(IMG, IMGc, previewNframes)
+        fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
+        fprintf('\n IMG matrix current size:  % s \n\n', num2str(size(IMGc)));
+        % GRINcompare(IMG, IMGc, previewNframes)
         mainguih.HandleVisibility = 'off';
         close all;
         mainguih.HandleVisibility = 'on';
     
     IMG = IMGc;
+    
+        previewStack
 
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
@@ -798,19 +797,81 @@ disableButtons; pause(.02);
         grinano('trim',IMG,IMGt)
         % fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
         % fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGt)));
-        GRINcompare(IMG, IMGt, previewNframes)
+        % GRINcompare(IMG, IMGt, previewNframes)
         mainguih.HandleVisibility = 'off';
         close all;
         mainguih.HandleVisibility = 'on';
     
     IMG = IMGt;
     
+        previewStack
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
 
         
 enableButtons        
 disp('Crop Images completed!')
+end
+
+
+
+
+
+
+%----------------------------------------------------
+%        PREVIEW IMAGE STACK
+%----------------------------------------------------
+function previewStack(boxidselecth, eventdata)
+disableButtons; pause(.02);
+
+    disp('PREVIEWING IMAGE STACK')
+    
+    totframes = size(IMG,3);
+    
+    previewStacknum = str2num(previewStacknumH.String);
+
+    
+    if totframes >= previewStacknum
+    
+        IMGi = IMG(:,:,1:previewStacknum);
+    
+    
+        [IMGcMax, IMGcMaxInd] = max(IMG(:));
+        [IMGcMin, IMGcMinInd] = min(IMG(:));    
+        % [I,J,tmp1] = ind2sub(size(IMG),cb1)
+        % IMG(I,J,tmp1)
+
+        axes(haxGRIN)
+        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+
+
+        for nn = 1:previewStacknum
+
+            phGRIN.CData = IMGi(:,:,nn);
+
+            pause(.04)
+        end
+    
+    
+
+        % VISUALIZE AND ANNOTATE
+        % fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
+        % fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGt)));
+        % GRINcompare(IMG, IMGt, previewNframes)
+        % mainguih.HandleVisibility = 'off';
+        % close all;
+        % mainguih.HandleVisibility = 'on';
+    
+    
+    else
+        
+       disp('Not enough images in 3rd dim to preview that many frames') 
+        
+    end
+
+        
+enableButtons        
+disp('Preview completed!')
 end
 
 
@@ -854,76 +915,20 @@ disableButtons; pause(.02);
         % VISUALIZE AND ANNOTATE
         fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
         fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGb)));
-        GRINcompare(IMG, IMGb, previewNframes)
+        % GRINcompare(IMG, IMGb, previewNframes)
         mainguih.HandleVisibility = 'off';
         close all;
         mainguih.HandleVisibility = 'on';
     
     IMG = IMGb;
-
+    
+        previewStack
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
 
         
 enableButtons        
 disp('Block-Segment Images completed!')        
-end
-
-
-
-
-
-
-
-%----------------------------------------------------
-%        deltaF OVER F
-%----------------------------------------------------
-function dFoverF(boxidselecth, eventdata)
-disableButtons; pause(.02);
-
-    % COMPUTE dF/F FOR ALL FRAMES
-    disp('COMPUTING dF/F FOR ALL FRAMES')
-    
-    
-    if numel(size(IMG)) == 3
-        
-        % As a shortcut and to retain the original frame number I am using
-        % circshift to move the first image to the end of the image matrix
-        im = circshift( IMG , -1 ,3);
-        IMGf = (im - IMG) ./ im;
-        IMGf(:,:,end) = IMGf(:,:,end-1); % this just duplicates the last frame
-    
-        % muIMG = mean(IMG(:,:,1:baselineTime),3);
-        % im = repmat(muIMG,1,1,size(IMG,3));
-        % IMGf = (IMG - im) ./ im;
-    
-    elseif numel(size(IMG)) == 4
-        
-        muIMG = mean(IMG(:,:,1:baselineTime,:),3);
-        im = repmat(muIMG,1,1,size(IMG,3));
-        IMGf = (IMG - im) ./ im;
-        
-    end
-
-    
-    
-    
-        % VISUALIZE AND ANNOTATE
-        fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
-        fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGf)));
-        GRINcompare(IMG, IMGf, previewNframes, [.98 1.05], [8 2])
-        mainguih.HandleVisibility = 'off';
-        close all;
-        mainguih.HandleVisibility = 'on';
-    
-    IMG = IMGf;
-    
-        axes(haxGRIN)
-        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
-
-        
-enableButtons        
-disp('dF/F computation completed!')
 end
 
 
@@ -1050,6 +1055,71 @@ end
 
 
 
+
+
+
+
+%----------------------------------------------------
+%        deltaF OVER F
+%----------------------------------------------------
+function dFoverF(boxidselecth, eventdata)
+disableButtons; pause(.02);
+
+    % COMPUTE dF/F FOR ALL FRAMES
+    disp('COMPUTING dF/F FOR ALL FRAMES')
+    
+    
+    if numel(size(IMG)) == 3
+        
+        % As a shortcut and to retain the original frame number I am using
+        % circshift to move the first image to the end of the image matrix
+        im = circshift( IMG , -1 ,3);
+        IMGf = (im - IMG) ./ im;
+        IMGf(:,:,end) = IMGf(:,:,end-1); % this just duplicates the last frame
+    
+        % muIMG = mean(IMG(:,:,1:baselineTime),3);
+        % im = repmat(muIMG,1,1,size(IMG,3));
+        % IMGf = (IMG - im) ./ im;
+    
+    elseif numel(size(IMG)) == 4
+        
+        muIMG = mean(IMG(:,:,1:baselineTime,:),3);
+        im = repmat(muIMG,1,1,size(IMG,3));
+        IMGf = (IMG - im) ./ im;
+        
+    end
+
+    
+    
+    
+        % VISUALIZE AND ANNOTATE
+        fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
+        fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGf)));
+        % GRINcompare(IMG, IMGf, previewNframes, [.98 1.05], [8 2])
+        mainguih.HandleVisibility = 'off';
+        close all;
+        mainguih.HandleVisibility = 'on';
+    
+    IMG = IMGf;
+    
+        previewStack
+        axes(haxGRIN)
+        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+
+        
+enableButtons        
+disp('dF/F computation completed!')
+end
+
+
+
+
+
+
+
+
+
+
 %----------------------------------------------------
 %        GET TIMEPOINT MEANS
 %----------------------------------------------------
@@ -1165,26 +1235,66 @@ end
 
 
 %----------------------------------------------------
-%        GET ROI STATISTICS
+%        PLOT TILE DATA
 %----------------------------------------------------
 function plotROIstats(boxidselecth, eventdata)
-disableButtons; pause(.02);
+% disableButtons; pause(.02);
 
     % keyboard
+    
+    fh1=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
+    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax1.YLim = [-.15 .15];
+    hax2 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax2.YLim = [-.15 .15];
+    axis off; hold on;
+    hax3 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax3.YLim = [-.15 .15];
+    axis off; hold on;
+    hax4 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax4.YLim = [-.15 .15];
+    axis off; hold on;
+    hax5 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax5.YLim = [-.15 .15];
+    axis off; hold on;
+    hax6 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax6.YLim = [-.15 .15];
+    axis off; hold on;
+    allhax = {hax1, hax2, hax3, hax4, hax5, hax6};
+    colorz = {  [.99 .01 .01], ...
+                [.01 .99 .01], ...
+                [.01 .01 .99], ...
+                [.99 .01 .99], ...
+                [.99 .99 .01], ...
+                [.01 .99 .99], ...
+                };
+    legpos = {  [0.75,0.85,0.15,0.06], ...
+                [0.75,0.80,0.15,0.06], ...
+                [0.75,0.75,0.15,0.06], ...
+                [0.75,0.70,0.15,0.06], ...
+                [0.75,0.65,0.15,0.06], ...
+                [0.75,0.60,0.15,0.06], ...
+                };
 
+    % plot(pixels(:,:,1)')
+    % pause(.2)
+    text(10, .1, ['CS ON/OFF US ON/OFF:  ', num2str(CSUSonoff)])
+    
     blockSize = str2num(imgblocksnumH.String);
 
-    tv1 = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
+    pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
     
-    tv2 = squeeze(reshape(tv1,numel(tv1(:,:,1)),[],size(tv1,3),size(tv1,4)));
+    pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
     
-    tv3 = tv2(:,:,1);
-
-
-
-	%==============================================%
-	Mu = mean(tv3,1);
-    Sd = std(tv3,0,1);
+    CSids = unique(GRINstruct.csus);
+    
+    %==============================================%
+    for nn = 1:size(pixels,3)
+    
+    pixCS = pixels(:,:,nn);
+	
+	Mu = mean(pixCS,1);
+    Sd = std(pixCS,0,1);
     Se = Sd./sqrt(numel(Mu));
 	y_Mu = Mu';
     x_Mu = (1:numel(Mu))';
@@ -1193,35 +1303,106 @@ disableButtons; pause(.02);
 	xx_Mu = 1:0.1:max(x_Mu);
 	yy_Mu = spline(x_Mu,y_Mu,xx_Mu);
     ee_Mu = spline(x_Mu,e_Mu,xx_Mu);
-
     
-    
-    fh1=figure('Units','normalized','OuterPosition',[.1 .1 .8 .6],'Color','w');
-    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax1.YLim = [-.1 .1];
-    hax2 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax2.YLim = [-.1 .1];
-    axis off; hold on;    
 
-
-    axes(hax1)
-    plot(tv2(:,:,1)')
-    pause(.2)
-
-    axes(hax2)    
-    [ph1, po1] = envlineplot(xx_Mu',yy_Mu', ee_Mu','cmap',[.1 .95 .4],...
+    axes(allhax{nn})
+    [ph1, po1] = envlineplot(xx_Mu',yy_Mu', ee_Mu','cmap',colorz{nn},...
                             'alpha','transparency', 0.6);
+    hp1 = plot(xx_Mu,yy_Mu,'Color',colorz{nn});
     pause(.2)
-
+    
+    legend(allhax{nn},CSids(nn),'Position',legpos{nn},'Box','off');
+    
+    end
+    %==============================================%
+    
+    
+    
+    fh1=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
+    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
     hax1.YLim = [-.15 .15];
+    hax2 = axes('Position',[.05 .05 .9 .9],'Color','none');
     hax2.YLim = [-.15 .15];
-    pause(.2)
-
-
-
+    axis off; hold on;
+    
+    
+    % IMG 
+    % GRINstruct 
+    % GRINtable
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 enableButtons
 disp('Compute ROI statistics completed!')
 end
+
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        RUN ALL IMAGE PROCESSING FUNCTIONS
+%----------------------------------------------------
+function runallIP(boxidselecth, eventdata)
+disableButtons; pause(.02);
+        
+
+    if checkbox1H.Value
+        smoothimg
+    end
+    
+    if checkbox2H.Value
+        cropimg
+    end
+    
+    if checkbox3H.Value
+        imgblocks
+    end
+
+    if checkbox4H.Value
+        reshapeData
+    end
+
+    if checkbox5H.Value
+        alignCSframes
+    end
+
+    if checkbox6H.Value
+        dFoverF
+    end
+
+    if checkbox7H.Value
+        timepointMeans
+    end
+
+
+    
+disp('ALL SELECTED FUNCTIONS FINISHED RUNNING!')
+enableButtons        
+end
+
+
+
+
 
 
 
@@ -1258,7 +1439,7 @@ function runCustomC(boxidselecth, eventdata)
 % disableButtons; pause(.02);
 
     disp('RUNNING YOUR CUSTOM FUNCTION!')
-        
+            
     grincustomC(IMG, GRINstruct, GRINtable, customFunOrder)
     
 enableButtons        
@@ -1269,6 +1450,10 @@ function runCustomD(boxidselecth, eventdata)
 % disableButtons; pause(.02);
 
     disp('RUNNING YOUR CUSTOM FUNCTION!')
+    
+    mainguih.HandleVisibility = 'off';
+    close all;
+    mainguih.HandleVisibility = 'on';
         
     grincustomD(IMG, GRINstruct, GRINtable, customFunOrder)
     
@@ -1324,9 +1509,6 @@ end
 
 
 
-
-
-
 %----------------------------------------------------
 %        LOAD .mat DATA
 %----------------------------------------------------
@@ -1344,66 +1526,6 @@ function loadmatdata(boxidselecth, eventdata)
 disp('Dataset loaded!')
 enableButtons        
 end
-
-
-
-
-
-%----------------------------------------------------
-%        LOAD .mat DATA
-%----------------------------------------------------
-function runallIP(boxidselecth, eventdata)
-disableButtons; pause(.02);
-        
-
-    if checkbox1H.Value
-        smoothimg
-    end
-    
-    if checkbox2H.Value
-        cropimg
-    end
-    
-    if checkbox3H.Value
-        imgblocks
-    end
-
-    if checkbox4H.Value
-        reshapeData
-    end
-
-    if checkbox5H.Value
-        alignCSframes
-    end
-
-    if checkbox6H.Value
-        dFoverF
-    end
-
-    if checkbox7H.Value
-        timepointMeans
-    end
-
-
-    
-disp('ALL SELECTED FUNCTIONS FINISHED RUNNING!')
-enableButtons        
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
