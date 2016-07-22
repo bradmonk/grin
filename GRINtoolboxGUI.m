@@ -66,9 +66,9 @@ disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
 global imgfilename imgpathname xlsfilename xlspathname
 
-% imgfilename = 'gc33_031916g.tif';
+% imgfilename = 'gc33_031816g.tif';
 % imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-% xlsfilename = 'gc33_031916.xlsx';
+% xlsfilename = 'gc33_031816.xlsx';
 % xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 
 
@@ -580,6 +580,15 @@ function importimgstack(hObject, eventdata)
         
      CSUSvals = unique(GRINstruct.csus);
      set(CSUSpopupH, 'String', CSUSvals);
+     
+     
+     % VISUALIZE AND ANNOTATE
+     fprintf('\n\n Imported stack size: % s ', num2str(size(IMG)));
+     
+  IMG = IMG(:,:,total_frames);
+     
+     fprintf('\n Size after excel-informed adjustment:  % s \n\n', num2str(size(IMG)));
+     
     
     
 enableButtons
