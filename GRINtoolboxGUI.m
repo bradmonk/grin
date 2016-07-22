@@ -55,7 +55,7 @@ thisfile = 'GRINtoolboxGUI.m';
 thisfilepath = fileparts(which(thisfile));
 cd(thisfilepath);
 
-% addpath(genpath(thisfilepath))
+addpath(genpath(thisfilepath))
 
 % rmpath(genpath([thisfilepath,'/.git']))
 
