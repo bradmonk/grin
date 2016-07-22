@@ -66,10 +66,10 @@ disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
 global imgfilename imgpathname xlsfilename xlspathname
 
-imgfilename = 'gc33_031916g.tif';
-imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-xlsfilename = 'gc33_031916.xlsx';
-xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+% imgfilename = 'gc33_031916g.tif';
+% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+% xlsfilename = 'gc33_031916.xlsx';
+% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 
 
 
