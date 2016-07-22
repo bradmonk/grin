@@ -585,7 +585,7 @@ function importimgstack(hObject, eventdata)
      % VISUALIZE AND ANNOTATE
      fprintf('\n\n Imported stack size: % s ', num2str(size(IMG)));
      
-  IMG = IMG(:,:,total_frames);
+  IMG = IMG(:,:,1:total_frames);
      
      fprintf('\n Size after excel-informed adjustment:  % s \n\n', num2str(size(IMG)));
      
@@ -1478,7 +1478,7 @@ end
 function exportvars(boxidselecth, eventdata)
 % disableButtons; pause(.02);
 
-    if GRINstruct
+    if size(GRINtable,1) > 1
         checkLabels = {'Save IMG to variable named:' ...
                    'Save GRINstruct to variable named:' ...
                    'Save GRINtable to variable named:'}; 
