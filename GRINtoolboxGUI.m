@@ -1418,7 +1418,7 @@ function runCustomA(boxidselecth, eventdata)
 
     disp('RUNNING YOUR CUSTOM FUNCTION!')
         
-    grincustomA(IMG, GRINstruct, GRINtable, customFunOrder)
+    grincustomA(IMG, GRINstruct, GRINtable)
     
 enableButtons        
 disp('Run custom function completed!')
@@ -1429,7 +1429,7 @@ function runCustomB(boxidselecth, eventdata)
 
     disp('RUNNING YOUR CUSTOM FUNCTION!')
         
-    grincustomB(IMG, GRINstruct, GRINtable, customFunOrder)
+    grincustomB(IMG, GRINstruct, GRINtable)
     
 enableButtons        
 disp('Run custom function completed!')
@@ -1440,7 +1440,7 @@ function runCustomC(boxidselecth, eventdata)
 
     disp('RUNNING YOUR CUSTOM FUNCTION!')
             
-    grincustomC(IMG, GRINstruct, GRINtable, customFunOrder)
+    grincustomC(IMG, GRINstruct, GRINtable)
     
 enableButtons        
 disp('Run custom function completed!')
@@ -1455,7 +1455,7 @@ function runCustomD(boxidselecth, eventdata)
     close all;
     mainguih.HandleVisibility = 'on';
         
-    grincustomD(IMG, GRINstruct, GRINtable, customFunOrder)
+    grincustomD(IMG, GRINstruct, GRINtable)
     
 enableButtons        
 disp('Run custom function completed!')
