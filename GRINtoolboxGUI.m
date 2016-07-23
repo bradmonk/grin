@@ -491,7 +491,7 @@ function importimgstack(hObject, eventdata)
                                'Yes','No (import manually)','Yes');
             switch choice
                 case 'Yes'
-                    disp([choice ' importing xls data...'])
+                    % disp([choice ' importing xls data...'])
                     xlsfilename = xlsFiles.name;
                     xlspathname = imgpathname;
                 case 'No (import manually)'
@@ -540,6 +540,7 @@ function importimgstack(hObject, eventdata)
 
     [xlsN,xlsT,xlsR] = xlsread([xlspathname , xlsfilename]);
 
+    disp(' '); disp('Preview of raw xls import...')
     disp(xlsR(1:5,1:7))
 
     frame_period    = xlsN(1,1);
@@ -589,7 +590,6 @@ function importimgstack(hObject, eventdata)
      
      fprintf('\n Size after excel-informed adjustment:  % s \n\n', num2str(size(IMG)));
      
-    
     
 enableButtons
 disp('Image stack and xls data import completed!')
@@ -1503,11 +1503,27 @@ function savedataset(boxidselecth, eventdata)
 % disableButtons; pause(.02);
 
     if size(IMG,3) > 1
+        
+        
+        [filen,pathn] = uiputfile([GRINstruct.file(1:end-4),'.mat'],'Save Vars to Workspace');
             
-        uisave({IMG,GRINstruct,GRINtable},...
-               [GRINstruct.file(1:end-4),'.mat'])
-
+        if isequal(filen,0) || isequal(pathn,0)
+           disp('User selected Cancel')
+        else
+           disp(['User selected ',fullfile(pathn,filen)])
+        end
+        
+        % IMGint16 = uint16(IMG);
+                
+        disp('Saving data to .mat file, please wait...')
+        save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable','-v7.3')
+        % save(fullfile(pathn,filen),'IMGint16','GRINstruct','GRINtable','-v7.3')
         disp('Dataset saved!')
+        
+        % whos('-file','newstruct.mat')
+        % m = matfile(filename,'Writable',isWritable)
+        % save(filename,variables,'-append')
+
     else
         disp('No data to save')
     end
