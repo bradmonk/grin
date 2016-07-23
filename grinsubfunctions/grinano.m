@@ -38,7 +38,7 @@ switch scase
     
     case 'import' 
         
-        fprintf('\n importing tif stack from...\n % s \n', var1{1});
+        fprintf('\n Importing tif stack from...\n % s \n', var1{1});
         
         
     case 'trim'
@@ -52,7 +52,7 @@ switch scase
         
     case 'importxls' 
         
-        fprintf('\n importing xls info from...\n % s \n', var1{1});
+        fprintf('\n Importing xls info from...\n % s \n', var1{1});
         
     case 'xlsparams'
         
