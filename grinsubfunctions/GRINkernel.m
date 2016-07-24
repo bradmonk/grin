@@ -82,10 +82,15 @@ Z = GNpk*exp( - (a*(X-GNx0).^2 + c*(Y-GNy0).^2)) ;
 
 Mask=Z;
 
+disp('SMOOTHING KERNEL PARAMETERS:')
+fprintf('  SIZE OF MASK:   % s x % s \n', num2str(GNnum), num2str(GNnum));
+fprintf('  STDEV OF SLOPE: % s \n', num2str(GNsd));
+fprintf('  HIGHT OF PEAK:  % s \n', num2str(GNpk));
+fprintf('  RESOLUTION:     % s \n\n', num2str(GNres));
 
 
-if doMASKfig
-    disp(Mask);
+if doMASKfig == 1
+    % disp(Mask);
     
     fh96=figure('Units','normalized','OuterPosition',[.05 .05 .6 .8],'Color','w');
     hax97 = axes('Position',[.05 .55 .33 .40],'Color','none');
