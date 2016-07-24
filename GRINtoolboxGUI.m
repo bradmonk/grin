@@ -56,7 +56,6 @@ thisfilepath = fileparts(which(thisfile));
 cd(thisfilepath);
 
 addpath(genpath(thisfilepath))
-
 % rmpath(genpath([thisfilepath,'/.git']))
 
 
@@ -128,8 +127,8 @@ previewStacknum = 25;
 global confile confilefullpath
 confile = 'gcconsole.txt';
 diary on
-disp('CONSOLE LOGGING ON.')
 diary(confile)
+disp('CONSOLE LOGGING ON.')
 diary off
 confilefullpath = which(confile,'-all');
 delete(confile)
