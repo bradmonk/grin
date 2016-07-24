@@ -55,9 +55,14 @@ thisfile = 'GRINtoolboxGUI.m';
 thisfilepath = fileparts(which(thisfile));
 cd(thisfilepath);
 
-addpath(genpath(thisfilepath))
-% rmpath(genpath([thisfilepath,'/.git']))
 
+global isbrad
+upath = userpath;
+isbrad = strcmp('/Users/bradleymonk',upath(1:18));
+if ~isbrad
+    addpath(genpath(thisfilepath))
+    % rmpath(genpath([thisfilepath,'/.git']))
+end
 
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
@@ -65,16 +70,17 @@ disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
 global imgfilename imgpathname xlsfilename xlspathname
 
+if isbrad
 % imgfilename = 'gc33_031816g.tif';
 % imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 % xlsfilename = 'gc33_031816.xlsx';
 % xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 
-% imgfilename = 'gc33_032316g.tif';
-% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-% xlsfilename = 'gc33_032316.xlsx';
-% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-
+imgfilename = 'gc33_032316g.tif';
+imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+xlsfilename = 'gc33_032316.xlsx';
+xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+end
 
 
 %% ESTABLISH GLOBALS AND SET STARTING VALUES
@@ -126,7 +132,6 @@ previewStacknum = 25;
 
 global confile confilefullpath
 confile = 'gcconsole.txt';
-diary on
 diary(confile)
 disp('CONSOLE LOGGING ON.')
 diary off
@@ -302,9 +307,10 @@ graphspanelH = uipanel('Title','Graphs and Figures','FontSize',10,...
 getROIstatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.65 0.45 0.28], 'FontSize', 12, 'String', 'Select ROI & Plot',...
     'Callback', @getROIstats, 'Enable','off');
-plotROIstatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
+
+plotTileStatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
     'Position', [0.53 0.65 0.45 0.28], 'FontSize', 12, 'String', 'Plot Tile Data',...
-    'Callback', @plotROIstats, 'Enable','off'); 
+    'Callback', @plotTileStats, 'Enable','off'); 
 
 previewStackH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.05 0.40 0.28], 'FontSize', 12, 'String', 'Preview Image Stack',...
@@ -641,7 +647,7 @@ function enableButtons()
     alignCSFramesH.Enable = 'on';
     timepointMeansH.Enable = 'on';
     getROIstatsH.Enable = 'on';
-    plotROIstatsH.Enable = 'on';
+    plotTileStatsH.Enable = 'on';
     runallIPH.Enable = 'on';
     previewStackH.Enable = 'on';
 
@@ -663,7 +669,7 @@ function disableButtons()
     alignCSFramesH.Enable = 'off';
     timepointMeansH.Enable = 'off';
     getROIstatsH.Enable = 'off';
-    plotROIstatsH.Enable = 'off';
+    plotTileStatsH.Enable = 'off';
     runallIPH.Enable = 'off';
     openImageJH.Enable = 'off';
     previewStackH.Enable = 'off';
@@ -849,6 +855,70 @@ disableButtons; pause(.02);
 enableButtons        
 disp('Crop Images completed!')
 end
+
+
+
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        CREATE IMAGE TILES
+%----------------------------------------------------
+function imgblocks(boxidselecth, eventdata)
+disableButtons; pause(.02);
+
+    % CREATE ROBERT BLOCK PROC
+    disp('SEGMENTING IMGAGES INTO BLOCKS (blockproc could take a few seconds)')
+
+    blockSize = str2num(imgblocksnumH.String);
+    
+    
+    
+    fun = @(block_struct) mean(block_struct.data(:)) * ones(size(block_struct.data)); 
+
+    IMGb = zeros(size(IMG));
+
+    sz = size(IMG,3);
+    progresstimer('Segmenting images into blocks...')
+    % hwb = waitbar(0,'Segmenting image into tiles...');
+    for nn = 1:sz
+
+        IMGb(:,:,nn) = blockproc(IMG(:,:,nn),[blockSize blockSize],fun);
+        
+        if ~mod(nn,100)
+            % waitbar(nn/sz)
+            progresstimer(nn/sz)
+        end
+    
+    end
+    
+        % close(hwb)
+        % VISUALIZE AND ANNOTATE
+        fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
+        fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGb)));
+        % GRINcompare(IMG, IMGb, previewNframes)
+        mainguih.HandleVisibility = 'off';
+        close all;
+        mainguih.HandleVisibility = 'on';
+    
+    IMG = IMGb;
+    
+        previewStack
+        axes(haxGRIN)
+        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+
+        
+enableButtons        
+disp('Block-Segment Images completed!')        
+end
+
+
+
 
 
 
@@ -1160,14 +1230,16 @@ end
 
 
 %----------------------------------------------------
-%        PLOT TILE DATA
+%        PLOT TILE STATS DATA
 %----------------------------------------------------
-function plotROIstats(boxidselecth, eventdata)
+function plotTileStats(boxidselecth, eventdata)
 % disableButtons; pause(.02);
-
-    disp(' '); disp('PLOTTING TRIAL DATA'); 
-
-    % keyboard
+%%
+    disp(' '); disp('PLOTTING TILE STATS DATA'); 
+    
+    % EVENTUALLY REPLACE YLIMS WITH...
+    % [IMGcMax, IMGcMaxInd] = max(IMG(:));
+    % [IMGcMin, IMGcMinInd] = min(IMG(:)); 
     
     fh1=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
     hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
@@ -1187,6 +1259,9 @@ function plotROIstats(boxidselecth, eventdata)
     hax6 = axes('Position',[.05 .05 .9 .9],'Color','none');
     hax6.YLim = [-.15 .15];
     axis off; hold on;
+    hax0 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax0.YLim = [-.15 .15];
+    axis off; hold on;
     allhax = {hax1, hax2, hax3, hax4, hax5, hax6};
     colorz = {  [.99 .01 .01], ...
                 [.01 .99 .01], ...
@@ -1203,14 +1278,12 @@ function plotROIstats(boxidselecth, eventdata)
                 [0.75,0.60,0.15,0.06], ...
                 };
 
-    % plot(pixels(:,:,1)')
-    % pause(.2)
-    text(10, .1, ['CS ON/OFF US ON/OFF:  ', num2str(CSUSonoff)])
+    
     
     blockSize = str2num(imgblocksnumH.String);
 
     pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
-    
+
     pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
     
     CSids = unique(GRINstruct.csus);
@@ -1243,34 +1316,46 @@ function plotROIstats(boxidselecth, eventdata)
     end
     %==============================================%
     
+    text(10, .1, ['CS ON/OFF US ON/OFF:  ', num2str(CSUSonoff)])
+    
+        
+    for mm = 1:4
+    text(CSUSonoff(mm),allhax{nn}.YLim(1),{'\downarrow'},...
+        'HorizontalAlignment','center','VerticalAlignment','bottom',...
+        'FontSize',20,'FontWeight','bold')
+    end
+    line([CSUSonoff(1) CSUSonoff(1)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
+    line([CSUSonoff(2) CSUSonoff(2)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
+    %==============================================%
     
     
-    fh1=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
-    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax1.YLim = [-.15 .15];
-    hax2 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax2.YLim = [-.15 .15];
-    axis off; hold on;
+
+fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
+
+    aXlocs =  (0:(size(pxl,1))) .* (1/(size(pxl,1)));
+    aXlocs(end) = [];
+    aYlocs =  (0:(size(pxl,2))) .* (1/(size(pxl,2)));
+    aYlocs(end) = [];
+    aXlocs = aXlocs+.005;
+    aYlocs = aYlocs+.005;
+    [aX,aY] = meshgrid(aXlocs,aYlocs);
+    YL=[-.15 .15];
     
     
-    % IMG 
-    % GRINstruct 
-    % GRINtable
+    for tt = 1:size(pixels,3)
+        for ii = 1:size(pixels,1)
+                
+        
+        axes('Position',[aX(ii) aY(ii) (1/(size(pxl,1)+1)) (1/(size(pxl,2)+1))],...
+        'Color','none'); axis off; hold on;
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+        plot( 1:size(pixels,2) , pixels(ii,:,tt) ,'Color',colorz{tt})
+        set(gca,'YLim',YL)
+        line([CSUSonoff(1) CSUSonoff(1)],YL,'Color',[.8 .8 .8])
+        line([CSUSonoff(2) CSUSonoff(2)],YL,'Color',[.8 .8 .8])
+                    
+        end
+    end
     
     
     
@@ -1396,64 +1481,6 @@ disableButtons; pause(.02);
 enableButtons        
 % disp('Preview completed!')
 end
-
-
-
-
-
-
-
-%----------------------------------------------------
-%        CREATE IMAGE TILES
-%----------------------------------------------------
-function imgblocks(boxidselecth, eventdata)
-disableButtons; pause(.02);
-
-    % CREATE ROBERT BLOCK PROC
-    disp('SEGMENTING IMGAGES INTO BLOCKS (blockproc could take a few seconds)')
-
-    blockSize = str2num(imgblocksnumH.String);
-    
-    
-    
-    fun = @(block_struct) mean(block_struct.data(:)) * ones(size(block_struct.data)); 
-
-    IMGb = zeros(size(IMG));
-
-    sz = size(IMG,3);
-    progresstimer('Segmenting images into blocks...')
-    % hwb = waitbar(0,'Segmenting image into tiles...');
-    for nn = 1:sz
-
-        IMGb(:,:,nn) = blockproc(IMG(:,:,nn),[blockSize blockSize],fun);
-        
-        if ~mod(nn,100)
-            % waitbar(nn/sz)
-            progresstimer(nn/sz)
-        end
-    
-    end
-    
-        % close(hwb)
-        % VISUALIZE AND ANNOTATE
-        fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
-        fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGb)));
-        % GRINcompare(IMG, IMGb, previewNframes)
-        mainguih.HandleVisibility = 'off';
-        close all;
-        mainguih.HandleVisibility = 'on';
-    
-    IMG = IMGb;
-    
-        previewStack
-        axes(haxGRIN)
-        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
-
-        
-enableButtons        
-disp('Block-Segment Images completed!')        
-end
-
 
 
 
