@@ -71,6 +71,11 @@ global imgfilename imgpathname xlsfilename xlspathname
 % xlsfilename = 'gc33_031816.xlsx';
 % xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 
+% imgfilename = 'gc33_032316g.tif';
+% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+% xlsfilename = 'gc33_032316.xlsx';
+% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+
 
 
 %% ESTABLISH GLOBALS AND SET STARTING VALUES
@@ -120,10 +125,14 @@ muIMGS = [];
 previewStacknum = 25;
 
 
-
-
-
-
+global confile confilefullpath
+confile = 'gcconsole.txt';
+diary on
+disp('CONSOLE LOGGING ON.')
+diary(confile)
+diary off
+confilefullpath = which(confile,'-all');
+delete(confile)
 
 
 % -----------------------------------------------------------------
@@ -409,7 +418,8 @@ grinlenstoolbox()
 function grinlenstoolbox(hObject, eventdata)
 %Load file triggers uiresume; the initial menu is set to invisible. Prompts
 %user for file to load, copies the datastack from the file; sets the image 
-%windows to visible, and plots the images.    
+%windows to visible, and plots the images.
+
 
     set(initmenuh, 'Visible', 'Off');
     set(mainguih, 'Visible', 'On');
@@ -444,7 +454,7 @@ function grinlenstoolbox(hObject, eventdata)
     phGRIN = imagesc(imgLogo , 'Parent', haxGRIN);
         pause(.1)
 
-disp('Ready!')        
+disp('Ready!')
 end
 
 
@@ -458,7 +468,9 @@ end
 %        IMPORT IMAGE STACK MAIN FUNCTION
 %----------------------------------------------------
 function importimgstack(hObject, eventdata)
-    
+diary on
+disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
+
     if imgfilename
         disp('image stack path was set manually')
     else
@@ -503,6 +515,7 @@ function importimgstack(hObject, eventdata)
     
     end
     
+    fprintf('\n\n GRIN DATASET: % s \n\n', imgfilename);
     
     
     % ------------- IMG STACK IMPORT CODE -----------
@@ -593,6 +606,8 @@ function importimgstack(hObject, eventdata)
     
 enableButtons
 disp('Image stack and xls data import completed!')
+diary(confile)
+diary off
 end
 
 
@@ -636,7 +651,6 @@ function enableButtons()
     else
         openImageJH.Enable = 'off';
     end
-
 end
 
 function disableButtons()
@@ -659,6 +673,21 @@ end
 
 
 
+
+
+
+
+%----------------------------------------------------
+%        CONSOLE DIARY ON / OFF / OPEN
+%----------------------------------------------------
+function conon
+    diary on
+end
+function conoff
+    diary(confile)
+    diary off
+    web(confilefullpath{1})
+end
 
 
 
@@ -737,11 +766,11 @@ end
 %----------------------------------------------------
 %        SMOOTH IMAGES
 %----------------------------------------------------
-function smoothimg(boxidselecth, eventdata)
+function smoothimg(boxidselecth, eventdata)    
 disableButtons; pause(.02);
 
     % PERFORM IMAGE SMOOTHING
-    disp('PERFORMING IMAGE SMOOTHING')
+    disp(' '); disp('PERFORMING IMAGE SMOOTHING')
 
     
     smoothSD = str2num(smoothimgnumH.String);
@@ -795,7 +824,7 @@ function cropimg(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
     % TRIM EDGES FROM IMAGE
-    disp('TRIMMING EDGES FROM IMAGE')
+    disp(' '); disp('TRIMMING EDGES FROM IMAGE')
     
     
     cropAmount = str2num(cropimgnumH.String);
@@ -828,132 +857,13 @@ end
 
 
 %----------------------------------------------------
-%        PREVIEW IMAGE STACK
-%----------------------------------------------------
-function previewStack(boxidselecth, eventdata)
-disableButtons; pause(.02);
-
-    disp('PREVIEWING IMAGE STACK')
-    
-    totframes = size(IMG,3);
-    
-    previewStacknum = str2num(previewStacknumH.String);
-
-    
-    if totframes >= previewStacknum
-    
-        IMGi = IMG(:,:,1:previewStacknum);
-    
-    
-        [IMGcMax, IMGcMaxInd] = max(IMG(:));
-        [IMGcMin, IMGcMinInd] = min(IMG(:));    
-        % [I,J,tmp1] = ind2sub(size(IMG),cb1)
-        % IMG(I,J,tmp1)
-
-        axes(haxGRIN)
-        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
-
-
-        for nn = 1:previewStacknum
-
-            phGRIN.CData = IMGi(:,:,nn);
-
-            pause(.04)
-        end
-    
-    
-
-        % VISUALIZE AND ANNOTATE
-        % fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
-        % fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGt)));
-        % GRINcompare(IMG, IMGt, previewNframes)
-        % mainguih.HandleVisibility = 'off';
-        % close all;
-        % mainguih.HandleVisibility = 'on';
-    
-    
-    else
-        
-       disp('Not enough images in 3rd dim to preview that many frames') 
-        
-    end
-
-        
-enableButtons        
-disp('Preview completed!')
-end
-
-
-
-
-
-
-
-%----------------------------------------------------
-%        CREATE IMAGE TILES
-%----------------------------------------------------
-function imgblocks(boxidselecth, eventdata)
-disableButtons; pause(.02);
-
-    % CREATE ROBERT BLOCK PROC
-    disp('SEGMENTING IMGAGES INTO BLOCKS (blockproc could take a few seconds)')
-
-    blockSize = str2num(imgblocksnumH.String);
-    
-    
-    
-    fun = @(block_struct) mean(block_struct.data(:)) * ones(size(block_struct.data)); 
-
-    IMGb = zeros(size(IMG));
-
-    sz = size(IMG,3);
-    progresstimer('Segmenting images into blocks...')
-    % hwb = waitbar(0,'Segmenting image into tiles...');
-    for nn = 1:sz
-
-        IMGb(:,:,nn) = blockproc(IMG(:,:,nn),[blockSize blockSize],fun);
-        
-        if ~mod(nn,100)
-            % waitbar(nn/sz)
-            progresstimer(nn/sz)
-        end
-    
-    end
-    
-        % close(hwb)
-        % VISUALIZE AND ANNOTATE
-        fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
-        fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGb)));
-        % GRINcompare(IMG, IMGb, previewNframes)
-        mainguih.HandleVisibility = 'off';
-        close all;
-        mainguih.HandleVisibility = 'on';
-    
-    IMG = IMGb;
-    
-        previewStack
-        axes(haxGRIN)
-        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
-
-        
-enableButtons        
-disp('Block-Segment Images completed!')        
-end
-
-
-
-
-
-
-
-%----------------------------------------------------
 %        RESHAPE DATA BY TRIALS
 %----------------------------------------------------
 function reshapeData(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
     % RESHAPE IMAGE STACK INTO SIZE: YPIXELS by XPIXELS in NFRAMES per NTRIALS
-
+    disp(' '); disp('RESHAPING DATASET (ADDINING DIM FOR TRIALS)'); 
     
     IMGr = reshape(IMG,size(IMG,1),size(IMG,2),framesPerTrial,[]);
         
@@ -984,6 +894,7 @@ function unshapeData(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
     % RESHAPE IMAGE STACK INTO SIZE: YPIXELS by XPIXELS in NTOTALFRAMES
+    disp(' '); disp('UNDOING DATASET RESHAPE (REMOVING TRIALS DIM)'); 
     
     IMGr = reshape(IMG,size(IMG,1),size(IMG,2),[]);
         
@@ -1017,9 +928,13 @@ function alignCSframes(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
     % MAKE DELAY TO CS EQUAL TO t SECONDS FOR ALL TRIALS
+    fprintf('\n\n MAKING CS DELAY EQUAL TO [ % s  ]SECONDS FOR ALL TRIALS'...
+        , alignCSFramesnumH.String);
 
     % Make all CS onsets this many seconds from trial start
     CSonsetDelay = str2num(alignCSFramesnumH.String);
+    
+
 
     EqualizeCSdelay  = round((delaytoCS-CSonsetDelay) .* framesPerSec);
 
@@ -1075,7 +990,7 @@ function dFoverF(boxidselecth, eventdata)
 disableButtons; pause(.02);
 
     % COMPUTE dF/F FOR ALL FRAMES
-    disp('COMPUTING dF/F FOR ALL FRAMES')
+    disp(' '); disp('COMPUTING dF/F FOR ALL FRAMES')
     
     
     if numel(size(IMG)) == 3
@@ -1135,6 +1050,7 @@ end
 function timepointMeans(boxidselecth, eventdata)
 disableButtons; pause(.02);    
     
+    disp(' '); disp('COMPUTING TRIAL MEANS (AVERAGING SAME-TIMEPOINTS ACROSS TRIALS)'); 
     
     % AVERAGE ACROSS SAME TIMEPOINTS
     nCSUS = size(GRINstruct.tf,2);
@@ -1190,7 +1106,8 @@ end
 function getROIstats(boxidselecth, eventdata)
 disableButtons; pause(.02);
     
-    % PREVIEW AN ROI FOR A SINGLE TRIAL AVERAGED OVER TRIALS
+    % PREVIEW AN ROI FOR A SINGLE CSUS AVERAGED OVER TRIALS
+    disp(' '); disp('GETTING ROI STATISTICS'); 
 
     fh1=figure('Units','normalized','OuterPosition',[.40 .22 .59 .75],'Color','w');
     hax1 = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[]);
@@ -1248,6 +1165,8 @@ end
 %----------------------------------------------------
 function plotROIstats(boxidselecth, eventdata)
 % disableButtons; pause(.02);
+
+    disp(' '); disp('PLOTTING TRIAL DATA'); 
 
     % keyboard
     
@@ -1357,7 +1276,7 @@ function plotROIstats(boxidselecth, eventdata)
     
     
 enableButtons
-disp('Compute ROI statistics completed!')
+disp('Plotting trial data completed!')
 end
 
 
@@ -1373,6 +1292,7 @@ end
 %----------------------------------------------------
 function runallIP(boxidselecth, eventdata)
 disableButtons; pause(.02);
+conon
         
 
     if checkbox1H.Value
@@ -1405,12 +1325,135 @@ disableButtons; pause(.02);
 
 
     
-disp('ALL SELECTED FUNCTIONS FINISHED RUNNING!')
+disp('PROCESSING COMPLETED - ALL SELECTED FUNCTIONS FINISHED RUNNING!')
+conoff
 enableButtons        
 end
 
 
 
+
+
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        PREVIEW IMAGE STACK
+%----------------------------------------------------
+function previewStack(boxidselecth, eventdata)
+disableButtons; pause(.02);
+
+    % disp('PREVIEWING IMAGE STACK')
+    
+    totframes = size(IMG,3);
+    
+    previewStacknum = str2num(previewStacknumH.String);
+
+    
+    if totframes >= previewStacknum
+    
+        IMGi = IMG(:,:,1:previewStacknum);
+    
+    
+        [IMGcMax, IMGcMaxInd] = max(IMG(:));
+        [IMGcMin, IMGcMinInd] = min(IMG(:));    
+        % [I,J,tmp1] = ind2sub(size(IMG),cb1)
+        % IMG(I,J,tmp1)
+
+        axes(haxGRIN)
+        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+
+
+        for nn = 1:previewStacknum
+
+            phGRIN.CData = IMGi(:,:,nn);
+
+            pause(.04)
+        end
+    
+    
+
+        % VISUALIZE AND ANNOTATE
+        % fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
+        % fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGt)));
+        % GRINcompare(IMG, IMGt, previewNframes)
+        % mainguih.HandleVisibility = 'off';
+        % close all;
+        % mainguih.HandleVisibility = 'on';
+    
+    
+    else
+        
+       disp('Not enough images in 3rd dim to preview that many frames') 
+        
+    end
+
+        
+enableButtons        
+% disp('Preview completed!')
+end
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        CREATE IMAGE TILES
+%----------------------------------------------------
+function imgblocks(boxidselecth, eventdata)
+disableButtons; pause(.02);
+
+    % CREATE ROBERT BLOCK PROC
+    disp('SEGMENTING IMGAGES INTO BLOCKS (blockproc could take a few seconds)')
+
+    blockSize = str2num(imgblocksnumH.String);
+    
+    
+    
+    fun = @(block_struct) mean(block_struct.data(:)) * ones(size(block_struct.data)); 
+
+    IMGb = zeros(size(IMG));
+
+    sz = size(IMG,3);
+    progresstimer('Segmenting images into blocks...')
+    % hwb = waitbar(0,'Segmenting image into tiles...');
+    for nn = 1:sz
+
+        IMGb(:,:,nn) = blockproc(IMG(:,:,nn),[blockSize blockSize],fun);
+        
+        if ~mod(nn,100)
+            % waitbar(nn/sz)
+            progresstimer(nn/sz)
+        end
+    
+    end
+    
+        % close(hwb)
+        % VISUALIZE AND ANNOTATE
+        fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
+        fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGb)));
+        % GRINcompare(IMG, IMGb, previewNframes)
+        mainguih.HandleVisibility = 'off';
+        close all;
+        mainguih.HandleVisibility = 'on';
+    
+    IMG = IMGb;
+    
+        previewStack
+        axes(haxGRIN)
+        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+
+        
+enableButtons        
+disp('Block-Segment Images completed!')        
+end
 
 
 
