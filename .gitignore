@@ -5,6 +5,7 @@
 *.aux
 *.log
 *.out
+*.txt
 
 # Explicitly ignore some folders
 testdata
