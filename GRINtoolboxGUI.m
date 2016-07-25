@@ -71,22 +71,19 @@ disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 global imgfilename imgpathname xlsfilename xlspathname
 
 if isbrad
-% imgfilename = 'gc33_031816g.tif';
-% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-% xlsfilename = 'gc33_031816.xlsx';
-% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-
-imgfilename = 'gc33_032316g.tif';
+imgfilename = 'gc33_031816g.tif';
 imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-xlsfilename = 'gc33_032316.xlsx';
+xlsfilename = 'gc33_031816.xlsx';
 xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+
+% imgfilename = 'gc33_032316g.tif';
+% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+% xlsfilename = 'gc33_032316.xlsx';
+% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 end
 
 
 %% ESTABLISH GLOBALS AND SET STARTING VALUES
-
-
-% NEW GLOBALS
 
 global mainguih imgLogo
 
@@ -97,12 +94,12 @@ global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial
 global total_frames CS_lengthFrames
 
 
-global cropAmount blockSize previewNframes customFunOrder 
+global cropAmount IMGfactors blockSize previewNframes customFunOrder 
 cropAmount = 18;
-blockSize = 20;
+IMGfactors = 1;
+blockSize = 22;
 previewNframes = 25;
 customFunOrder = 1;
-
 
 global stimtype stimnum CSUSvals
 % CSxUS:1  CS:2  US:3
@@ -250,11 +247,11 @@ imgblocksH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
     'Position', [0.08 0.50 0.60 0.08], 'FontSize', 13, 'String', 'Block-Segment Images',...
     'Callback', @imgblocks, 'Enable','off'); 
 imgblockstxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.56 0.27 0.03], 'FontSize', 11,'String', 'Tile Size (pxl)');
-imgblocksnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.71 0.51 0.27 0.05], 'FontSize', 13); 
-
-
+    'Position', [0.71 0.56 0.27 0.03], 'FontSize', 10,'String', 'Tile Size (pxl)');
+imgblockspopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
+    'Units', 'normalized', 'String', {'20','2','1'},...
+    'Position', [0.70 0.505 0.28 0.05],...
+    'Callback', @imgblockspopup);
 
 
 reshapeDataH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
@@ -291,7 +288,7 @@ timepointMeansH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
     'Callback', @timepointMeans, 'Enable','off');              
 CSUSpopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
     'Units', 'normalized', 'String', {'CS','US'},...
-    'Position', [0.70 0.11 0.28 0.05],...
+    'Position', [0.70 0.105 0.28 0.05],...
     'Callback', @CSUSpopup);
 
 
@@ -414,9 +411,6 @@ grinlenstoolbox()
 % -----------------------------------------------------------------
 
 
-
-
-
 %----------------------------------------------------
 %   INITIAL GRIN TOOLBOX FUNCTION TO POPULATE GUI
 %----------------------------------------------------
@@ -436,12 +430,11 @@ function grinlenstoolbox(hObject, eventdata)
     set(haxGRIN, 'XLim', [1 size(imgLogo,2)], 'YLim', [1 size(imgLogo,1)]);
     set(smoothimgnumH, 'String', num2str(smoothSD));
     set(cropimgnumH, 'String', num2str(cropAmount));
-    set(imgblocksnumH, 'String', num2str(blockSize));
     set(alignCSFramesnumH, 'String', num2str(CSonsetDelay));
     set(dFoverFnumH, 'String', num2str(baselineTime));
     set(previewStacknumH, 'String', num2str(previewStacknum));
     
-    
+    % set(imgblocksnumH, 'String', num2str(blockSize));
     % Set radiobuttons
     % stimtypeh.SelectedObject = stimtypeh1; 
     % stimtype = stimtypeh.SelectedObject.String;
@@ -461,10 +454,6 @@ function grinlenstoolbox(hObject, eventdata)
 
 disp('Ready!')
 end
-
-
-
-
 
 
 
@@ -608,6 +597,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
      
      fprintf('\n Size after excel-informed adjustment:  % s \n\n', num2str(size(IMG)));
      
+     update_IMGfactors()
     
 enableButtons
 disp('Image stack and xls data import completed!')
@@ -851,6 +841,7 @@ disableButtons; pause(.02);
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
 
+        update_IMGfactors()
         
 enableButtons        
 disp('Crop Images completed!')
@@ -866,19 +857,85 @@ end
 
 
 
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        IMGBLOCKS POPUP MENU CALLBACK
+%----------------------------------------------------
+function imgblockspopup(hObject, eventdata)
+        
+    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+    
+    fprintf('\n\n New tile size: % s \n\n', num2str(blockSize));
+    
+    % imgblockspopupH.String
+    % imgblockspopupH.Value
+
+end
+
+
+
+%----------------------------------------------------
+%  GET FACTORS THAT DIVIDE EVENLY INTO size(IMG,1)
+%----------------------------------------------------
+function update_IMGfactors()
+    
+    szIMG = size(IMG,1);
+        
+    s=1:szIMG;
+    
+    IMGfactors = s(rem(szIMG,s)==0);
+    
+    imgblockspopupH.String = IMGfactors;
+    
+    
+    
+    if any(IMGfactors == 22)
+        
+        imgblockspopupH.Value = find(IMGfactors==22);
+        blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+        
+    elseif numel(IMGfactors) > 2
+
+        imgblockspopupH.Value = round(numel(IMGfactors)/2)+1;
+        blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+        
+    else
+        
+        imgblockspopupH.Value = ceil(numel(IMGfactors)/2);
+        blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+    
+    end
+
+    % fprintf('\n\n New tile size: % s \n\n', num2str(blockSize));
+
+end
+
+
+
+
+
 %----------------------------------------------------
 %        CREATE IMAGE TILES
 %----------------------------------------------------
 function imgblocks(boxidselecth, eventdata)
-disableButtons; pause(.02);
+% disableButtons; pause(.02);
 
-    % CREATE ROBERT BLOCK PROC
-    disp('SEGMENTING IMGAGES INTO BLOCKS (blockproc could take a few seconds)')
+    % CREATE IMAGES TILES PER ROBERT'S SPEC
+    disp('SEGMENTING IMGAGES INTO TILES')
 
-    blockSize = str2num(imgblocksnumH.String);
     
+    update_IMGfactors()
+    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
     
-    
+    fprintf('\n\n Tile Size: % s \n\n', num2str(blockSize));
+        
     fun = @(block_struct) mean(block_struct.data(:)) * ones(size(block_struct.data)); 
 
     IMGb = zeros(size(IMG));
@@ -913,7 +970,7 @@ disableButtons; pause(.02);
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
 
         
-enableButtons        
+enableButtons
 disp('Block-Segment Images completed!')        
 end
 
@@ -1233,9 +1290,9 @@ end
 %        PLOT TILE STATS DATA
 %----------------------------------------------------
 function plotTileStats(boxidselecth, eventdata)
-% disableButtons; pause(.02);
-%%
-    disp(' '); disp('PLOTTING TILE STATS DATA'); 
+disableButtons; pause(.02);
+
+    disp(' '); disp('PLOTTING TILE STATS DATA (PLEASE WAIT)...'); 
     
     % EVENTUALLY REPLACE YLIMS WITH...
     % [IMGcMax, IMGcMaxInd] = max(IMG(:));
@@ -1280,7 +1337,7 @@ function plotTileStats(boxidselecth, eventdata)
 
     
     
-    blockSize = str2num(imgblocksnumH.String);
+    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
 
     pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
 
@@ -1308,15 +1365,20 @@ function plotTileStats(boxidselecth, eventdata)
     axes(allhax{nn})
     [ph1, po1] = envlineplot(xx_Mu',yy_Mu', ee_Mu','cmap',colorz{nn},...
                             'alpha','transparency', 0.6);
-    hp1 = plot(xx_Mu,yy_Mu,'Color',colorz{nn});
+    hp1{nn} = plot(xx_Mu,yy_Mu,'Color',colorz{nn});
     pause(.2)
     
-    legend(allhax{nn},CSids(nn),'Position',legpos{nn},'Box','off');
+    % lh1{nn} = legend(allhax{nn},CSids(nn),'Position',legpos{nn},'Box','off');
     
     end
     %==============================================%
     
-    text(10, .1, ['CS ON/OFF US ON/OFF:  ', num2str(CSUSonoff)])
+    text(1, -.12, ['CS ON/OFF US ON/OFF:  ', num2str(CSUSonoff)])
+    
+    
+    leg1 = legend([hp1{:}],CSids);
+	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
     
         
     for mm = 1:4
@@ -1327,7 +1389,7 @@ function plotTileStats(boxidselecth, eventdata)
     line([CSUSonoff(1) CSUSonoff(1)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
     line([CSUSonoff(2) CSUSonoff(2)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
     %==============================================%
-    
+    pause(.1)
     
 
 fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
@@ -1341,26 +1403,73 @@ fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
     [aX,aY] = meshgrid(aXlocs,aYlocs);
     YL=[-.15 .15];
     
-    
-    for tt = 1:size(pixels,3)
-        for ii = 1:size(pixels,1)
-                
-        
+    %{
+%     for tt = 1:size(pixels,3)
+%         for ii = 1:size(pixels,1)
+%                 
+%         
+%         axes('Position',[aX(ii) aY(ii) (1/(size(pxl,1)+1)) (1/(size(pxl,2)+1))],...
+%         'Color','none'); axis off; hold on;
+%     
+%         plot( 1:size(pixels,2) , pixels(ii,:,tt) ,'Color',colorz{tt})
+%         set(gca,'YLim',YL)
+%         line([CSUSonoff(1) CSUSonoff(1)],YL,'Color',[.8 .8 .8])
+%         line([CSUSonoff(2) CSUSonoff(2)],YL,'Color',[.8 .8 .8])
+%                     
+%         end
+%         pause(.05)
+%     end
+%}
+
+    for ii = 1:size(pixels,1)
+
         axes('Position',[aX(ii) aY(ii) (1/(size(pxl,1)+1)) (1/(size(pxl,2)+1))],...
         'Color','none'); axis off; hold on;
     
-        plot( 1:size(pixels,2) , pixels(ii,:,tt) ,'Color',colorz{tt})
+        % h = squeeze(pixels(ii,:,:));
+        pha = plot( 1:size(pixels,2) , squeeze(pixels(ii,:,:)));
         set(gca,'YLim',YL)
         line([CSUSonoff(1) CSUSonoff(1)],YL,'Color',[.8 .8 .8])
         line([CSUSonoff(2) CSUSonoff(2)],YL,'Color',[.8 .8 .8])
                     
-        end
+    end
+        pause(.05)
+    
+    
+    
+    
+    legpos = {  [0.01,0.94,0.15,0.033], ...
+                [0.01,0.90,0.15,0.033], ...
+                [0.01,0.86,0.15,0.033], ...
+                [0.01,0.82,0.15,0.033], ...
+                [0.01,0.78,0.15,0.033], ...
+                [0.01,0.74,0.15,0.033], ...
+                };
+    
+    pc = {pha.Color};
+    pt = CSids;
+    
+    for nn = 1:size(pixels,3)
+        
+    annotation(fh10,'textbox',...
+    'Position',legpos{nn},...
+    'Color',pc{nn},...
+    'FontWeight','bold',...
+    'String',pt(nn),...
+    'FontSize',14,...
+    'FitBoxToText','on',...
+    'EdgeColor',pc{nn},...
+    'FaceAlpha',.7,...
+    'Margin',3,...
+    'LineWidth',2,...
+    'VerticalAlignment','bottom',...
+    'BackgroundColor',[1 1 1]);
+    
     end
     
     
-    
 enableButtons
-disp('Plotting trial data completed!')
+disp('PLOTTING TILE STATS DATA COMPLETED!')
 end
 
 
@@ -1889,6 +1998,48 @@ end
 
 
 
+
+
+
+% CREATE VISUAL IMAGE OF TRIAL BLOCKS AND CS / US ONSET / OFFSET
+%{
+
+trials = zeros(30,69);
+
+y = randsample(30,15)
+
+t = 1:30;
+t(y) = 0;
+z = find(t)
+
+trials(y,25:35) = 1;
+trials(y,36) = 0;
+trials(y,37:47) = 3;
+
+trials(z,35:45) = 2;
+trials(z,46) = 0;
+trials(z,47:57) = 4;
+
+
+
+
+cm = [ 1  1  1
+      .9 .1 .1
+      .95 .2 .4
+      .1 .9 .1
+      .1 .95 .6
+      ];
+
+close all
+fh1=figure('Units','normalized','OuterPosition',[.1 .1 .8 .6],'Color','w');
+ih = imagesc(trials);
+colormap(cm)
+grid on
+ax = gca;
+ax.YTick = [.5:1:29.5];
+ax.YTickLabel = 1:30;
+
+%}
 
 
 end
