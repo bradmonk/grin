@@ -546,6 +546,10 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     grinano('importxls',[xlspathname , xlsfilename])
 
     [xlsN,xlsT,xlsR] = xlsread([xlspathname , xlsfilename]);
+    
+    if size(xlsN,1) == size(xlsR,1)
+        xlsN(1,:) = [];
+    end
 
     disp(' '); disp('Preview of raw xls import...')
     disp(xlsR(1:5,1:7))
@@ -566,6 +570,10 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     total_frames    = total_trials * framesPerTrial;    % total collected frames
     CS_lengthFrames = round(CS_length .* framesPerSec); % CS length in frames
 
+    
+    
+    
+    
     disp('XLS data successfully imported and processed!')
     grinano('xlsparams',total_trials, framesPerTrial, secPerFrame, framesPerSec, secondsPerTrial)
 
@@ -1275,6 +1283,8 @@ disableButtons; pause(.02);
     % previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff, ROImu)
     
     
+    
+    
 enableButtons
 disp('Compute ROI statistics completed!')
 end
@@ -1290,7 +1300,7 @@ end
 %        PLOT TILE STATS DATA
 %----------------------------------------------------
 function plotTileStats(boxidselecth, eventdata)
-disableButtons; pause(.02);
+% disableButtons; pause(.02);
 
     disp(' '); disp('PLOTTING TILE STATS DATA (PLEASE WAIT)...'); 
     
@@ -1467,6 +1477,18 @@ fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
     
     end
     
+%     % Add 'doprint' checkbox before implementing this code
+%     print(fh10,'-dpng','-r300','tilefig')
+%     
+%     hFig = figure('Toolbar','none',...
+%               'Menubar','none');
+%     hIm = imshow('tilefig.png');
+%     hSP = imscrollpanel(hFig,hIm);
+%     set(hSP,'Units','normalized',...
+%         'Position',[0 .1 1 .9])
+   
+ 
+ 
     
 enableButtons
 disp('PLOTTING TILE STATS DATA COMPLETED!')
