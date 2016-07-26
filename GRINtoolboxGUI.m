@@ -69,12 +69,15 @@ disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 %% MANUALLY SET PER-SESSION PATH PARAMETERS IF WANTED (OPTIONAL)
 
 global imgfilename imgpathname xlsfilename xlspathname
+global lickfilename lickpathname
 
 if isbrad
 imgfilename = 'gc33_031816g.tif';
 imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 xlsfilename = 'gc33_031816.xlsx';
 xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+lickfilename = 'gc33_031916_lick.xlsx';
+lickpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 
 % imgfilename = 'gc33_032316g.tif';
 % imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
@@ -87,7 +90,10 @@ end
 
 global mainguih imgLogo
 
-global IMG GRINstruct GRINtable xlsN xlsT xlsR
+global IMG GRINstruct GRINtable
+global xlsN xlsT xlsR
+global lickN LICK %lickT lickR
+global IMGraw
 
 global frame_period framesUncomp CS_type US_type delaytoCS CS_length compressFrms
 global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial 
@@ -465,17 +471,17 @@ function importimgstack(hObject, eventdata)
 diary on
 disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
-    if imgfilename
+    if numel(imgfilename) > 1
         disp('image stack path was set manually')
     else
         [imgfilename, imgpathname] = uigetfile({'*.tif*'},...
         'Select image stack to import', thisfilepath);        
     end
     
-    % keyboard
+
     
     
-    if xlsfilename
+    if numel(xlsfilename) > 1
         disp('xls data path was set manually')
     else
     
@@ -536,7 +542,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
               pause(1)
     
-    
+    IMGraw = IMG(:,:,1);
     % imgslider.Max = size(IMG);
     % imgsliderH.SliderStep = [1 size(IMG)]
               
@@ -572,6 +578,26 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
     
     
+    if isbrad
+    lickFiles = dir([lickpathname, lickfilename(1:end-5) '*.xls*']);
+    
+    [lickN,~,~] = xlsread([lickpathname , lickFiles.name]);
+    
+    LICK = reshape(lickN,...
+            floor(size(lickN,1) / framesPerTrial),...
+            [],...
+            size(lickN,2));
+        
+    % keyboard
+        
+    LICK = squeeze(sum(LICK,1));
+                
+        tv1 = [];
+        tv2 = [];
+        tv3 = [];
+        tv4 = [];
+        
+    end
     
     
     disp('XLS data successfully imported and processed!')
@@ -844,6 +870,8 @@ disableButtons; pause(.02);
         mainguih.HandleVisibility = 'on';
     
     IMG = IMGt;
+    
+    IMGraw = IMGt(:,:,1);
     
         previewStack
         axes(haxGRIN)
@@ -1487,8 +1515,29 @@ fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
 %     set(hSP,'Units','normalized',...
 %         'Position',[0 .1 1 .9])
    
- 
- 
+    fhR = figure('Units','normalized','OuterPosition',[.1 .1 .5 .8],'Color','w');
+    axR = axes;
+    phR = imagesc(IMGraw);
+    grid on
+    axR.YTick = [0:blockSize:size(IMGraw,1)];
+    axR.XTick = [0:blockSize:size(IMGraw,1)];
+    % axR.YTickLabel = 1:30;
+    
+    axR.GridAlpha = .8;
+    axR.GridColor = [0.99 0.1 0.1];
+    
+        tv1 = 1:size(IMGraw,1);
+        
+        pause(.2)
+        
+        for ii = 1:size(pixels,1)
+            
+            tv2 = [  aX(ii)*size(IMGraw,1)   aY(ii)*size(IMGraw,1)+2 ...
+                    (1/(size(pxl,1)+1))     (1/(size(pxl,2)+1))];
+
+            text(tv2(1),tv2(2),num2str(tv1(ii)),'Color','r','Parent',axR);
+    
+        end
     
 enableButtons
 disp('PLOTTING TILE STATS DATA COMPLETED!')
