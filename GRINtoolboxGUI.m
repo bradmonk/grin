@@ -72,12 +72,12 @@ global imgfilename imgpathname xlsfilename xlspathname
 global lickfilename lickpathname
 
 if isbrad
-imgfilename = 'gc33_031816g.tif';
-imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-xlsfilename = 'gc33_031816.xlsx';
-xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-lickfilename = 'gc33_031916_lick.xlsx';
-lickpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+% imgfilename = 'gc33_031816g.tif';
+% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+% xlsfilename = 'gc33_031816.xlsx';
+% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
+% lickfilename = 'gc33_031916_lick.xlsx';
+% lickpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
 
 % imgfilename = 'gc33_032316g.tif';
 % imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
@@ -578,26 +578,26 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
     
     
-    if isbrad
-    lickFiles = dir([lickpathname, lickfilename(1:end-5) '*.xls*']);
-    
-    [lickN,~,~] = xlsread([lickpathname , lickFiles.name]);
-    
-    LICK = reshape(lickN,...
-            floor(size(lickN,1) / framesPerTrial),...
-            [],...
-            size(lickN,2));
-        
-    % keyboard
-        
-    LICK = squeeze(sum(LICK,1));
-                
-        tv1 = [];
-        tv2 = [];
-        tv3 = [];
-        tv4 = [];
-        
-    end
+%     if isbrad
+%     lickFiles = dir([lickpathname, lickfilename(1:end-5) '*.xls*']);
+%     
+%     [lickN,~,~] = xlsread([lickpathname , lickFiles.name]);
+%     
+%     LICK = reshape(lickN,...
+%             floor(size(lickN,1) / framesPerTrial),...
+%             [],...
+%             size(lickN,2));
+%         
+%     % keyboard
+%         
+%     LICK = squeeze(sum(LICK,1));
+%                 
+%         tv1 = [];
+%         tv2 = [];
+%         tv3 = [];
+%         tv4 = [];
+%         
+%     end
     
     
     disp('XLS data successfully imported and processed!')
@@ -1730,9 +1730,10 @@ function exportvars(boxidselecth, eventdata)
     if size(GRINtable,1) > 1
         checkLabels = {'Save IMG to variable named:' ...
                    'Save GRINstruct to variable named:' ...
-                   'Save GRINtable to variable named:'}; 
-        varNames = {'IMG','GRINstruct','GRINtable'}; 
-        items = {IMG,GRINstruct,GRINtable};
+                   'Save GRINtable to variable named:' ...
+                   'Save IMGraw to variable named:'}; 
+        varNames = {'IMG','GRINstruct','GRINtable','IMGraw'}; 
+        items = {IMG,GRINstruct,GRINtable,IMGraw};
         export2wsdlg(checkLabels,varNames,items,...
                      'Save Variables to Workspace');
 
