@@ -374,9 +374,9 @@ exploreBH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Explore Data B',...
     'Callback', @exploreB, 'Enable','off');
 
-exploreCH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Explore Data C',...
-    'Callback', @exploreC, 'Enable','off');
+resetwsH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Reset Toolbox',...
+    'Callback', @resetws);
 
 
 
@@ -1891,15 +1891,34 @@ enableButtons
 disp('Data explorer function completed!')
 end
 
-function exploreC(boxidselecth, eventdata)
+
+
+
+
+%----------------------------------------------------
+%        RESET WORKSPACE
+%----------------------------------------------------
+function resetws(boxidselecth, eventdata)
 % disableButtons; pause(.02);
 
-    disp('RUNNING DATA EXPLORER C!')
-    disp('COMING SOON!')
+
+    choice = questdlg({'This will close all windows and reset the ',...
+                       'GRIN Lens Toolbox workspace. Continue?'}, ...
+	'Relaunch GRIN Toolbox', ...
+	'reset toolbox','abort reset','reset toolbox');
+    % Handle response
+    switch choice
+        case 'reset toolbox'
+            disp(' Resetting GRIN Lens Toolbox...')
+            pause(2)
+            GRINtoolboxGUI()
+            return
+        case 'abort reset'
+            disp(' Continuing without reset...')
+    end
     
     
-enableButtons        
-disp('Data explorer function completed!')
+% enableButtons
 end
 
 
