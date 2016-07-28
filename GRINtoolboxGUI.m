@@ -404,7 +404,7 @@ loadmatdataH = uicontrol('Parent', exportpanelH, 'Units', 'normalized', ...
 % enableButtons
 
 
-
+pause(.1)
 
 grinlenstoolbox()
 
@@ -471,8 +471,15 @@ function importimgstack(hObject, eventdata)
 diary on
 disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
+
+
+
+    % PATH TO IMAGE STACK WAS ALREADY SET MANUALLY ABOVE
     if numel(imgfilename) > 1
         disp('image stack path was set manually')
+        
+        
+    % PATH TO IMAGE STACK WAS NOT SET - GET IT NOW    
     else
         [imgfilename, imgpathname] = uigetfile({'*.tif*'},...
         'Select image stack to import', thisfilepath);        
@@ -481,8 +488,14 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
     
     
+    
+    % PATH TO XLS DATA WAS ALREADY SET MANUALLY ABOVE
     if numel(xlsfilename) > 1
         disp('xls data path was set manually')
+        
+        
+        
+    % PATH TO XLS DATA WAS NOT SET MANUALLY - GET IT NOW
     else
     
         if numel(imgfilename) == 16
@@ -495,6 +508,8 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
         end
 
+        
+        % THERE WAS A SINGLE MATCH, BINGO!
         if numel(xlsFiles) == 1
 
             choice = questdlg({'Matching xls file found.', 'Would you like to import:',...
@@ -510,12 +525,43 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
                     [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
                     'Select Excel file associated with the TIF stack', imgpathname);
             end
+        
+            
+        % THERE WERE MULTIPLE MATCHING FILES
+        elseif numel(xlsFiles) > 1 
+                    
+                [s,v] = listdlg('PromptString','Select main xls file:',...
+                'SelectionMode','single',...
+                'ListString',{xlsFiles.name});
+            
+                if v == 1 % USER PRESSED 'OK'
+                        xlsfilename = xlsFiles(s).name;
+                        xlspathname = imgpathname;
+                else % USER PRESSED 'CANCEL' - ALLOW MANUAL SELECTION
+                        [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
+                        'Select Excel file associated with the TIF stack',...
+                        imgpathname);
+                end
+                
 
+        % NOTHING MATCHED - ALLOW MANUAL SELECTION    
+        else
+            disp(' ');
+            disp('No matching xls files were found in the same dir as the tif stack');
+            disp('Manually select the Excel datasheet associated with this stack');
+            [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
+                    'Select Excel file associated with the TIF stack', imgpathname);
         end
     
     end
     
+    
+    
+    
+    
+    
     fprintf('\n\n GRIN DATASET: % s \n\n', imgfilename);
+    pause(.1)
     
     
     % ------------- IMG STACK IMPORT CODE -----------
@@ -1383,7 +1429,10 @@ function plotTileStats(boxidselecth, eventdata)
     
     CSids = unique(GRINstruct.csus);
     
-    %==============================================%
+    
+    
+    
+    %-------------------------- CI ENVELOPE FIGURE --------------------------
     for nn = 1:size(pixels,3)
     
     pixCS = pixels(:,:,nn);
@@ -1399,7 +1448,6 @@ function plotTileStats(boxidselecth, eventdata)
 	yy_Mu = spline(x_Mu,y_Mu,xx_Mu);
     ee_Mu = spline(x_Mu,e_Mu,xx_Mu);
     
-
     axes(allhax{nn})
     [ph1, po1] = envlineplot(xx_Mu',yy_Mu', ee_Mu','cmap',colorz{nn},...
                             'alpha','transparency', 0.6);
@@ -1409,10 +1457,8 @@ function plotTileStats(boxidselecth, eventdata)
     % lh1{nn} = legend(allhax{nn},CSids(nn),'Position',legpos{nn},'Box','off');
     
     end
-    %==============================================%
     
     text(1, -.12, ['CS ON/OFF US ON/OFF:  ', num2str(CSUSonoff)])
-    
     
     leg1 = legend([hp1{:}],CSids);
 	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
@@ -1426,12 +1472,77 @@ function plotTileStats(boxidselecth, eventdata)
     end
     line([CSUSonoff(1) CSUSonoff(1)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
     line([CSUSonoff(2) CSUSonoff(2)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
-    %==============================================%
     pause(.1)
+    %-------------------------------------------------------------------------
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    %-------------------------- IMGraw FIGURE GRID --------------------------
+    
+    aXlocs =  (0:(size(pxl,1))) .* (1/(size(pxl,1)));
+    aXlocs(end) = [];
+    aYlocs =  (0:(size(pxl,2))) .* (1/(size(pxl,2)));
+    aYlocs(end) = [];
+    aXlocs = aXlocs+.005;
+    aYlocs = aYlocs+.005;
+    [aX,aY] = meshgrid(aXlocs,aYlocs);
+    YL=[-.15 .15];
 
-fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
+    fhR = figure('Units','normalized','OuterPosition',[.1 .1 .5 .8],'Color','w');
+    axR = axes;
+    phR = imagesc(IMGraw);
+    grid on
+    axR.YTick = [0:blockSize:size(IMGraw,1)];
+    axR.XTick = [0:blockSize:size(IMGraw,1)];
+    % axR.YTickLabel = 1:30;
+    
+    axR.GridAlpha = .8;
+    axR.GridColor = [0.99 0.1 0.1];
+    
+        tv1 = 1:size(IMGraw,1);
+        
+        pause(.2)
+        
+        
+        % NUMBERING IS TECHNICALLY INCORRECT SINCE BELOW AXIS #1 STARTS IN THE
+        % BOTTOM LEFT CORNER AND GOES UP, AND HERE IT STARTS IN THE TOP
+        % LEFT CORNER AND GOES DOWN. NOT SURE THAT IT MATTERS...
+        for ii = 1:size(pixels,1)
+            
+            tv2 = [  aX(ii)*size(IMGraw,1)   aY(ii)*size(IMGraw,1)+2 ...
+                    (1/(size(pxl,1)+1))     (1/(size(pxl,2)+1))];
 
+            text(tv2(1),tv2(2),num2str(tv1(ii)),'Color','r','Parent',axR);
+    
+        end
+        
+     pause(.1)
+    %-------------------------------------------------------------------------
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    %-------------------------- MULTI-TILE FIGURE --------------------------
+
+    fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
+
+    set(fh10,'ButtonDownFcn',@(~,~)disp('figure'),...
+   'HitTest','off')
+    
+    
+    
     aXlocs =  (0:(size(pxl,1))) .* (1/(size(pxl,1)));
     aXlocs(end) = [];
     aYlocs =  (0:(size(pxl,2))) .* (1/(size(pxl,2)));
@@ -1461,15 +1572,21 @@ fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
 
     for ii = 1:size(pixels,1)
 
-        axes('Position',[aX(ii) aY(ii) (1/(size(pxl,1)+1)) (1/(size(pxl,2)+1))],...
-        'Color','none'); axis off; hold on;
+        axh{ii} = axes('Position',[aX(ii) aY(ii) (1/(size(pxl,1)+1)) (1/(size(pxl,2)+1))],...
+        'Color','none','Tag',num2str(ii)); 
+        % axis off;
+        hold on;
     
         % h = squeeze(pixels(ii,:,:));
         pha = plot( 1:size(pixels,2) , squeeze(pixels(ii,:,:)));
         set(gca,'YLim',YL)
         line([CSUSonoff(1) CSUSonoff(1)],YL,'Color',[.8 .8 .8])
         line([CSUSonoff(2) CSUSonoff(2)],YL,'Color',[.8 .8 .8])
-                    
+        
+        
+        set(axh{ii},'ButtonDownFcn',@(~,~)disp(gca),...
+        'HitTest','on')
+        
     end
         pause(.05)
     
@@ -1505,6 +1622,66 @@ fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
     
     end
     
+    % haxN = axes('Position',[.001 .001 .99 .99],'Color','none');
+    % axis off; hold on;
+    pause(.2)
+    %-------------------------------------------------------------------------
+    
+
+
+        % keyboard
+        
+        
+        
+        
+
+    hcmenu = uicontextmenu;
+
+    item1 = uimenu(hcmenu,'Label','replot','Callback',@plottile);
+
+    haxe = findall(fh10,'Type','axes');
+
+         % Attach the context menu to each axes
+    for aa = 1:length(haxe)
+        set(haxe(aa),'uicontextmenu',hcmenu)
+    end   
+        
+        
+        
+        
+        %{
+        
+        gca
+        
+        figure(fh10)
+        [xp,yp,btn] = ginput(1);
+        
+        [aX,aY]
+        aXlocs
+        aYlocs
+        
+        aXlocs > xp & aXlocs < xp
+        
+        
+        
+        
+        tv1 = [];
+        tv2 = [];
+        tv3 = [];
+        tv4 = [];
+        
+        %}
+        
+    
+        
+        
+        
+        
+        
+        
+        
+        
+        
 %     % Add 'doprint' checkbox before implementing this code
 %     print(fh10,'-dpng','-r300','tilefig')
 %     
@@ -1513,35 +1690,182 @@ fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
 %     hIm = imshow('tilefig.png');
 %     hSP = imscrollpanel(hFig,hIm);
 %     set(hSP,'Units','normalized',...
-%         'Position',[0 .1 1 .9])
-   
-    fhR = figure('Units','normalized','OuterPosition',[.1 .1 .5 .8],'Color','w');
-    axR = axes;
-    phR = imagesc(IMGraw);
-    grid on
-    axR.YTick = [0:blockSize:size(IMGraw,1)];
-    axR.XTick = [0:blockSize:size(IMGraw,1)];
-    % axR.YTickLabel = 1:30;
-    
-    axR.GridAlpha = .8;
-    axR.GridColor = [0.99 0.1 0.1];
-    
-        tv1 = 1:size(IMGraw,1);
+%         'Position',[0 .1 1 .9])        
         
-        pause(.2)
         
-        for ii = 1:size(pixels,1)
-            
-            tv2 = [  aX(ii)*size(IMGraw,1)   aY(ii)*size(IMGraw,1)+2 ...
-                    (1/(size(pxl,1)+1))     (1/(size(pxl,2)+1))];
-
-            text(tv2(1),tv2(2),num2str(tv1(ii)),'Color','r','Parent',axR);
-    
-        end
-    
 enableButtons
 disp('PLOTTING TILE STATS DATA COMPLETED!')
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%   CONTEXT MENU CALLBACK TO MAKE LARGER TILE PLOT
+%----------------------------------------------------
+function plottile(boxidselecth, eventdata)
+% disableButtons; pause(.02);
+    
+    axdat = gca;
+    
+    tv1 = axdat.Children;
+    
+    tv2 = [tv1(3:end).XData];
+    tv3 = [tv1(3:end).YData];
+    
+    tv2 = fliplr(reshape(tv2,[],(size(tv1,1)-2)));
+    tv3 = fliplr(reshape(tv3,[],(size(tv1,1)-2)));
+    
+    fhrp=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
+    hx1 = axes('Position',[.05 .08 .9 .85],'Color','none');
+    hx1.YLim = [-.15 .15]; hold on;
+    
+    hp = plot(tv2, tv3 , 'LineWidth',2);
+    
+    leg1 = legend(hp,unique(GRINstruct.csus));
+	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
+    
+    tv2 = [tv1(1:2).XData];
+    tv3 = [tv1(1:2).YData];
+    
+    tv2 = reshape(tv2,[],2);
+    tv3 = reshape(tv3,[],2);
+    
+    plot(tv2, tv3 , 'Color',[.5 .5 .5])
+    
+    hx1.XTickLabel = num2str(round(hx1.XTick .* framesPerSec)');
+    hx1.XLabel.String = 'Time (seconds)';
+
+    % disp(' '); disp('PLOTTING TILE STATS DATA (PLEASE WAIT)...'); 
+    
+    %{
+    % EVENTUALLY REPLACE YLIMS WITH...
+    % [IMGcMax, IMGcMaxInd] = max(IMG(:));
+    % [IMGcMin, IMGcMinInd] = min(IMG(:)); 
+    
+    fhrp=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
+    hx1 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hx1.YLim = [-.15 .15];
+    hx2 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hx2.YLim = [-.15 .15];
+    axis off; hold on;
+    hx3 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hx3.YLim = [-.15 .15];
+    axis off; hold on;
+    hx4 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hx4.YLim = [-.15 .15];
+    axis off; hold on;
+    hx5 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hx5.YLim = [-.15 .15];
+    axis off; hold on;
+    hx6 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hx6.YLim = [-.15 .15];
+    axis off; hold on;
+    hx0 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hx0.YLim = [-.15 .15];
+    axis off; hold on;
+    allhx = {hx1, hx2, hx3, hx4, hx5, hx6};
+    colorz = {  [.99 .01 .01], ...
+                [.01 .99 .01], ...
+                [.01 .01 .99], ...
+                [.99 .01 .99], ...
+                [.99 .99 .01], ...
+                [.01 .99 .99], ...
+                };
+    legpos = {  [0.75,0.85,0.15,0.06], ...
+                [0.75,0.80,0.15,0.06], ...
+                [0.75,0.75,0.15,0.06], ...
+                [0.75,0.70,0.15,0.06], ...
+                [0.75,0.65,0.15,0.06], ...
+                [0.75,0.60,0.15,0.06], ...
+                };
+
+    
+    
+    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+
+    pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
+
+    pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
+    
+    CSids = unique(GRINstruct.csus);
+    
+    
+    
+    
+    %-------------------------- CI ENVELOPE FIGURE --------------------------
+    for nn = 1:size(pixels,3)
+    
+    pixCS = pixels(:,:,nn);
+	
+	Mu = mean(pixCS,1);
+    Sd = std(pixCS,0,1);
+    Se = Sd./sqrt(numel(Mu));
+	y_Mu = Mu';
+    x_Mu = (1:numel(Mu))';
+    % e_Mu = Se';
+    e_Mu = Sd';
+	xx_Mu = 1:0.1:max(x_Mu);
+	yy_Mu = spline(x_Mu,y_Mu,xx_Mu);
+    ee_Mu = spline(x_Mu,e_Mu,xx_Mu);
+    
+    axes(allhx{nn})
+    [ph1, po1] = envlineplot(xx_Mu',yy_Mu', ee_Mu','cmap',colorz{nn},...
+                            'alpha','transparency', 0.6);
+    hp1{nn} = plot(xx_Mu,yy_Mu,'Color',colorz{nn});
+    pause(.2)
+    
+    % lh1{nn} = legend(allhax{nn},CSids(nn),'Position',legpos{nn},'Box','off');
+    
+    end
+    
+    text(1, -.12, ['CS ON/OFF US ON/OFF:  ', num2str(CSUSonoff)])
+    
+    leg1 = legend([hp1{:}],CSids);
+	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
+    
+        
+    for mm = 1:4
+    text(CSUSonoff(mm),allhx{nn}.YLim(1),{'\downarrow'},...
+        'HorizontalAlignment','center','VerticalAlignment','bottom',...
+        'FontSize',20,'FontWeight','bold')
+    end
+    line([CSUSonoff(1) CSUSonoff(1)],[allhx{nn}.YLim(1) allhx{nn}.YLim(2)])
+    line([CSUSonoff(2) CSUSonoff(2)],[allhx{nn}.YLim(1) allhx{nn}.YLim(2)])
+    pause(.1)
+    %-------------------------------------------------------------------------
+    %}
+    
+    
+        
+% enableButtons
+% disp('PLOTTING TILE STATS DATA COMPLETED!')
+end
+
+
+
+
+
+
+
+
+
+
 
 
 
