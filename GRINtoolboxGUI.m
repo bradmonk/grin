@@ -2478,6 +2478,10 @@ function plottile(boxidselecth, eventdata)
     
     tv1 = axdat.Children;
     
+    GRINplotGUI(tv1, GRINstruct)
+    
+    return
+    
     tv2 = [tv1(3:end).XData];
     tv3 = [tv1(3:end).YData];
     
