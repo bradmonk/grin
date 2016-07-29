@@ -142,6 +142,18 @@ confilefullpath = which(confile,'-all');
 delete(confile)
 
 
+global GhaxGRIN GimgsliderYAH GimgsliderYBH GimgsliderXAH GimgsliderXBH
+global slideValYA slideValYB slideValXA slideValXB
+slideValYA = 0.15;
+slideValYB = -0.15;
+slideValXA = 100;
+slideValXB = 0;
+global GupdateGraphH Gcheckbox1H Gcheckbox2H Gcheckbox3H Gcheckbox4H
+global Gcheckbox5H Gcheckbox6H Gcheckbox7H
+
+
+
+
 % -----------------------------------------------------------------
 %%     INITIATE GUI HANDLES AND CREATE SUBMENU GUI FIGURE
 % -----------------------------------------------------------------
@@ -412,9 +424,9 @@ grinlenstoolbox()
 
 
 
-% -----------------------------------------------------------------
+% -----------------------------------------------------------------------------
 %%                     GUI TOOLBOX FUNCTIONS
-% -----------------------------------------------------------------
+% -----------------------------------------------------------------------------
 
 
 %----------------------------------------------------
@@ -472,13 +484,15 @@ diary on
 disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
 
+  %------------------- IMPORT DATA DIALOGUES --------------------
 
-
+  %--- IMPORT TIF IMAGE STACK
+  
     % PATH TO IMAGE STACK WAS ALREADY SET MANUALLY ABOVE
     if numel(imgfilename) > 1
+        
         disp('image stack path was set manually')
-        
-        
+            
     % PATH TO IMAGE STACK WAS NOT SET - GET IT NOW    
     else
         [imgfilename, imgpathname] = uigetfile({'*.tif*'},...
@@ -486,18 +500,18 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     end
     
 
-    
+  %--- IMPORT MAIN XLS DATA OF EXPERIMENT PARAMETERS
     
     
     % PATH TO XLS DATA WAS ALREADY SET MANUALLY ABOVE
     if numel(xlsfilename) > 1
+        
         disp('xls data path was set manually')
-        
-        
         
     % PATH TO XLS DATA WAS NOT SET MANUALLY - GET IT NOW
     else
     
+        % DETERMINE IF XLS FILE EXISTS IN SAME DIR AS IMG DATA
         if numel(imgfilename) == 16
 
             xlsFiles = dir([imgpathname, imgfilename(1:end-5) '*.xls*']);
@@ -509,7 +523,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
         end
 
         
-        % THERE WAS A SINGLE MATCH, BINGO!
+        % IF THERE WAS A SINGLE MATCH, BINGO!
         if numel(xlsFiles) == 1
 
             choice = questdlg({'Matching xls file found.', 'Would you like to import:',...
@@ -548,7 +562,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
         else
             disp(' ');
             disp('No matching xls files were found in the same dir as the tif stack');
-            disp('Manually select the Excel datasheet associated with this stack');
+            disp('Manually select the Excel datasheet of imaging parameters');
             [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
                     'Select Excel file associated with the TIF stack', imgpathname);
         end
@@ -560,6 +574,96 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     
     
     
+    
+  %--- IMPORT XLS LICKING DATA
+    
+  doimportlicking = questdlg('Would you like to import LICKING DATA?', ...
+                      'Licking data import', ...
+                       'Yes','No','No');             
+  switch doimportlicking
+	case 'Yes'
+    
+    % PATH TO XLS DATA WAS ALREADY SET MANUALLY ABOVE
+    if numel(lickfilename) > 1
+        
+        disp('xls data path was set manually')
+        
+    % PATH TO XLS DATA WAS NOT SET MANUALLY - GET IT NOW
+    else
+    
+        % DETERMINE IF XLS FILE EXISTS IN SAME DIR AS IMG DATA
+        if numel(imgfilename) == 16
+
+            lickxlsFiles = dir([imgpathname, imgfilename(1:end-5) '*_lick.xls*']);
+            
+
+        elseif numel(imgfilename) == 15
+
+            lickxlsFiles = dir([imgpathname, imgfilename(1:end-4) '*_lick.xls*']);
+
+        end
+
+        
+        % IF THERE WAS A SINGLE MATCH, BINGO!
+        if numel(lickxlsFiles) == 1
+
+            choice = questdlg({'Matching xls licking file found.',...
+                               'Would you like to import:',...
+                               lickxlsFiles.name}, ...
+                               'Import XLS file', ...
+                               'Yes','No (import manually)','No','Yes');
+            switch choice
+                case 'Yes'
+                    lickfilename = lickxlsFiles.name;
+                    lickpathname = imgpathname;
+                case 'No (import manually)'
+                    [lickfilename, lickpathname] = uigetfile({'*.xls*'},...
+                    'Select Excel file of licking data', imgpathname);
+                case 'No'
+                    lickfilename = [];
+                    lickpathname = [];
+                    
+            end
+        
+            
+        % THERE WERE MULTIPLE MATCHING FILES
+        elseif numel(lickxlsFiles) > 1 
+                    
+                [s,v] = listdlg('PromptString','Select xls licking file:',...
+                'SelectionMode','single',...
+                'ListString',{lickxlsFiles.name});
+            
+                if v == 1 % USER PRESSED 'OK'
+                        lickfilename = lickxlsFiles(s).name;
+                        lickpathname = imgpathname;
+                else % USER PRESSED 'CANCEL' - ALLOW MANUAL SELECTION
+                        [lickfilename, lickpathname] = uigetfile({'*.xls*'},...
+                        'Select Excel file of licking data', imgpathname);
+                end
+                
+
+        % NOTHING MATCHED - ALLOW MANUAL SELECTION    
+        else
+            disp(' ');
+            disp('No matching licking files were found tif stack dir');
+            disp('Manually select the Excel licking datasheet');
+            [lickfilename, lickpathname] = uigetfile({'*.xls*'},...
+                    'Select Excel file of licking data', imgpathname);
+        end
+    
+    end
+    
+  case 'No'
+    lickfilename = [];
+    lickpathname = [];
+  end
+      
+  %---------------------------------------------------------------------
+    
+  
+  
+  
+  
     fprintf('\n\n GRIN DATASET: % s \n\n', imgfilename);
     pause(.1)
     
@@ -624,28 +728,6 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
     
     
-%     if isbrad
-%     lickFiles = dir([lickpathname, lickfilename(1:end-5) '*.xls*']);
-%     
-%     [lickN,~,~] = xlsread([lickpathname , lickFiles.name]);
-%     
-%     LICK = reshape(lickN,...
-%             floor(size(lickN,1) / framesPerTrial),...
-%             [],...
-%             size(lickN,2));
-%         
-%     % keyboard
-%         
-%     LICK = squeeze(sum(LICK,1));
-%                 
-%         tv1 = [];
-%         tv2 = [];
-%         tv3 = [];
-%         tv4 = [];
-%         
-%     end
-    
-    
     disp('XLS data successfully imported and processed!')
     grinano('xlsparams',total_trials, framesPerTrial, secPerFrame, framesPerSec, secondsPerTrial)
 
@@ -668,6 +750,42 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
         
      CSUSvals = unique(GRINstruct.csus);
      set(CSUSpopupH, 'String', CSUSvals);
+     
+     
+     
+     
+     
+     
+     
+     
+     
+if isbrad
+    % ------------- LICK DATA IMPORT CODE -----------
+    [lickN,~,~] = xlsread([lickpathname , lickfilename]);
+    
+    if (size(lickN,2) ~= total_trials) 
+        warning(['\n Number of colums in % s \n does not match number ',...
+        'of trials in % s \n (toolbox may crash during analysis). \n'],...
+        lickfilename, xlsfilename)
+    end
+    
+    LICK = reshape(lickN,floor(size(lickN,1) / framesPerTrial),...
+                   [], size(lickN,2));
+
+               
+    fprintf('\n\n Lick data imported and reshaped to size:\n   size(LICK) % s \n\n', ...
+             num2str(size(LICK)));
+    % LICK = squeeze(sum(LICK,1));
+
+end
+     
+     
+     
+     
+     
+     
+     
+     
      
      
      % VISUALIZE AND ANNOTATE
@@ -1537,7 +1655,7 @@ function plotTileStats(boxidselecth, eventdata)
     %-------------------------- MULTI-TILE FIGURE --------------------------
 
     fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
-
+    
     set(fh10,'ButtonDownFcn',@(~,~)disp('figure'),...
    'HitTest','off')
     
@@ -1622,6 +1740,21 @@ function plotTileStats(boxidselecth, eventdata)
     
     end
     
+    annotation(fh10,'textbox',...
+    'Position',[.01 .97 .2 .05],...
+    'Color',[0 0 0],...
+    'FontWeight','bold',...
+    'String','RIGHT-CLICK ON ANY GRAPH TO OPEN ADVANCED REPLOT GUI',...
+    'FontSize',14,...
+    'FitBoxToText','on',...
+    'EdgeColor','none',...
+    'FaceAlpha',.7,...
+    'Margin',3,...
+    'LineWidth',2,...
+    'VerticalAlignment','bottom',...
+    'BackgroundColor',[1 1 1]);
+    
+    
     % haxN = axes('Position',[.001 .001 .99 .99],'Color','none');
     % axis off; hold on;
     pause(.2)
@@ -1637,7 +1770,7 @@ function plotTileStats(boxidselecth, eventdata)
 
     hcmenu = uicontextmenu;
 
-    item1 = uimenu(hcmenu,'Label','replot','Callback',@plottile);
+    item1 = uimenu(hcmenu,'Label','OPEN IN ADVANCED PLOT GUI','Callback',@plottile);
 
     haxe = findall(fh10,'Type','axes');
 
@@ -1716,6 +1849,8 @@ end
 %----------------------------------------------------
 %   CONTEXT MENU CALLBACK TO MAKE LARGER TILE PLOT
 %----------------------------------------------------
+% MOVED TO OWN FUNCTION FILE
+%{
 function plottile(boxidselecth, eventdata)
 % disableButtons; pause(.02);
     
@@ -1751,112 +1886,11 @@ function plottile(boxidselecth, eventdata)
     hx1.XLabel.String = 'Time (seconds)';
 
     % disp(' '); disp('PLOTTING TILE STATS DATA (PLEASE WAIT)...'); 
-    
-    %{
-    % EVENTUALLY REPLACE YLIMS WITH...
-    % [IMGcMax, IMGcMaxInd] = max(IMG(:));
-    % [IMGcMin, IMGcMinInd] = min(IMG(:)); 
-    
-    fhrp=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
-    hx1 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hx1.YLim = [-.15 .15];
-    hx2 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hx2.YLim = [-.15 .15];
-    axis off; hold on;
-    hx3 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hx3.YLim = [-.15 .15];
-    axis off; hold on;
-    hx4 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hx4.YLim = [-.15 .15];
-    axis off; hold on;
-    hx5 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hx5.YLim = [-.15 .15];
-    axis off; hold on;
-    hx6 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hx6.YLim = [-.15 .15];
-    axis off; hold on;
-    hx0 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hx0.YLim = [-.15 .15];
-    axis off; hold on;
-    allhx = {hx1, hx2, hx3, hx4, hx5, hx6};
-    colorz = {  [.99 .01 .01], ...
-                [.01 .99 .01], ...
-                [.01 .01 .99], ...
-                [.99 .01 .99], ...
-                [.99 .99 .01], ...
-                [.01 .99 .99], ...
-                };
-    legpos = {  [0.75,0.85,0.15,0.06], ...
-                [0.75,0.80,0.15,0.06], ...
-                [0.75,0.75,0.15,0.06], ...
-                [0.75,0.70,0.15,0.06], ...
-                [0.75,0.65,0.15,0.06], ...
-                [0.75,0.60,0.15,0.06], ...
-                };
-
-    
-    
-    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
-
-    pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
-
-    pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
-    
-    CSids = unique(GRINstruct.csus);
-    
-    
-    
-    
-    %-------------------------- CI ENVELOPE FIGURE --------------------------
-    for nn = 1:size(pixels,3)
-    
-    pixCS = pixels(:,:,nn);
-	
-	Mu = mean(pixCS,1);
-    Sd = std(pixCS,0,1);
-    Se = Sd./sqrt(numel(Mu));
-	y_Mu = Mu';
-    x_Mu = (1:numel(Mu))';
-    % e_Mu = Se';
-    e_Mu = Sd';
-	xx_Mu = 1:0.1:max(x_Mu);
-	yy_Mu = spline(x_Mu,y_Mu,xx_Mu);
-    ee_Mu = spline(x_Mu,e_Mu,xx_Mu);
-    
-    axes(allhx{nn})
-    [ph1, po1] = envlineplot(xx_Mu',yy_Mu', ee_Mu','cmap',colorz{nn},...
-                            'alpha','transparency', 0.6);
-    hp1{nn} = plot(xx_Mu,yy_Mu,'Color',colorz{nn});
-    pause(.2)
-    
-    % lh1{nn} = legend(allhax{nn},CSids(nn),'Position',legpos{nn},'Box','off');
-    
-    end
-    
-    text(1, -.12, ['CS ON/OFF US ON/OFF:  ', num2str(CSUSonoff)])
-    
-    leg1 = legend([hp1{:}],CSids);
-	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
-    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
-    
-        
-    for mm = 1:4
-    text(CSUSonoff(mm),allhx{nn}.YLim(1),{'\downarrow'},...
-        'HorizontalAlignment','center','VerticalAlignment','bottom',...
-        'FontSize',20,'FontWeight','bold')
-    end
-    line([CSUSonoff(1) CSUSonoff(1)],[allhx{nn}.YLim(1) allhx{nn}.YLim(2)])
-    line([CSUSonoff(2) CSUSonoff(2)],[allhx{nn}.YLim(1) allhx{nn}.YLim(2)])
-    pause(.1)
-    %-------------------------------------------------------------------------
-    %}
-    
-    
         
 % enableButtons
 % disp('PLOTTING TILE STATS DATA COMPLETED!')
 end
-
+%}
 
 
 
@@ -2410,6 +2444,345 @@ function motioncorrection(hObject, eventdata)
     % ===============================================
    
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        ADVANCED PLOTTING GUI
+%----------------------------------------------------
+function plottile(boxidselecth, eventdata)
+% disableButtons; pause(.02);
+
+    
+
+    
+    axdat = gca;
+    
+    tv1 = axdat.Children;
+    
+    tv2 = [tv1(3:end).XData];
+    tv3 = [tv1(3:end).YData];
+    
+    tv2 = fliplr(reshape(tv2,[],(size(tv1,1)-2)));
+    tv3 = fliplr(reshape(tv3,[],(size(tv1,1)-2)));
+    
+    
+    
+    
+    
+    
+%% -------- MAIN FIGURE WINDOW --------   
+% close(graphguih)
+% mainguih.CurrentCharacter = '+';
+graphguih = figure('Units', 'normalized','Position', [.02 .1 .85 .65], 'BusyAction',...
+    'cancel', 'Name', 'mainguih', 'Tag', 'graphguih'); 
+
+
+GhaxGRIN = axes('Parent', graphguih, 'NextPlot', 'replacechildren',...
+    'Position', [0.05 0.08 0.55 0.85]);
+    GhaxGRIN.YLim = [-.15 .15];
+    hold on;
+    % 'XColor','none','YColor','none','YDir','reverse'
+    % ,'XDir','reverse',... 'PlotBoxAspectRatio', [1 1 1],
+    
+GimgsliderYAH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','slider',...
+	'Max',1,'Min',0,'Value',.15,'SliderStep',[0.01 0.10],...
+	'Position', [-.01 0.62 0.03 0.30], 'Callback', @GimgsliderYA);
+
+GimgsliderYBH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','slider',...
+	'Max',0,'Min',-1,'Value',-.15,'SliderStep',[0.01 0.10],...
+	'Position', [-.01 0.08 0.03 0.30], 'Callback', @GimgsliderYB);
+
+GimgsliderXAH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','slider',...
+	'Max',200,'Min',0,'Value',100,'SliderStep',[0.01 0.10],...
+	'Position', [0.40 0.01 0.20 0.03], 'Callback', @GimgsliderXA);
+
+GimgsliderXBH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','slider',...
+	'Max',200,'Min',0,'Value',1,'SliderStep',[0.01 0.10],...
+	'Position', [0.05 0.01 0.20 0.03], 'Callback', @GimgsliderXB);
+
+
+%----------------------------------------------------
+%           IMAGE PROCESSING PANEL
+%----------------------------------------------------
+GIPpanelH = uipanel('Title','Image Processing','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],...
+    'Position', [0.65 0.25 0.15 0.73]); % 'Visible', 'Off',
+
+
+% csustxt = unique(GRINstruct.csus);
+
+GupdateGraphH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
+    'Position', [.05 0.88 .90 .10], 'FontSize', 13, 'String', 'Update Graph',...
+    'Callback', @GupdateGraph, 'Enable','off');
+
+if size(CSUSvals,1) > 0
+Gcheckbox1H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.71 .90 .05] ,'String',CSUSvals(1), 'Value',1);
+end
+if size(CSUSvals,1) > 1
+Gcheckbox2H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.61 .90 .05] ,'String',CSUSvals(2), 'Value',1);
+end
+if size(CSUSvals,1) > 2
+Gcheckbox3H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.51 .90 .05] ,'String',CSUSvals(3), 'Value',1);
+end
+if size(CSUSvals,1) > 3
+Gcheckbox4H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.41 .90 .05] ,'String',CSUSvals(4), 'Value',1);
+end
+if size(CSUSvals,1) > 4 
+Gcheckbox5H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.31 .90 .05] ,'String',CSUSvals(5), 'Value',1);
+end
+if size(CSUSvals,1) > 5
+Gcheckbox6H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.21 .90 .05] ,'String',CSUSvals(6), 'Value',1);
+end
+if size(CSUSvals,1) > 6
+Gcheckbox7H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.11 .90 .05] ,'String',CSUSvals(7), 'Value',1);
+end
+
+
+
+GCSUSpopupH = uicontrol('Parent', GIPpanelH,'Style', 'popup',...
+    'Units', 'normalized', 'String', {'CS','US'},...
+    'Position', [.05 .02 0.9 0.05],...
+    'Callback', @GCSUSpopup);
+
+           
+% keyboard
+%----------------------------------------------------
+%    CUSTOM FUNCTIONS PANEL
+%----------------------------------------------------
+GcustomfunpanelH = uipanel('Title','Custom Code & Data Exploration','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],...
+    'Position', [0.81 0.64 0.18 0.34]); % 'Visible', 'Off',
+              
+GrunCustomAH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function A',...
+    'Callback', @GrunCustomA, 'Enable','off');
+
+GrunCustomBH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function B',...
+    'Callback', @GrunCustomB, 'Enable','off');
+
+GrunCustomCH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function C',...
+    'Callback', @GrunCustomC, 'Enable','off');
+
+GrunCustomDH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function D',...
+    'Callback', @GrunCustomD, 'Enable','off');
+
+
+
+
+
+%----------------------------------------------------
+%    DATA EXPLORATION & API PANEL
+%----------------------------------------------------
+GexplorepanelH = uipanel('Title','Data Exploration & API','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],...
+    'Position', [0.81 0.25 0.18 0.34]); % 'Visible', 'Off',
+              
+GopenImageJH = uicontrol('Parent', GexplorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Open stack in ImageJ ',...
+    'Callback', @GopenImageJ, 'Enable','off');
+
+GexploreAH = uicontrol('Parent', GexplorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', 'Explore Data A',...
+    'Callback', @GexploreA, 'Enable','off');
+
+GexploreBH = uicontrol('Parent', GexplorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Explore Data B',...
+    'Callback', @GexploreB, 'Enable','off');
+
+GresetwsH = uicontrol('Parent', GexplorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Reset Toolbox',...
+    'Callback', @Gresetws, 'Enable','off');
+
+
+
+%----------------------------------------------------
+%    SAVE AND EXPORT DATA
+%----------------------------------------------------
+GexportpanelH = uipanel('Title','I/O','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],...
+    'Position', [0.81 0.02 0.18 0.20]); % 'Visible', 'Off',
+              
+GexportvarsH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.65 0.95 0.28], 'FontSize', 13, 'String', 'Export Vars to Workspace ',...
+    'Callback', @Gexportvars, 'Enable','off');
+
+GsavedatasetH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.34 0.95 0.28], 'FontSize', 13, 'String', 'Save Dataset',...
+    'Callback', @Gsavedataset, 'Enable','off');
+
+GloadmatdataH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.03 0.95 0.28], 'FontSize', 13, 'String', 'Load .mat Dataset',...
+    'Callback', @Gloadmatdata, 'Enable','off');
+
+    
+    
+
+    hp = plot(tv2, tv3 , 'LineWidth',2);
+    
+    leg1 = legend(hp,unique(GRINstruct.csus));
+	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
+    
+    tv2 = [tv1(1:2).XData];
+    tv3 = [tv1(1:2).YData];
+    
+    tv2 = reshape(tv2,[],2);
+    tv3 = reshape(tv3,[],2);
+    
+    reph = plot(tv2, tv3 , 'Color',[.5 .5 .5]);
+    
+    
+    % GhaxGRIN.XTickLabel = num2str(round(GhaxGRIN.XTick .* framesPerSec)');
+    % GhaxGRIN.XLabel.String = 'Time (seconds)';
+    
+    
+    
+    % plottiles(hp, reph, leg1, GRINstruct)
+    
+
+
+% enableButtons
+% disp('PLOTTING TILE STATS DATA COMPLETED!')
+end
+
+
+%----------------------------------------------------
+%        IMAGE SIDER CALLBACK
+%----------------------------------------------------
+function GimgsliderYA(hObject, eventdata)
+slideValYA = GimgsliderYAH.Value;
+GhaxGRIN.YLim = [slideValYB slideValYA];
+end
+
+function GimgsliderYB(hObject, eventdata)
+slideValYB = GimgsliderYBH.Value;
+GhaxGRIN.YLim = [slideValYB slideValYA];
+end
+
+
+function GimgsliderXA(hObject, eventdata)
+slideValXA = GimgsliderXAH.Value;
+GhaxGRIN.XLim = [slideValXB slideValXA];
+end
+
+function GimgsliderXB(hObject, eventdata)
+slideValXB = GimgsliderXBH.Value;
+GhaxGRIN.XLim = [slideValXB slideValXA];
+end
+
+
+%----------------------------------------------------
+%        UPDATE GRAPH CALLBACK
+%----------------------------------------------------
+function GupdateGraph(boxidselecth, eventdata)
+disableButtons; pause(.02);
+conon
+        
+
+    if Gcheckbox1H.Value
+        smoothimg
+    end
+    
+    if Gcheckbox2H.Value
+        cropimg
+    end
+    
+    if Gcheckbox3H.Value
+        imgblocks
+    end
+
+    if Gcheckbox4H.Value
+        reshapeData
+    end
+
+    if Gcheckbox5H.Value
+        alignCSframes
+    end
+
+    if Gcheckbox6H.Value
+        dFoverF
+    end
+
+    if Gcheckbox7H.Value
+        timepointMeans
+    end
+
+
+    
+disp('PROCESSING COMPLETED - ALL SELECTED FUNCTIONS FINISHED RUNNING!')
+conoff
+enableButtons        
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
