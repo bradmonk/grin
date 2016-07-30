@@ -142,14 +142,14 @@ confilefullpath = which(confile,'-all');
 delete(confile)
 
 
-global GhaxGRIN GimgsliderYAH GimgsliderYBH GimgsliderXAH GimgsliderXBH
-global slideValYA slideValYB slideValXA slideValXB
-slideValYA = 0.15;
-slideValYB = -0.15;
-slideValXA = 100;
-slideValXB = 0;
-global GupdateGraphH Gcheckbox1H Gcheckbox2H Gcheckbox3H Gcheckbox4H
-global Gcheckbox5H Gcheckbox6H Gcheckbox7H
+% global GhaxGRIN GimgsliderYAH GimgsliderYBH GimgsliderXAH GimgsliderXBH
+% global slideValYA slideValYB slideValXA slideValXB
+% slideValYA = 0.15;
+% slideValYB = -0.15;
+% slideValXA = 100;
+% slideValXB = 0;
+% global GupdateGraphH Gcheckbox1H Gcheckbox2H Gcheckbox3H Gcheckbox4H
+% global Gcheckbox5H Gcheckbox6H Gcheckbox7H
 
 
 
@@ -307,11 +307,11 @@ timepointMeansH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
 CSUSpopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
     'Units', 'normalized', 'String', {'CS','US'},...
     'Position', [0.70 0.105 0.28 0.05],...
-    'Callback', @CSUSpopup);
+    'Callback', @CSUSpopup, 'Enable','off');
 
 
               
-
+%%
 %----------------------------------------------------
 %           DATA GRAPHS AND FIGURES PANEL
 %----------------------------------------------------
@@ -319,25 +319,52 @@ graphspanelH = uipanel('Title','Graphs and Figures','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
     'Position', [0.43 0.02 0.35 0.20]); % 'Visible', 'Off',
               
-getROIstatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.65 0.45 0.28], 'FontSize', 12, 'String', 'Select ROI & Plot',...
-    'Callback', @getROIstats, 'Enable','off');
+
+
 
 plotTileStatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
-    'Position', [0.53 0.65 0.45 0.28], 'FontSize', 12, 'String', 'Plot Tile Data',...
+    'Position', [0.03 0.66 0.31 0.28], 'FontSize', 12, 'String', 'Plot Tile Data',...
     'Callback', @plotTileStats, 'Enable','off'); 
 
+
+
+getROIstatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.34 0.31 0.28], 'FontSize', 12, 'String', 'Select ROI & Plot',...
+    'Callback', @getROIstats, 'Enable','off');
+
+
+plotGroupMeansH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.03 0.31 0.28], 'FontSize', 12, 'String', 'Plot Group Means',...
+    'Callback', @plotGroupMeans, 'Enable','off');
+
+
+
+viewGridOverlayH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
+    'Position', [0.35 0.66 0.31 0.28], 'FontSize', 12, 'String', 'View Grid Overlay',...
+    'Callback', @viewGridOverlay, 'Enable','off');
+
+viewTrialTimingsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
+    'Position', [0.35 0.34 0.31 0.28], 'FontSize', 12, 'String', 'View Trial Timings',...
+    'Callback', @viewTrialTimings, 'Enable','off');
+
+
 previewStackH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.05 0.40 0.28], 'FontSize', 12, 'String', 'Preview Image Stack',...
+    'Position', [0.35 0.03 0.38 0.28], 'FontSize', 12, 'String', 'Preview Image Stack',...
     'Callback', @previewStack, 'Enable','off');
 previewStacktxtH = uicontrol('Parent', graphspanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.45 0.29 0.15 0.13], 'FontSize', 11,'String', 'Frames');
+    'Position', [0.74 0.29 0.15 0.11], 'FontSize', 10,'String', 'Frames');
 previewStacknumH = uicontrol('Parent', graphspanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.45 0.09 0.15 0.20], 'FontSize', 13);
-previewStackcbH = uicontrol('Parent', graphspanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.62 0.12 .14 .14] ,'String','', 'Value',1);
-previewStacktxtH = uicontrol('Parent', graphspanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [.66 0.10 .28 .15], 'FontSize', 10,'String', 'Postprocessing Previews');
+    'Position', [0.74 0.07 0.15 0.20], 'FontSize', 12);
+% previewStackcbH = uicontrol('Parent', graphspanelH,'Style','checkbox','Units','normalized',...
+%     'Position', [.62 0.12 .14 .14] ,'String','Postprocessing Previews', 'Value',1);
+
+
+plotGUIH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
+    'Position', [0.67 0.45 0.31 0.50], 'FontSize', 12, 'String', 'Open Plot GUI',...
+    'Callback', @plotGUI, 'Enable','off');
+
+
+%%
 
 
 %----------------------------------------------------
@@ -838,6 +865,9 @@ function enableButtons()
     plotTileStatsH.Enable = 'on';
     runallIPH.Enable = 'on';
     previewStackH.Enable = 'on';
+    viewGridOverlayH.Enable = 'on';
+    plotGroupMeansH.Enable = 'on';
+    viewTrialTimingsH.Enable = 'on';
 
     if numel(size(IMG)) > 1 && numel(size(IMG)) < 4;
         openImageJH.Enable = 'on';
@@ -861,6 +891,9 @@ function disableButtons()
     runallIPH.Enable = 'off';
     openImageJH.Enable = 'off';
     previewStackH.Enable = 'off';
+    viewGridOverlayH.Enable = 'off';
+    plotGroupMeansH.Enable = 'off';
+    viewTrialTimingsH.Enable = 'on';
 
 end
 
@@ -959,7 +992,7 @@ end
 %----------------------------------------------------
 %        SMOOTH IMAGES
 %----------------------------------------------------
-function smoothimg(boxidselecth, eventdata)    
+function smoothimg(hObject, eventdata)    
 disableButtons; pause(.02);
 
     % PERFORM IMAGE SMOOTHING
@@ -1013,7 +1046,7 @@ end
 %----------------------------------------------------
 %        CROP IMAGES
 %----------------------------------------------------
-function cropimg(boxidselecth, eventdata)
+function cropimg(hObject, eventdata)
 disableButtons; pause(.02);
 
     % TRIM EDGES FROM IMAGE
@@ -1124,7 +1157,7 @@ end
 %----------------------------------------------------
 %        CREATE IMAGE TILES
 %----------------------------------------------------
-function imgblocks(boxidselecth, eventdata)
+function imgblocks(hObject, eventdata)
 % disableButtons; pause(.02);
 
     % CREATE IMAGES TILES PER ROBERT'S SPEC
@@ -1185,7 +1218,7 @@ end
 %----------------------------------------------------
 %        RESHAPE DATA BY TRIALS
 %----------------------------------------------------
-function reshapeData(boxidselecth, eventdata)
+function reshapeData(hObject, eventdata)
 disableButtons; pause(.02);
 
     % RESHAPE IMAGE STACK INTO SIZE: YPIXELS by XPIXELS in NFRAMES per NTRIALS
@@ -1216,7 +1249,7 @@ end
 %----------------------------------------------------
 %        UNDO RESHAPE DATA
 %----------------------------------------------------
-function unshapeData(boxidselecth, eventdata)
+function unshapeData(hObject, eventdata)
 disableButtons; pause(.02);
 
     % RESHAPE IMAGE STACK INTO SIZE: YPIXELS by XPIXELS in NTOTALFRAMES
@@ -1250,7 +1283,7 @@ end
 %----------------------------------------------------
 %        ALIGN CS FRAMES BY CS ONSET
 %----------------------------------------------------
-function alignCSframes(boxidselecth, eventdata)
+function alignCSframes(hObject, eventdata)
 disableButtons; pause(.02);
 
     % MAKE DELAY TO CS EQUAL TO t SECONDS FOR ALL TRIALS
@@ -1312,7 +1345,7 @@ end
 %----------------------------------------------------
 %        deltaF OVER F
 %----------------------------------------------------
-function dFoverF(boxidselecth, eventdata)
+function dFoverF(hObject, eventdata)
 disableButtons; pause(.02);
 
     % COMPUTE dF/F FOR ALL FRAMES
@@ -1373,7 +1406,7 @@ end
 %----------------------------------------------------
 %        GET TIMEPOINT MEANS
 %----------------------------------------------------
-function timepointMeans(boxidselecth, eventdata)
+function timepointMeans(hObject, eventdata)
 disableButtons; pause(.02);    
     
     disp(' '); disp('COMPUTING TRIAL MEANS (AVERAGING SAME-TIMEPOINTS ACROSS TRIALS)'); 
@@ -1427,492 +1460,9 @@ end
 
 
 %----------------------------------------------------
-%        GET ROI STATISTICS
-%----------------------------------------------------
-function getROIstats(boxidselecth, eventdata)
-disableButtons; pause(.02);
-    
-    % PREVIEW AN ROI FOR A SINGLE CSUS AVERAGED OVER TRIALS
-    disp(' '); disp('GETTING ROI STATISTICS'); 
-
-    fh1=figure('Units','normalized','OuterPosition',[.40 .22 .59 .75],'Color','w');
-    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[]);
-
-    ih1 = imagesc(muIMGS(:,:,1,1));
-
-    disp('Use mouse to trace around a region of interest on the figure.')
-    hROI = imfreehand(hax1);   
-    ROIpos = hROI.getPosition;
-    ROIarea = polyarea(ROIpos(:,1),ROIpos(:,2));
-
-
-    ROImask = hROI.createMask(ih1);
-    
-    ROI_INTENSITY = muIMGS(:,:,1,1) .* ROImask;
-    figure; imagesc(ROI_INTENSITY); colorbar;
-
-
-
-
-    % Here we are computing the average intensity for the selected ROI
-    % N.B. here it is assumed that a pixel value (actually dF/F value)
-    % has virtually a zero probability of equaling exactly zero; this
-    % allows us to multiply the mask T/F matrix by the image matrix
-    % and disclude from the average all pixels that equal exactly zero
-    
-    ROImu = zeros(size(muIMGS,4),size(muIMGS,3));
-    for mm = 1:size(muIMGS,4)
-        for nn = 1:size(muIMGS,3)
-        
-        ROI_INTENSITY = muIMGS(:,:,nn,mm) .* ROImask;
-        ROImu(mm,nn) = mean(ROI_INTENSITY(ROI_INTENSITY ~= 0));
-
-        end
-    end
-
-    CSUSplot(ROImu', GRINstruct);
-    % CSUSplot(ROImu', GRINstruct, CSUSonoff);
-    % previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff, ROImu)
-    
-    
-    
-    
-enableButtons
-disp('Compute ROI statistics completed!')
-end
-
-
-
-
-
-
-
-
-%----------------------------------------------------
-%        PLOT TILE STATS DATA
-%----------------------------------------------------
-function plotTileStats(boxidselecth, eventdata)
-% disableButtons; pause(.02);
-
-    disp(' '); disp('PLOTTING TILE STATS DATA (PLEASE WAIT)...'); 
-    
-    % EVENTUALLY REPLACE YLIMS WITH...
-    % [IMGcMax, IMGcMaxInd] = max(IMG(:));
-    % [IMGcMin, IMGcMinInd] = min(IMG(:)); 
-    
-    fh1=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
-    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax1.YLim = [-.15 .15];
-    hax2 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax2.YLim = [-.15 .15];
-    axis off; hold on;
-    hax3 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax3.YLim = [-.15 .15];
-    axis off; hold on;
-    hax4 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax4.YLim = [-.15 .15];
-    axis off; hold on;
-    hax5 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax5.YLim = [-.15 .15];
-    axis off; hold on;
-    hax6 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax6.YLim = [-.15 .15];
-    axis off; hold on;
-    hax0 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax0.YLim = [-.15 .15];
-    axis off; hold on;
-    allhax = {hax1, hax2, hax3, hax4, hax5, hax6};
-    colorz = {  [.99 .01 .01], ...
-                [.01 .99 .01], ...
-                [.01 .01 .99], ...
-                [.99 .01 .99], ...
-                [.99 .99 .01], ...
-                [.01 .99 .99], ...
-                };
-    legpos = {  [0.75,0.85,0.15,0.06], ...
-                [0.75,0.80,0.15,0.06], ...
-                [0.75,0.75,0.15,0.06], ...
-                [0.75,0.70,0.15,0.06], ...
-                [0.75,0.65,0.15,0.06], ...
-                [0.75,0.60,0.15,0.06], ...
-                };
-
-    
-    
-    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
-
-    pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
-
-    pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
-    
-    CSids = unique(GRINstruct.csus);
-    
-    
-    
-    
-    %-------------------------- CI ENVELOPE FIGURE --------------------------
-    for nn = 1:size(pixels,3)
-    
-    pixCS = pixels(:,:,nn);
-	
-	Mu = mean(pixCS,1);
-    Sd = std(pixCS,0,1);
-    Se = Sd./sqrt(numel(Mu));
-	y_Mu = Mu';
-    x_Mu = (1:numel(Mu))';
-    % e_Mu = Se';
-    e_Mu = Sd';
-	xx_Mu = 1:0.1:max(x_Mu);
-	yy_Mu = spline(x_Mu,y_Mu,xx_Mu);
-    ee_Mu = spline(x_Mu,e_Mu,xx_Mu);
-    
-    axes(allhax{nn})
-    [ph1, po1] = envlineplot(xx_Mu',yy_Mu', ee_Mu','cmap',colorz{nn},...
-                            'alpha','transparency', 0.6);
-    hp1{nn} = plot(xx_Mu,yy_Mu,'Color',colorz{nn});
-    pause(.2)
-    
-    % lh1{nn} = legend(allhax{nn},CSids(nn),'Position',legpos{nn},'Box','off');
-    
-    end
-    
-    text(1, -.12, ['CS ON/OFF US ON/OFF:  ', num2str(CSUSonoff)])
-    
-    leg1 = legend([hp1{:}],CSids);
-	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
-    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
-    
-        
-    for mm = 1:4
-    text(CSUSonoff(mm),allhax{nn}.YLim(1),{'\downarrow'},...
-        'HorizontalAlignment','center','VerticalAlignment','bottom',...
-        'FontSize',20,'FontWeight','bold')
-    end
-    line([CSUSonoff(1) CSUSonoff(1)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
-    line([CSUSonoff(2) CSUSonoff(2)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
-    pause(.1)
-    %-------------------------------------------------------------------------
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    %-------------------------- IMGraw FIGURE GRID --------------------------
-    
-    aXlocs =  (0:(size(pxl,1))) .* (1/(size(pxl,1)));
-    aXlocs(end) = [];
-    aYlocs =  (0:(size(pxl,2))) .* (1/(size(pxl,2)));
-    aYlocs(end) = [];
-    aXlocs = aXlocs+.005;
-    aYlocs = aYlocs+.005;
-    [aX,aY] = meshgrid(aXlocs,aYlocs);
-    YL=[-.15 .15];
-
-    fhR = figure('Units','normalized','OuterPosition',[.1 .1 .5 .8],'Color','w');
-    axR = axes;
-    phR = imagesc(IMGraw);
-    grid on
-    axR.YTick = [0:blockSize:size(IMGraw,1)];
-    axR.XTick = [0:blockSize:size(IMGraw,1)];
-    % axR.YTickLabel = 1:30;
-    
-    axR.GridAlpha = .8;
-    axR.GridColor = [0.99 0.1 0.1];
-    
-        tv1 = 1:size(IMGraw,1);
-        
-        pause(.2)
-        
-        
-        % NUMBERING IS TECHNICALLY INCORRECT SINCE BELOW AXIS #1 STARTS IN THE
-        % BOTTOM LEFT CORNER AND GOES UP, AND HERE IT STARTS IN THE TOP
-        % LEFT CORNER AND GOES DOWN. NOT SURE THAT IT MATTERS...
-        for ii = 1:size(pixels,1)
-            
-            tv2 = [  aX(ii)*size(IMGraw,1)   aY(ii)*size(IMGraw,1)+2 ...
-                    (1/(size(pxl,1)+1))     (1/(size(pxl,2)+1))];
-
-            text(tv2(1),tv2(2),num2str(tv1(ii)),'Color','r','Parent',axR);
-    
-        end
-        
-     pause(.1)
-    %-------------------------------------------------------------------------
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    %-------------------------- MULTI-TILE FIGURE --------------------------
-
-    fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
-    
-    set(fh10,'ButtonDownFcn',@(~,~)disp('figure'),...
-   'HitTest','off')
-    
-    
-    
-    aXlocs =  (0:(size(pxl,1))) .* (1/(size(pxl,1)));
-    aXlocs(end) = [];
-    aYlocs =  (0:(size(pxl,2))) .* (1/(size(pxl,2)));
-    aYlocs(end) = [];
-    aXlocs = aXlocs+.005;
-    aYlocs = aYlocs+.005;
-    [aX,aY] = meshgrid(aXlocs,aYlocs);
-    YL=[-.15 .15];
-    
-    %{
-%     for tt = 1:size(pixels,3)
-%         for ii = 1:size(pixels,1)
-%                 
-%         
-%         axes('Position',[aX(ii) aY(ii) (1/(size(pxl,1)+1)) (1/(size(pxl,2)+1))],...
-%         'Color','none'); axis off; hold on;
-%     
-%         plot( 1:size(pixels,2) , pixels(ii,:,tt) ,'Color',colorz{tt})
-%         set(gca,'YLim',YL)
-%         line([CSUSonoff(1) CSUSonoff(1)],YL,'Color',[.8 .8 .8])
-%         line([CSUSonoff(2) CSUSonoff(2)],YL,'Color',[.8 .8 .8])
-%                     
-%         end
-%         pause(.05)
-%     end
-%}
-
-    for ii = 1:size(pixels,1)
-
-        axh{ii} = axes('Position',[aX(ii) aY(ii) (1/(size(pxl,1)+1)) (1/(size(pxl,2)+1))],...
-        'Color','none','Tag',num2str(ii)); 
-        % axis off;
-        hold on;
-    
-        % h = squeeze(pixels(ii,:,:));
-        pha = plot( 1:size(pixels,2) , squeeze(pixels(ii,:,:)));
-        set(gca,'YLim',YL)
-        line([CSUSonoff(1) CSUSonoff(1)],YL,'Color',[.8 .8 .8])
-        line([CSUSonoff(2) CSUSonoff(2)],YL,'Color',[.8 .8 .8])
-        
-        
-        set(axh{ii},'ButtonDownFcn',@(~,~)disp(gca),...
-        'HitTest','on')
-        
-    end
-        pause(.05)
-    
-    
-    
-    
-    legpos = {  [0.01,0.94,0.15,0.033], ...
-                [0.01,0.90,0.15,0.033], ...
-                [0.01,0.86,0.15,0.033], ...
-                [0.01,0.82,0.15,0.033], ...
-                [0.01,0.78,0.15,0.033], ...
-                [0.01,0.74,0.15,0.033], ...
-                };
-    
-    pc = {pha.Color};
-    pt = CSids;
-    
-    for nn = 1:size(pixels,3)
-        
-    annotation(fh10,'textbox',...
-    'Position',legpos{nn},...
-    'Color',pc{nn},...
-    'FontWeight','bold',...
-    'String',pt(nn),...
-    'FontSize',14,...
-    'FitBoxToText','on',...
-    'EdgeColor',pc{nn},...
-    'FaceAlpha',.7,...
-    'Margin',3,...
-    'LineWidth',2,...
-    'VerticalAlignment','bottom',...
-    'BackgroundColor',[1 1 1]);
-    
-    end
-    
-    annotation(fh10,'textbox',...
-    'Position',[.01 .97 .2 .05],...
-    'Color',[0 0 0],...
-    'FontWeight','bold',...
-    'String','RIGHT-CLICK ON ANY GRAPH TO OPEN ADVANCED REPLOT GUI',...
-    'FontSize',14,...
-    'FitBoxToText','on',...
-    'EdgeColor','none',...
-    'FaceAlpha',.7,...
-    'Margin',3,...
-    'LineWidth',2,...
-    'VerticalAlignment','bottom',...
-    'BackgroundColor',[1 1 1]);
-    
-    
-    % haxN = axes('Position',[.001 .001 .99 .99],'Color','none');
-    % axis off; hold on;
-    pause(.2)
-    %-------------------------------------------------------------------------
-    
-
-
-        % keyboard
-        
-        
-        
-        
-
-    hcmenu = uicontextmenu;
-
-    item1 = uimenu(hcmenu,'Label','OPEN IN ADVANCED PLOT GUI','Callback',@plottile);
-
-    haxe = findall(fh10,'Type','axes');
-
-         % Attach the context menu to each axes
-    for aa = 1:length(haxe)
-        set(haxe(aa),'uicontextmenu',hcmenu)
-    end   
-        
-        
-        
-        
-        %{
-        
-        gca
-        
-        figure(fh10)
-        [xp,yp,btn] = ginput(1);
-        
-        [aX,aY]
-        aXlocs
-        aYlocs
-        
-        aXlocs > xp & aXlocs < xp
-        
-        
-        
-        
-        tv1 = [];
-        tv2 = [];
-        tv3 = [];
-        tv4 = [];
-        
-        %}
-        
-    
-        
-        
-        
-        
-        
-        
-        
-        
-        
-%     % Add 'doprint' checkbox before implementing this code
-%     print(fh10,'-dpng','-r300','tilefig')
-%     
-%     hFig = figure('Toolbar','none',...
-%               'Menubar','none');
-%     hIm = imshow('tilefig.png');
-%     hSP = imscrollpanel(hFig,hIm);
-%     set(hSP,'Units','normalized',...
-%         'Position',[0 .1 1 .9])        
-        
-        
-enableButtons
-disp('PLOTTING TILE STATS DATA COMPLETED!')
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%----------------------------------------------------
-%   CONTEXT MENU CALLBACK TO MAKE LARGER TILE PLOT
-%----------------------------------------------------
-% MOVED TO OWN FUNCTION FILE
-%{
-function plottile(boxidselecth, eventdata)
-% disableButtons; pause(.02);
-    
-    axdat = gca;
-    
-    tv1 = axdat.Children;
-    
-    tv2 = [tv1(3:end).XData];
-    tv3 = [tv1(3:end).YData];
-    
-    tv2 = fliplr(reshape(tv2,[],(size(tv1,1)-2)));
-    tv3 = fliplr(reshape(tv3,[],(size(tv1,1)-2)));
-    
-    fhrp=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
-    hx1 = axes('Position',[.05 .08 .9 .85],'Color','none');
-    hx1.YLim = [-.15 .15]; hold on;
-    
-    hp = plot(tv2, tv3 , 'LineWidth',2);
-    
-    leg1 = legend(hp,unique(GRINstruct.csus));
-	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
-    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
-    
-    tv2 = [tv1(1:2).XData];
-    tv3 = [tv1(1:2).YData];
-    
-    tv2 = reshape(tv2,[],2);
-    tv3 = reshape(tv3,[],2);
-    
-    plot(tv2, tv3 , 'Color',[.5 .5 .5])
-    
-    hx1.XTickLabel = num2str(round(hx1.XTick .* framesPerSec)');
-    hx1.XLabel.String = 'Time (seconds)';
-
-    % disp(' '); disp('PLOTTING TILE STATS DATA (PLEASE WAIT)...'); 
-        
-% enableButtons
-% disp('PLOTTING TILE STATS DATA COMPLETED!')
-end
-%}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%----------------------------------------------------
 %        RUN ALL IMAGE PROCESSING FUNCTIONS
 %----------------------------------------------------
-function runallIP(boxidselecth, eventdata)
+function runallIP(hObject, eventdata)
 disableButtons; pause(.02);
 conon
         
@@ -1967,7 +1517,7 @@ end
 %----------------------------------------------------
 %        PREVIEW IMAGE STACK
 %----------------------------------------------------
-function previewStack(boxidselecth, eventdata)
+function previewStack(hObject, eventdata)
 disableButtons; pause(.02);
 
     % disp('PREVIEWING IMAGE STACK')
@@ -2029,7 +1579,7 @@ end
 %----------------------------------------------------
 %        RUN CUSTOM FUNCTION
 %----------------------------------------------------
-function runCustomA(boxidselecth, eventdata)
+function runCustomA(hObject, eventdata)
 % disableButtons; pause(.02);
 
     disp('RUNNING YOUR CUSTOM FUNCTION!')
@@ -2040,7 +1590,7 @@ enableButtons
 disp('Run custom function completed!')
 end
 
-function runCustomB(boxidselecth, eventdata)
+function runCustomB(hObject, eventdata)
 % disableButtons; pause(.02);
 
     disp('RUNNING YOUR CUSTOM FUNCTION!')
@@ -2051,7 +1601,7 @@ enableButtons
 disp('Run custom function completed!')
 end
 
-function runCustomC(boxidselecth, eventdata)
+function runCustomC(hObject, eventdata)
 % disableButtons; pause(.02);
 
     disp('RUNNING YOUR CUSTOM FUNCTION!')
@@ -2062,7 +1612,7 @@ enableButtons
 disp('Run custom function completed!')
 end
 
-function runCustomD(boxidselecth, eventdata)
+function runCustomD(hObject, eventdata)
 % disableButtons; pause(.02);
 
     disp('RUNNING YOUR CUSTOM FUNCTION!')
@@ -2082,16 +1632,17 @@ end
 %----------------------------------------------------
 %        EXPORT DATA TO BASE WORKSPACE
 %----------------------------------------------------
-function exportvars(boxidselecth, eventdata)
+function exportvars(hObject, eventdata)
 % disableButtons; pause(.02);
 
     if size(GRINtable,1) > 1
         checkLabels = {'Save IMG to variable named:' ...
                    'Save GRINstruct to variable named:' ...
                    'Save GRINtable to variable named:' ...
-                   'Save IMGraw to variable named:'}; 
-        varNames = {'IMG','GRINstruct','GRINtable','IMGraw'}; 
-        items = {IMG,GRINstruct,GRINtable,IMGraw};
+                   'Save IMGraw to variable named:'...
+                   'Save LICK to variable named:'}; 
+        varNames = {'IMG','GRINstruct','GRINtable','IMGraw','LICK'}; 
+        items = {IMG,GRINstruct,GRINtable,IMGraw,LICK};
         export2wsdlg(checkLabels,varNames,items,...
                      'Save Variables to Workspace');
 
@@ -2107,7 +1658,7 @@ end
 %----------------------------------------------------
 %        SAVE DATA TO .MAT FILE
 %----------------------------------------------------
-function savedataset(boxidselecth, eventdata)
+function savedataset(hObject, eventdata)
 % disableButtons; pause(.02);
 
     if size(IMG,3) > 1
@@ -2124,7 +1675,8 @@ function savedataset(boxidselecth, eventdata)
         % IMGint16 = uint16(IMG);
                 
         disp('Saving data to .mat file, please wait...')
-        save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable','-v7.3')
+        save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable',...
+            'LICK','GRINraw','-v7.3')
         % save(fullfile(pathn,filen),'IMGint16','GRINstruct','GRINtable','-v7.3')
         disp('Dataset saved!')
         
@@ -2145,7 +1697,7 @@ end
 %----------------------------------------------------
 %        LOAD .mat DATA
 %----------------------------------------------------
-function loadmatdata(boxidselecth, eventdata)
+function loadmatdata(hObject, eventdata)
 % disableButtons; pause(.02);
 
     [filename, pathname] = uigetfile( ...
@@ -2168,7 +1720,7 @@ end
 %----------------------------------------------------
 %        OPEN IMAGEJ API
 %----------------------------------------------------
-function openImageJ(boxidselecth, eventdata)
+function openImageJ(hObject, eventdata)
 disableButtons; pause(.02);
 
     % TRIM EDGES FROM IMAGE
@@ -2227,7 +1779,7 @@ end
 %----------------------------------------------------
 %        DATA EXPLORATION FUNCTIONS
 %----------------------------------------------------
-function exploreA(boxidselecth, eventdata)
+function exploreA(hObject, eventdata)
 % disableButtons; pause(.02);
 
     disp('RUNNING DATA EXPLORER A!')
@@ -2238,7 +1790,7 @@ enableButtons
 disp('Data explorer function completed!')
 end
 
-function exploreB(boxidselecth, eventdata)
+function exploreB(hObject, eventdata)
 % disableButtons; pause(.02);
 
     disp('RUNNING DATA EXPLORER B!')
@@ -2256,7 +1808,7 @@ end
 %----------------------------------------------------
 %        RESET WORKSPACE
 %----------------------------------------------------
-function resetws(boxidselecth, eventdata)
+function resetws(hObject, eventdata)
 % disableButtons; pause(.02);
 
 
@@ -2449,12 +2001,239 @@ end
 
 
 
+%----------------------------------------------------
+%        COMING SOON NOTIFICATION
+%----------------------------------------------------
+function comingsoon(hObject, eventdata)
+   msgbox('Coming Soon!'); 
+end
 
 
 
 
 
 
+
+%----------------------------------------------------
+%        GET ROI STATISTICS
+%----------------------------------------------------
+function getROIstats(hObject, eventdata)
+disableButtons; pause(.02);
+
+
+    if size(muIMGS,1) < 1
+       
+        msgbox('DATA HAS NOT BEEN PROCESSED'); 
+        
+        enableButtons
+        
+        return
+        
+    end
+
+    
+    % PREVIEW AN ROI FOR A SINGLE CSUS AVERAGED OVER TRIALS
+    disp(' '); disp('GETTING ROI STATISTICS'); 
+
+    fh1=figure('Units','normalized','OuterPosition',[.40 .22 .59 .75],'Color','w');
+    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[]);
+
+    ih1 = imagesc(muIMGS(:,:,1,1));
+
+    disp('Use mouse to trace around a region of interest on the figure.')
+    hROI = imfreehand(hax1);   
+    ROIpos = hROI.getPosition;
+    ROIarea = polyarea(ROIpos(:,1),ROIpos(:,2));
+
+
+    ROImask = hROI.createMask(ih1);
+    
+    ROI_INTENSITY = muIMGS(:,:,1,1) .* ROImask;
+    figure; imagesc(ROI_INTENSITY); colorbar;
+
+
+
+
+    % Here we are computing the average intensity for the selected ROI
+    % N.B. here it is assumed that a pixel value (actually dF/F value)
+    % has virtually a zero probability of equaling exactly zero; this
+    % allows us to multiply the mask T/F matrix by the image matrix
+    % and disclude from the average all pixels that equal exactly zero
+    
+    ROImu = zeros(size(muIMGS,4),size(muIMGS,3));
+    for mm = 1:size(muIMGS,4)
+        for nn = 1:size(muIMGS,3)
+        
+        ROI_INTENSITY = muIMGS(:,:,nn,mm) .* ROImask;
+        ROImu(mm,nn) = mean(ROI_INTENSITY(ROI_INTENSITY ~= 0));
+
+        end
+    end
+
+    CSUSplot(ROImu', GRINstruct);
+    % CSUSplot(ROImu', GRINstruct, CSUSonoff);
+    % previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff, ROImu)
+    
+    
+    
+    
+enableButtons
+disp('Compute ROI statistics completed!')
+end
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        PLOT TILE STATS DATA
+%----------------------------------------------------
+function plotTileStats(hObject, eventdata)
+% disableButtons; pause(.02);
+
+    if size(muIMGS,1) < 1
+       
+        msgbox('DATA HAS NOT BEEN PROCESSED'); 
+        
+        enableButtons
+        
+        return
+        
+    end
+
+    disp(' '); disp('PLOTTING TILE STATS DATA (PLEASE WAIT)...'); 
+    
+    
+    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+
+    pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
+
+    pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
+    
+    CSids = unique(GRINstruct.csus);
+    
+    
+    %-------------------------- MULTI-TILE FIGURE --------------------------
+
+    fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
+    
+    set(fh10,'ButtonDownFcn',@(~,~)disp('figure'),...
+   'HitTest','off')
+    
+    
+    
+    aXlocs =  (0:(size(pxl,1))) .* (1/(size(pxl,1)));
+    aXlocs(end) = [];
+    aYlocs =  (0:(size(pxl,2))) .* (1/(size(pxl,2)));
+    aYlocs(end) = [];
+    aXlocs = aXlocs+.005;
+    aYlocs = aYlocs+.005;
+    [aX,aY] = meshgrid(aXlocs,aYlocs);
+    YL=[-.15 .15];
+    
+
+    for ii = 1:size(pixels,1)
+
+        axh{ii} = axes('Position',[aX(ii) aY(ii) (1/(size(pxl,1)+1)) (1/(size(pxl,2)+1))],...
+        'Color','none','Tag',num2str(ii)); 
+        % axis off;
+        hold on;
+    
+        % h = squeeze(pixels(ii,:,:));
+        pha = plot( 1:size(pixels,2) , squeeze(pixels(ii,:,:)));
+        set(gca,'YLim',YL)
+        line([CSUSonoff(1) CSUSonoff(1)],YL,'Color',[.8 .8 .8])
+        line([CSUSonoff(2) CSUSonoff(2)],YL,'Color',[.8 .8 .8])
+        
+        
+        set(axh{ii},'ButtonDownFcn',@(~,~)disp(gca),...
+        'HitTest','on')
+        
+    end
+        pause(.05)
+    
+    
+    
+    
+    legpos = {  [0.01,0.94,0.15,0.033], ...
+                [0.01,0.90,0.15,0.033], ...
+                [0.01,0.86,0.15,0.033], ...
+                [0.01,0.82,0.15,0.033], ...
+                [0.01,0.78,0.15,0.033], ...
+                [0.01,0.74,0.15,0.033], ...
+                };
+    
+    pc = {pha.Color};
+    pt = CSids;
+    
+    for nn = 1:size(pixels,3)
+        
+    annotation(fh10,'textbox',...
+    'Position',legpos{nn},...
+    'Color',pc{nn},...
+    'FontWeight','bold',...
+    'String',pt(nn),...
+    'FontSize',14,...
+    'FitBoxToText','on',...
+    'EdgeColor',pc{nn},...
+    'FaceAlpha',.7,...
+    'Margin',3,...
+    'LineWidth',2,...
+    'VerticalAlignment','bottom',...
+    'BackgroundColor',[1 1 1]);
+    
+    end
+    
+    annotation(fh10,'textbox',...
+    'Position',[.01 .97 .2 .05],...
+    'Color',[0 0 0],...
+    'FontWeight','bold',...
+    'String','RIGHT-CLICK ON ANY GRAPH TO OPEN ADVANCED REPLOT GUI',...
+    'FontSize',14,...
+    'FitBoxToText','on',...
+    'EdgeColor','none',...
+    'FaceAlpha',.7,...
+    'Margin',3,...
+    'LineWidth',2,...
+    'VerticalAlignment','bottom',...
+    'BackgroundColor',[1 1 1]);
+    
+    
+    % haxN = axes('Position',[.001 .001 .99 .99],'Color','none');
+    % axis off; hold on;
+    pause(.2)
+    %-------------------------------------------------------------------------
+    
+
+    hcmenu = uicontextmenu;
+
+    item1 = uimenu(hcmenu,'Label','OPEN IN ADVANCED PLOT GUI','Callback',@plottile);
+
+    haxe = findall(fh10,'Type','axes');
+
+         % Attach the context menu to each axes
+    for aa = 1:length(haxe)
+        set(haxe(aa),'uicontextmenu',hcmenu)
+    end   
+        
+                
+%     % Add 'doprint' checkbox before implementing this code
+%     print(fh10,'-dpng','-r300','tilefig')
+%     
+%     hFig = figure('Toolbar','none',...
+%               'Menubar','none');
+%     hIm = imshow('tilefig.png');
+%     hSP = imscrollpanel(hFig,hIm);
+%     set(hSP,'Units','normalized',...
+%         'Position',[0 .1 1 .9])        
+        
+        
+enableButtons
+disp('PLOTTING TILE STATS DATA COMPLETED!')
+end
 
 
 
@@ -2468,19 +2247,407 @@ end
 %----------------------------------------------------
 %        ADVANCED PLOTTING GUI
 %----------------------------------------------------
-function plottile(boxidselecth, eventdata)
+function plottile(hObject, eventdata)
 % disableButtons; pause(.02);
 
+    axdat = gca;
+    
+    axesdata = axdat.Children;
+    
+    TILEplotGUI(axesdata, GRINstruct)
+ 
+end
+
+
+
+
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        VIEW GRID OVERLAY
+%----------------------------------------------------
+function viewGridOverlay(hObject, eventdata)
+% disableButtons; pause(.02);
+    
+    %-------------------------- IMGraw FIGURE GRID --------------------------
+    
+    
+    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+    
+    fprintf('\n\n Grid size is% d pixels \n\n', blockSize)
+
+    if length(muIMGS) < 1
+        
+        pxl = zeros(size(IMG,1) / blockSize);
+        
+    else
+    
+        pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
+        pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
+    
+    end
+    
+    
+    aXlocs =  (0:(size(pxl,1))) .* (1/(size(pxl,1)));
+    aXlocs(end) = [];
+    aYlocs =  (0:(size(pxl,2))) .* (1/(size(pxl,2)));
+    aYlocs(end) = [];
+    aXlocs = aXlocs+.005;
+    aYlocs = aYlocs+.005;
+    [aX,aY] = meshgrid(aXlocs,aYlocs);
+    YL=[-.15 .15];
+
+    fhR = figure('Units','normalized','OuterPosition',[.1 .1 .5 .8],'Color','w');
+    axR = axes;
+    phR = imagesc(IMGraw);
+    grid on
+    axR.YTick = [0:blockSize:size(IMGraw,1)];
+    axR.XTick = [0:blockSize:size(IMGraw,1)];
+    % axR.YTickLabel = 1:30;
+    
+    axR.GridAlpha = .8;
+    axR.GridColor = [0.99 0.1 0.1];
+    
+        tv1 = 1:size(IMGraw,1);
+        
+        pause(.2)
+        
+        
+        % NUMBERING IS TECHNICALLY INCORRECT SINCE BELOW AXIS #1 STARTS IN THE
+        % BOTTOM LEFT CORNER AND GOES UP, AND HERE IT STARTS IN THE TOP
+        % LEFT CORNER AND GOES DOWN. NOT SURE THAT IT MATTERS...
+        for ii = 1:size(pxl,1)^2
+            
+            tv2 = [  aX(ii)*size(IMGraw,1)   aY(ii)*size(IMGraw,1)+2 ...
+                    (1/(size(pxl,1)+1))     (1/(size(pxl,2)+1))];
+
+            text(tv2(1),tv2(2),num2str(tv1(ii)),'Color','r','Parent',axR);
+    
+        end
+        
+     pause(.1)
+    %-------------------------------------------------------------------------
     
 
+        
+enableButtons
+disp('GRID OVERLAY HAS BEEN GENERATED.')
+end
+
+
+
+%----------------------------------------------------
+%        PLOT GROUP MEANS (CI ENVELOPE PLOT)
+%----------------------------------------------------
+function plotGroupMeans(hObject, eventdata)
+% disableButtons; pause(.02);
+
+
+    if size(muIMGS,1) < 1
+       
+        msgbox('Group means have not yet been calculated'); 
+        
+        return
+        
+    end
+
+    disp(' '); disp('PLOTTING GROUP MEANS (PLEASE WAIT)...'); 
+        
+    fh1=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
+    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax1.YLim = [-.15 .15];
+    hax2 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax2.YLim = [-.15 .15];
+    axis off; hold on;
+    hax3 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax3.YLim = [-.15 .15];
+    axis off; hold on;
+    hax4 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax4.YLim = [-.15 .15];
+    axis off; hold on;
+    hax5 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax5.YLim = [-.15 .15];
+    axis off; hold on;
+    hax6 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax6.YLim = [-.15 .15];
+    axis off; hold on;
+    hax0 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax0.YLim = [-.15 .15];
+    axis off; hold on;
+    allhax = {hax1, hax2, hax3, hax4, hax5, hax6};
+    colorz = {  [.99 .01 .01], ...
+                [.01 .99 .01], ...
+                [.01 .01 .99], ...
+                [.99 .01 .99], ...
+                [.99 .99 .01], ...
+                [.01 .99 .99], ...
+                };
+    legpos = {  [0.75,0.85,0.15,0.06], ...
+                [0.75,0.80,0.15,0.06], ...
+                [0.75,0.75,0.15,0.06], ...
+                [0.75,0.70,0.15,0.06], ...
+                [0.75,0.65,0.15,0.06], ...
+                [0.75,0.60,0.15,0.06], ...
+                };
+
+    
+            
+
+    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+
+    pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
+
+    pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
+    
+    CSids = unique(GRINstruct.csus);
+    
+    
+    
+    
+    %-------------------------- CI ENVELOPE FIGURE --------------------------
+    for nn = 1:size(pixels,3)
+    
+    pixCS = pixels(:,:,nn);
+	
+	Mu = mean(pixCS,1);
+    Sd = std(pixCS,0,1);
+    Se = Sd./sqrt(numel(Mu));
+	y_Mu = Mu';
+    x_Mu = (1:numel(Mu))';
+    % e_Mu = Se';
+    e_Mu = Sd';
+	xx_Mu = 1:0.1:max(x_Mu);
+	yy_Mu = spline(x_Mu,y_Mu,xx_Mu);
+    ee_Mu = spline(x_Mu,e_Mu,xx_Mu);
+    
+    axes(allhax{nn})
+    [ph1, po1] = envlineplot(xx_Mu',yy_Mu', ee_Mu','cmap',colorz{nn},...
+                            'alpha','transparency', 0.6);
+    hp1{nn} = plot(xx_Mu,yy_Mu,'Color',colorz{nn});
+    pause(.2)
+    
+    % lh1{nn} = legend(allhax{nn},CSids(nn),'Position',legpos{nn},'Box','off');
+    
+    end
+    
+    text(1, -.12, ['CS ON/OFF US ON/OFF:  ', num2str(CSUSonoff)])
+    
+    leg1 = legend([hp1{:}],CSids);
+	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
+    
+        
+    for mm = 1:4
+    text(CSUSonoff(mm),allhax{nn}.YLim(1),{'\downarrow'},...
+        'HorizontalAlignment','center','VerticalAlignment','bottom',...
+        'FontSize',20,'FontWeight','bold')
+    end
+    line([CSUSonoff(1) CSUSonoff(1)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
+    line([CSUSonoff(2) CSUSonoff(2)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
+    pause(.1)
+    %-------------------------------------------------------------------------
+    
+    
+    
+    
+    
+    
+    
+    
+        
+enableButtons
+disp('PLOTTING GROUP MEANS COMPLETED!')
+end
+
+
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+% VISUALIZE TRIAL BLOCKS AND CS / US ONSET / OFFSET
+%----------------------------------------------------
+function viewTrialTimings(hObject, eventdata)
+    
+    
+    if length(delaytoCS) < 2
+       
+        msgbox('DATA HAS NOT BEEN IMPORTED'); 
+        
+        return
+        
+    end
+    
+trials = zeros(total_trials,round(secondsPerTrial));
+
+
+for nn = 1:total_trials
+    
+    trials(nn,delaytoCS(nn):delaytoCS(nn)+10) = GRINstruct.id(nn);
+    
+end
+
+cm = [ 1  1  1
+      .95 .05 .05
+      .90 .75 .15
+      .95 .05 .95
+      .05 .95 .05
+      .05 .75 .95
+      .05 .05 .95
+      .45 .95 .25
+      ];
+
+fh1=figure('Units','normalized','OuterPosition',[.1 .08 .8 .85],'Color','w');
+hax1 = axes('Position',[.15 .05 .82 .92],'Color','none');
+hax2 = axes('Position',[.15 .05 .82 .92],'Color','none','NextPlot','add');
+axis off; hold on;
+
+axes(hax1)
+ih = imagesc(trials);
+colormap(cm)
+grid on
+hax1.YTick = [.5:1:total_trials-.5];
+hax1.YTickLabel = 1:total_trials;
+hax1.XLabel.String = 'Time (seconds)';
+
+hax1.YTickLabel = GRINstruct.csus;
+% hax1.YTickLabelRotation = 30;
+
+
+% tv1 = [];
+% tv2 = [];
+% tv3 = [];
+% tv4 = [];
+% 
+% tv1 = {'\color[rgb]{.95,.05,.05}'};
+% tv1 = {'\color[rgb]{.90 .75 .15}'};
+% tv1 = {'\color[rgb]{.95 .05 .95}'};
+% tv1 = {'\color[rgb]{.9,.1,.1}'};
+% tv1 = {'\color[rgb]{.9,.1,.1}'};
+% tv1 = {'\color[rgb]{.9,.1,.1}'};
+% 
+% keyboard
+% 
+% tv2 = repmat(tv1,total_trials,1);
+% 
+% for nn=1:total_trials
+% tv3{nn} = strcat(tv2{nn}, GRINstruct.csus{nn});
+% end
+% 
+% 
+% hax1.YTickLabel = tv3{nn};
+% 
+% 
+% % annotation(fh1,'textbox',...
+% %     'Position',[.1 .1 .3 .3],...
+% %     'String',tv3{nn},...
+% %     'BackgroundColor',[1 1 1]);
+
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%   CONTEXT MENU CALLBACK TO MAKE LARGER TILE PLOT
+%----------------------------------------------------
+% MOVED TO OWN FUNCTION FILE
+%{
+function plottile(boxidselecth, eventdata)
+% disableButtons; pause(.02);
     
     axdat = gca;
     
     tv1 = axdat.Children;
     
-    GRINplotGUI(tv1, GRINstruct)
+    tv2 = [tv1(3:end).XData];
+    tv3 = [tv1(3:end).YData];
     
+    tv2 = fliplr(reshape(tv2,[],(size(tv1,1)-2)));
+    tv3 = fliplr(reshape(tv3,[],(size(tv1,1)-2)));
+    
+    fhrp=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
+    hx1 = axes('Position',[.05 .08 .9 .85],'Color','none');
+    hx1.YLim = [-.15 .15]; hold on;
+    
+    hp = plot(tv2, tv3 , 'LineWidth',2);
+    
+    leg1 = legend(hp,unique(GRINstruct.csus));
+	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
+    
+    tv2 = [tv1(1:2).XData];
+    tv3 = [tv1(1:2).YData];
+    
+    tv2 = reshape(tv2,[],2);
+    tv3 = reshape(tv3,[],2);
+    
+    plot(tv2, tv3 , 'Color',[.5 .5 .5])
+    
+    hx1.XTickLabel = num2str(round(hx1.XTick .* framesPerSec)');
+    hx1.XLabel.String = 'Time (seconds)';
+
+    % disp(' '); disp('PLOTTING TILE STATS DATA (PLEASE WAIT)...'); 
+        
+% enableButtons
+% disp('PLOTTING TILE STATS DATA COMPLETED!')
+end
+%}
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        ADVANCED PLOTTING GUI OLD
+%----------------------------------------------------
+%{
+function plottile(boxidselecth, eventdata)
+% disableButtons; pause(.02);
+
+
+    axdat = gca;
+    
+    axesdata = axdat.Children;
+    
+    TILEplotGUI(axesdata, GRINstruct)
+ 
+    
+
     return
+    
+    
+    
+    
+    
     
     tv2 = [tv1(3:end).XData];
     tv3 = [tv1(3:end).YData];
@@ -2676,9 +2843,10 @@ GloadmatdataH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
 
 % enableButtons
 % disp('PLOTTING TILE STATS DATA COMPLETED!')
+
 end
-
-
+%}
+%{
 %----------------------------------------------------
 %        IMAGE SIDER CALLBACK
 %----------------------------------------------------
@@ -2747,53 +2915,15 @@ conoff
 enableButtons        
 end
 
+%}
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-% CREATE VISUAL IMAGE OF TRIAL BLOCKS AND CS / US ONSET / OFFSET
+%----------------------------------------------------
+% VISUALIZE TRIAL BLOCKS AND CS / US ONSET / OFFSET
+%----------------------------------------------------
 %{
 
 trials = zeros(30,69);
