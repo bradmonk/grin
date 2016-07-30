@@ -1,4 +1,7 @@
-function GRINplotGUI(axdat, GRINstruct, varargin)
+function GRINplotGUI(IMG, GRINstruct, LICK, varargin)
+
+% (axdat, GRINstruct, varargin)
+% (IMG, GRINstruct, LICK)
 % disableButtons; pause(.02);
 
 global GhaxGRIN GimgsliderYAH GimgsliderYBH GimgsliderXAH GimgsliderXBH
@@ -254,9 +257,12 @@ end
 %----------------------------------------------------
 %        CREATE DATA TABLE
 %----------------------------------------------------
+keyboard
+% XDat = [axdat(3:end).XData];
+% YDat = [axdat(3:end).YData];
 
-XDat = [axdat(3:end).XData];
-YDat = [axdat(3:end).YData];
+XDat = 1:size(IMG,3);
+YDat = mean(IMG,4);
 
 XDat = fliplr(reshape(XDat,[],(size(axdat,1)-2)));
 YDat = fliplr(reshape(YDat,[],(size(axdat,1)-2)));
