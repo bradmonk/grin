@@ -912,7 +912,9 @@ end
 function conoff
     diary(confile)
     diary off
-    web(confilefullpath{1})
+    
+    % UNCOMMENT TO OPEN DIARY WHEN DONE IMAGE PROCESSING
+    % web(confilefullpath{1})
 end
 
 
@@ -1164,28 +1166,48 @@ function imgblocks(hObject, eventdata)
     disp('SEGMENTING IMGAGES INTO TILES')
 
     
-    update_IMGfactors()
+        update_IMGfactors()
     blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
-    
-    fprintf('\n\n Tile Size: % s \n\n', num2str(blockSize));
-        
-    fun = @(block_struct) mean(block_struct.data(:)) * ones(size(block_struct.data)); 
+        fprintf('\n\n Tile Size: % s \n\n', num2str(blockSize));
 
     IMGb = zeros(size(IMG));
-
     sz = size(IMG,3);
-    progresstimer('Segmenting images into blocks...')
-    % hwb = waitbar(0,'Segmenting image into tiles...');
-    for nn = 1:sz
-
-        IMGb(:,:,nn) = blockproc(IMG(:,:,nn),[blockSize blockSize],fun);
-        
-        if ~mod(nn,100)
-            % waitbar(nn/sz)
-            progresstimer(nn/sz)
-        end
     
+    %-------------------------
+    tv1 = 1:blockSize:size(IMG,1);
+    tv2 = 0:blockSize:size(IMG,1);
+    tv2(1) = [];
+    
+    progresstimer('Segmenting images into blocks...')
+    for nn = 1:sz
+      for cc = 1:numel(tv1)
+        for rr = 1:numel(tv1)
+
+          mbloc = IMG( tv1(rr):tv2(rr), tv1(cc):tv2(cc) , nn );
+          mu = mean(mbloc(:));
+        
+          IMGb( tv1(rr):tv2(rr), tv1(cc):tv2(cc) , nn ) = mu;
+        
+        end
+      end
+    if ~mod(nn,100); progresstimer(nn/sz); end    
     end
+    %-------------------------
+    
+% PREVIOUS IMPLEMENTATION OF THE LOOP ABOVE USING blockproc()
+%     fun = @(block_struct) mean(block_struct.data(:)) * ones(size(block_struct.data)); 
+%     progresstimer('Segmenting images into blocks...')
+%     % hwb = waitbar(0,'Segmenting image into tiles...');
+%     for nn = 1:sz
+% 
+%         IMGb(:,:,nn) = blockproc(IMG(:,:,nn),[blockSize blockSize],fun);
+%         
+%         if ~mod(nn,100)
+%             % waitbar(nn/sz)
+%             progresstimer(nn/sz)
+%         end
+%     
+%     end
     
         % close(hwb)
         % VISUALIZE AND ANNOTATE
@@ -1872,7 +1894,6 @@ end
 %----------------------------------------------------
 %        MOTION CORRECTION
 %----------------------------------------------------
-
 function motioncorrection(hObject, eventdata)
    msgbox('Coming Soon!'); 
    return
@@ -2264,7 +2285,15 @@ end
 
 
 
-
+%----------------------------------------------------
+%        ADVANCED PLOTTING GUI
+%----------------------------------------------------
+function plotGUI(hObject, eventdata)
+% disableButtons; pause(.02);
+    
+    FLIMplotGUI(IMG, GRINstruct, LICK)
+ 
+end
 
 
 
