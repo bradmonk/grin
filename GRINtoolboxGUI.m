@@ -48,23 +48,34 @@ function [] = GRINtoolboxGUI(varargin)
 
 clc; close all; clear all; clear java;
 % clearvars -except varargin
+disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
-% Change the current folder to the folder of this .m file.
 global thisfilepath
 thisfile = 'GRINtoolboxGUI.m';
 thisfilepath = fileparts(which(thisfile));
 cd(thisfilepath);
 
+fprintf('\n\n Current working path set to: \n % s \n', thisfilepath)
 
 global isbrad
 upath = userpath;
 isbrad = strcmp('/Users/bradleymonk',upath(1:18));
-if ~isbrad
-    addpath(genpath(thisfilepath))
+% if ~isbrad
+    
+    pathdir0 = thisfilepath;
+    pathdir1 = [thisfilepath '/grinsubfunctions'];
+    pathdir2 = [thisfilepath '/grincustomfunctions'];
+    pathdir3 = [thisfilepath '/grinfiji'];
+    
+    gpath = [pathdir0 ':' pathdir1 ':' pathdir2 ':' pathdir3];
+    % gpath = genpath(thisfilepath);
+    
+    addpath(gpath)
     % rmpath(genpath([thisfilepath,'/.git']))
-end
+% end
+fprintf('\n\n Added folders to path: \n % s \n % s \n % s \n % s \n\n',...
+        pathdir0,pathdir1,pathdir2,pathdir3)
 
-disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
 %% MANUALLY SET PER-SESSION PATH PARAMETERS IF WANTED (OPTIONAL)
 
@@ -136,7 +147,7 @@ previewStacknum = 25;
 global confile confilefullpath
 confile = 'gcconsole.txt';
 diary(confile)
-disp('CONSOLE LOGGING ON.')
+disp('GRIN CONSOLE LOGGING ON.')
 diary off
 confilefullpath = which(confile,'-all');
 delete(confile)
@@ -311,7 +322,7 @@ CSUSpopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
 
 
               
-%%
+
 %----------------------------------------------------
 %           DATA GRAPHS AND FIGURES PANEL
 %----------------------------------------------------
@@ -364,7 +375,7 @@ plotGUIH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
     'Callback', @plotGUI, 'Enable','off');
 
 
-%%
+
 
 
 %----------------------------------------------------
@@ -868,6 +879,9 @@ function enableButtons()
     viewGridOverlayH.Enable = 'on';
     plotGroupMeansH.Enable = 'on';
     viewTrialTimingsH.Enable = 'on';
+    plotGUIH.Enable = 'on';
+    
+    
 
     if numel(size(IMG)) > 1 && numel(size(IMG)) < 4;
         openImageJH.Enable = 'on';
@@ -893,7 +907,8 @@ function disableButtons()
     previewStackH.Enable = 'off';
     viewGridOverlayH.Enable = 'off';
     plotGroupMeansH.Enable = 'off';
-    viewTrialTimingsH.Enable = 'on';
+    viewTrialTimingsH.Enable = 'off';
+    plotGUIH.Enable = 'off';
 
 end
 
@@ -1016,7 +1031,8 @@ disableButtons; pause(.02);
     % IMGmsk(1:size(Mask),1:size(Mask)) = Mask;
     % figure; imagesc(IMGmsk);
     
-    mbh = msgbox('Performing convolution smoothing, please wait...');
+    mbh = waitbar(.5,'Performing convolution smoothing, please wait...');
+    % mbh = msgbox('Performing convolution smoothing, please wait...');
     IMGc = convn( IMG, Mask,'same');
     close(mbh);
 
@@ -2290,8 +2306,18 @@ end
 %----------------------------------------------------
 function plotGUI(hObject, eventdata)
 % disableButtons; pause(.02);
+
+    if size(muIMGS,1) < 1
+       
+        msgbox('DATA HAS NOT BEEN PROCESSED'); 
+        
+        enableButtons
+        
+        return
+        
+    end
     
-    FLIMplotGUI(IMG, GRINstruct, LICK)
+    GRINplotGUI(IMG, GRINstruct, LICK)
  
 end
 
