@@ -92,7 +92,7 @@ fprintf('  RESOLUTION:     % s \n\n', num2str(GNres));
 if doMASKfig == 1
     % disp(Mask);
     
-    fh96=figure('Units','normalized','OuterPosition',[.05 .05 .6 .8],'Color','w');
+    fh96=figure('Units','normalized','OuterPosition',[.05 .05 .4 .5],'Color','w');
     hax97 = axes('Position',[.05 .55 .33 .40],'Color','none');
     hax98 = axes('Position',[.04 .08 .32 .42],'Color','none');
     hax99 = axes('Position',[.45 .05 .50 .90],'Color','none');
