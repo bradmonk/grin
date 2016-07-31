@@ -1476,16 +1476,18 @@ disableButtons; pause(.02);
         % VISUALIZE AND ANNOTATE
         fprintf('\n\n IMG matrix retains size: % s ', num2str(size(IMG)));
         fprintf('\n muIMGS matrix is now size: % s \n\n', num2str(size(muIMGS)));
-        GRINcompare(IMG, muIMGS, previewNframes)
-        mainguih.HandleVisibility = 'off';
-        close all;
-        mainguih.HandleVisibility = 'on';
-        disp('Done!')
-    
-    % IMG = IMGf;
-    
+
+        previewIMGSTACK(muIMGS)
         axes(haxGRIN)
-        phGRIN = imagesc(muIMGS(:,:,1,1) , 'Parent', haxGRIN);
+        phGRIN = imagesc(muIMGS(:,:,1) , 'Parent', haxGRIN);
+    
+        
+        % GRINcompare(IMG, muIMGS, previewNframes)
+        % mainguih.HandleVisibility = 'off';
+        % close all;
+        % mainguih.HandleVisibility = 'on';
+        % axes(haxGRIN)
+        % phGRIN = imagesc(muIMGS(:,:,1,1) , 'Parent', haxGRIN);
 
 enableButtons        
 disp('Compute same-timepoint means completed!')
@@ -1609,6 +1611,58 @@ enableButtons
 end
 
 
+function previewIMGSTACK(IMGSTACK)
+disableButtons; pause(.02);
+
+    % disp('PREVIEWING IMAGE STACK')
+    
+    totframes = size(IMGSTACK,3);
+    
+    previewStacknum = str2num(previewStacknumH.String);
+
+    
+    if totframes >= previewStacknum
+    
+        IMGi = IMGSTACK(:,:,1:previewStacknum);
+    
+    
+        [IMGcMax, IMGcMaxInd] = max(IMGSTACK(:));
+        [IMGcMin, IMGcMinInd] = min(IMGSTACK(:));    
+        % [I,J,tmp1] = ind2sub(size(IMG),cb1)
+        % IMG(I,J,tmp1)
+
+        axes(haxGRIN)
+        phGRIN = imagesc(IMGSTACK(:,:,1) , 'Parent', haxGRIN);
+
+
+        for nn = 1:previewStacknum
+
+            phGRIN.CData = IMGi(:,:,nn);
+
+            pause(.04)
+        end
+    
+    
+
+        % VISUALIZE AND ANNOTATE
+        % fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
+        % fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGt)));
+        % GRINcompare(IMG, IMGt, previewNframes)
+        % mainguih.HandleVisibility = 'off';
+        % close all;
+        % mainguih.HandleVisibility = 'on';
+    
+    
+    else
+        
+       disp('Not enough images in 3rd dim to preview that many frames') 
+        
+    end
+
+        
+enableButtons        
+% disp('Preview completed!')
+end
 
 
 
