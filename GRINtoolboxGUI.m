@@ -153,40 +153,28 @@ confilefullpath = which(confile,'-all');
 delete(confile)
 
 
-% global GhaxGRIN GimgsliderYAH GimgsliderYBH GimgsliderXAH GimgsliderXBH
-% global slideValYA slideValYB slideValXA slideValXB
-% slideValYA = 0.15;
-% slideValYB = -0.15;
-% slideValXA = 100;
-% slideValXB = 0;
-% global GupdateGraphH Gcheckbox1H Gcheckbox2H Gcheckbox3H Gcheckbox4H
-% global Gcheckbox5H Gcheckbox6H Gcheckbox7H
-
-
-
-
 % -----------------------------------------------------------------
 %%     INITIATE GUI HANDLES AND CREATE SUBMENU GUI FIGURE
 % -----------------------------------------------------------------
 % INITIAL SUBMENU GUI SETUP (GRIN TOOLBOX ~ MOTION CORRECTION)
-
-initmenuh = figure('Units','normalized','OuterPosition',[.25 .4 .4 .2], ...
-    'BusyAction', 'cancel','Menubar', 'none',...
-    'Name', 'GRIN analysis', 'Tag', 'GRIN analysis');
-
-grinlenstoolboxh = uicontrol('Parent', initmenuh, 'Units','normalized', 'Position', [.03 .05 .47 .9],...
-    'String', 'Start GRIN lens toolbox', 'FontSize', 16, 'Tag', 'Start GRIN lens toolbox',...
-    'Callback', @grinlenstoolbox);
-
-motioncorrectionh = uicontrol('Parent', initmenuh, 'Units','normalized', 'Position', [.52 .51 .45 .44],...
-    'String', 'Perform motion correction', 'FontSize', 14, 'Tag', 'Perform motion correction',...
-    'Callback', @motioncorrection);
-
-
-formatXLSH = uicontrol('Parent', initmenuh, 'Units','normalized', 'Position', [.52 .05 .45 .44],...
-    'String', 'Multiformat XLS sheets', 'FontSize', 14, 'Tag', 'Multiformat XLS sheets',...
-    'Callback', @formatXLS);
-
+%{
+% initmenuh = figure('Units','normalized','OuterPosition',[.25 .4 .4 .2], ...
+%     'BusyAction', 'cancel','Menubar', 'none',...
+%     'Name', 'GRIN analysis', 'Tag', 'GRIN analysis');
+% 
+% grinlenstoolboxh = uicontrol('Parent', initmenuh, 'Units','normalized', 'Position', [.03 .05 .47 .9],...
+%     'String', 'Start GRIN lens toolbox', 'FontSize', 16, 'Tag', 'Start GRIN lens toolbox',...
+%     'Callback', @grinlenstoolbox);
+% 
+% motioncorrectionh = uicontrol('Parent', initmenuh, 'Units','normalized', 'Position', [.52 .51 .45 .44],...
+%     'String', 'Perform motion correction', 'FontSize', 14, 'Tag', 'Perform motion correction',...
+%     'Callback', @motioncorrection);
+% 
+% 
+% formatXLSH = uicontrol('Parent', initmenuh, 'Units','normalized', 'Position', [.52 .05 .45 .44],...
+%     'String', 'Multiformat XLS sheets', 'FontSize', 14, 'Tag', 'Multiformat XLS sheets',...
+%     'Callback', @formatXLS);
+%}
 
 
 %########################################################################
@@ -195,7 +183,8 @@ formatXLSH = uicontrol('Parent', initmenuh, 'Units','normalized', 'Position', [.
 
 % mainguih.CurrentCharacter = '+';
 mainguih = figure('Units', 'normalized','Position', [.05 .1 .85 .65], 'BusyAction',...
-    'cancel', 'Name', 'mainguih', 'Tag', 'mainguih','Visible', 'Off'); 
+    'cancel', 'Name', 'mainguih', 'Tag', 'mainguih','Visible', 'Off',...
+    'CloseRequestFcn',@mainGUIclosereq); 
      % 'KeyPressFcn', {@keypresszoom,1}, 'CloseRequestFcn',{@mainGUIclosereq}
      % intimagewhtb = uitoolbar(mainguih);
 
@@ -471,13 +460,9 @@ grinlenstoolbox()
 %   INITIAL GRIN TOOLBOX FUNCTION TO POPULATE GUI
 %----------------------------------------------------
 function grinlenstoolbox(hObject, eventdata)
-%Load file triggers uiresume; the initial menu is set to invisible. Prompts
-%user for file to load, copies the datastack from the file; sets the image 
-%windows to visible, and plots the images.
 
-
-    set(initmenuh, 'Visible', 'Off');
-    set(mainguih, 'Visible', 'On');
+    % set(initmenuh, 'Visible', 'Off');
+    % set(mainguih, 'Visible', 'On');
     
     %----------------------------------------------------
     %           SET USER-EDITABLE GUI VALUES
@@ -510,7 +495,6 @@ function grinlenstoolbox(hObject, eventdata)
 
 disp('Ready!')
 end
-
 
 
 
@@ -584,7 +568,8 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
                     
                 [s,v] = listdlg('PromptString','Select main xls file:',...
                 'SelectionMode','single',...
-                'ListString',{xlsFiles.name});
+                'ListString',{xlsFiles.name},...
+                'ListSize',[200 120], 'fus', 10, 'ffs', 12);
             
                 if v == 1 % USER PRESSED 'OK'
                         xlsfilename = xlsFiles(s).name;
@@ -795,9 +780,8 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
      
      
      
-     
-     
 if isbrad
+    if numel(lickfilename) > 2;
     % ------------- LICK DATA IMPORT CODE -----------
     [lickN,~,~] = xlsread([lickpathname , lickfilename]);
     
@@ -814,7 +798,8 @@ if isbrad
     fprintf('\n\n Lick data imported and reshaped to size:\n   size(LICK) % s \n\n', ...
              num2str(size(LICK)));
     % LICK = squeeze(sum(LICK,1));
-
+    
+    end
 end
      
      
@@ -2677,7 +2662,23 @@ end
 
 
 
-
+function mainGUIclosereq(src,callbackdata)
+% Close request function 
+% to display a question dialog box 
+   selection = questdlg('IMG stack still exists; clear from memory?',...
+      'Close Request Function',...
+      'Yes','No','Yes'); 
+   switch selection, 
+      case 'Yes',
+         clearvars IMG;
+         disp('IMG stack cleared.')
+         disp('GRIN toolbox closed.')
+         delete(gcf)
+      case 'No'
+      delete(gcf)
+      disp('GRIN toolbox closed.')
+   end
+end
 
 
 
