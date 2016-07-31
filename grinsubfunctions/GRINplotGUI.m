@@ -1,4 +1,4 @@
-function [] = GRINplotGUI(IMG, GRINstruct, LICK, varargin)
+function [] = GRINplotGUI(IMG, GRINstruct, XLSdata, LICK, varargin)
 %% GRINplotGUI.m
 %----------------------------------------------------
 %%     ESTABLISH GLOBALS

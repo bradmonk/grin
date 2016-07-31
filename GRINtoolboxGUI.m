@@ -101,9 +101,9 @@ end
 
 global mainguih imgLogo
 
-global IMG GRINstruct GRINtable
+global IMG GRINstruct GRINtable XLSdata LICK
 global xlsN xlsT xlsR
-global lickN LICK %lickT lickR
+global lickN %lickT lickR
 global IMGraw
 
 global frame_period framesUncomp CS_type US_type delaytoCS CS_length compressFrms
@@ -183,8 +183,7 @@ delete(confile)
 
 % mainguih.CurrentCharacter = '+';
 mainguih = figure('Units', 'normalized','Position', [.05 .1 .85 .65], 'BusyAction',...
-    'cancel', 'Name', 'mainguih', 'Tag', 'mainguih','Visible', 'Off',...
-    'CloseRequestFcn',@mainGUIclosereq); 
+    'cancel', 'Name', 'mainguih', 'Tag', 'mainguih','Visible', 'Off'); 
      % 'KeyPressFcn', {@keypresszoom,1}, 'CloseRequestFcn',{@mainGUIclosereq}
      % intimagewhtb = uitoolbar(mainguih);
 
@@ -454,6 +453,7 @@ grinlenstoolbox()
 % -----------------------------------------------------------------------------
 %%                     GUI TOOLBOX FUNCTIONS
 % -----------------------------------------------------------------------------
+
 
 
 %----------------------------------------------------
@@ -750,7 +750,6 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     CS_lengthFrames = round(CS_length .* framesPerSec); % CS length in frames
 
     
-    
     disp('XLS data successfully imported and processed!')
     grinano('xlsparams',total_trials, framesPerTrial, secPerFrame, framesPerSec, secondsPerTrial)
 
@@ -776,31 +775,50 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
      
      
      
+    XLSdata.frame_period    = frame_period;
+    XLSdata.framesUncomp    = framesUncomp;
+    XLSdata.CS_type         = CS_type;
+    XLSdata.US_type         = US_type;
+    XLSdata.delaytoCS       = delaytoCS;
+    XLSdata.CS_length       = CS_length;
+    XLSdata.compressFrms    = compressFrms;
+    XLSdata.total_trials    = total_trials;
+    XLSdata.framesPerTrial  = framesPerTrial;
+    XLSdata.secPerFrame     = secPerFrame;
+    XLSdata.framesPerSec    = framesPerSec;
+    XLSdata.secondsPerTrial = secondsPerTrial;
+    XLSdata.total_frames    = total_frames;
+    XLSdata.CS_lengthFrames = CS_lengthFrames;
+    XLSdata.CSonsetDelay    = CSonsetDelay;
+    XLSdata.baselineTime    = baselineTime;
+    XLSdata.CSUSvals        = CSUSvals;
+    XLSdata.blockSize       = blockSize;
+    XLSdata.cropAmount      = cropAmount;
+    XLSdata.sizeIMG         = size(IMG);
      
      
      
-     
-if isbrad
-    if numel(lickfilename) > 2;
-    % ------------- LICK DATA IMPORT CODE -----------
-    [lickN,~,~] = xlsread([lickpathname , lickfilename]);
-    
-    if (size(lickN,2) ~= total_trials) 
-        warning(['\n Number of colums in % s \n does not match number ',...
-        'of trials in % s \n (toolbox may crash during analysis). \n'],...
-        lickfilename, xlsfilename)
-    end
-    
-    LICK = reshape(lickN,floor(size(lickN,1) / framesPerTrial),...
-                   [], size(lickN,2));
+    if isbrad
+        if numel(lickfilename) > 2;
+        % ------------- LICK DATA IMPORT CODE -----------
+        [lickN,~,~] = xlsread([lickpathname , lickfilename]);
 
-               
-    fprintf('\n\n Lick data imported and reshaped to size:\n   size(LICK) % s \n\n', ...
-             num2str(size(LICK)));
-    % LICK = squeeze(sum(LICK,1));
-    
+        if (size(lickN,2) ~= total_trials) 
+            warning(['\n Number of colums in % s \n does not match number ',...
+            'of trials in % s \n (toolbox may crash during analysis). \n'],...
+            lickfilename, xlsfilename)
+        end
+
+        LICK = reshape(lickN,floor(size(lickN,1) / framesPerTrial),...
+                       [], size(lickN,2));
+
+
+        fprintf('\n\n Lick data imported and reshaped to size:\n   size(LICK) % s \n\n', ...
+                 num2str(size(LICK)));
+        % LICK = squeeze(sum(LICK,1));
+
+        end
     end
-end
      
      
      
@@ -829,165 +847,9 @@ end
 
 
 
-%----------------------------------------------------
-%        FORMAT XLS DATASHEETS
-%----------------------------------------------------
-function formatXLS()
-    
-    msgbox('Coming Soon!'); 
-   return
-   
-   xlsdata = formatXLS(varargin);
-     
-end
 
 
-
-
-%----------------------------------------------------
-%        ENABLE AND DISABLE GUI BUTTONS
-%----------------------------------------------------
-function enableButtons()
-
-    smoothimgH.Enable = 'on';
-    cropimgH.Enable = 'on';
-    imgblocksH.Enable = 'on';
-    dFoverFH.Enable = 'on';
-    reshapeDataH.Enable = 'on';
-    unshapeDataH.Enable = 'on';
-    alignCSFramesH.Enable = 'on';
-    timepointMeansH.Enable = 'on';
-    getROIstatsH.Enable = 'on';
-    plotTileStatsH.Enable = 'on';
-    runallIPH.Enable = 'on';
-    previewStackH.Enable = 'on';
-    viewGridOverlayH.Enable = 'on';
-    plotGroupMeansH.Enable = 'on';
-    viewTrialTimingsH.Enable = 'on';
-    plotGUIH.Enable = 'on';
-    
-    
-
-    if numel(size(IMG)) > 1 && numel(size(IMG)) < 4;
-        openImageJH.Enable = 'on';
-    else
-        openImageJH.Enable = 'off';
-    end
-end
-
-function disableButtons()
-    
-    smoothimgH.Enable = 'off';
-    cropimgH.Enable = 'off';
-    imgblocksH.Enable = 'off';
-    dFoverFH.Enable = 'off';
-    reshapeDataH.Enable = 'off';
-    unshapeDataH.Enable = 'off';
-    alignCSFramesH.Enable = 'off';
-    timepointMeansH.Enable = 'off';
-    getROIstatsH.Enable = 'off';
-    plotTileStatsH.Enable = 'off';
-    runallIPH.Enable = 'off';
-    openImageJH.Enable = 'off';
-    previewStackH.Enable = 'off';
-    viewGridOverlayH.Enable = 'off';
-    plotGroupMeansH.Enable = 'off';
-    viewTrialTimingsH.Enable = 'off';
-    plotGUIH.Enable = 'off';
-
-end
-
-
-
-
-
-
-
-%----------------------------------------------------
-%        CONSOLE DIARY ON / OFF / OPEN
-%----------------------------------------------------
-function conon
-    diary on
-end
-function conoff
-    diary(confile)
-    diary off
-    
-    % UNCOMMENT TO OPEN DIARY WHEN DONE IMAGE PROCESSING
-    % web(confilefullpath{1})
-end
-
-
-
-%----------------------------------------------------
-%        CSUS DROPDOWN MENU CALLBACK
-%----------------------------------------------------
-function CSUSpopup(hObject, eventdata)
-
-    if numel(GRINtable) > 0 
-        disp('reminder of CS/US combos...')
-        GRINtable(1:7,1:2)
-        % GRINstruct
-    end
-        
-    stimnum = CSUSpopupH.Value;
-
-    % CSUSvals = unique(GRINstruct.csus);
-    % set(CSUSpopupH, 'String', CSUSvals);
-
-end
-
-
-
-
-%----------------------------------------------------
-%        RADIO BUTTON CALLBACK
-%----------------------------------------------------
-function stimselection(source,callbackdata)
-        
-    % strcmp(stimtypeh.SelectedObject.String,'CSxUS')
-    stimtype = stimtypeh.SelectedObject.String;
-    
-    display(['Previous Stim: ' callbackdata.OldValue.String]);
-    display(['Current Stim: ' callbackdata.NewValue.String]);
-    display('------------------');
-    
-    
-    % % RADIO BUTTON GROUP FOR TIMEPOINT MEANS
-    % stimtypeh = uibuttongroup('Parent', IPpanelH, 'Visible','on',...
-    %                   'Units', 'normalized',...
-    %                   'Position',[0.63 0.31 0.35 0.06],...
-    %                   'SelectionChangedFcn',@stimselection);              
-    % stimtypeh1 = uicontrol(stimtypeh,'Style','radiobutton',...
-    %                   'String','CSxUS',...
-    %                   'Units', 'normalized',...
-    %                   'Position',[0.04 0.05 0.38 0.9],...
-    %                   'HandleVisibility','off');
-    % stimtypeh2 = uicontrol(stimtypeh,'Style','radiobutton',...
-    %                   'String','CS',...
-    %                   'Units', 'normalized',...
-    %                   'Position',[0.42 0.05 0.3 0.9],...
-    %                   'HandleVisibility','off');
-    % stimtypeh3 = uicontrol(stimtypeh,'Style','radiobutton',...
-    %                   'String','US',...
-    %                   'Units', 'normalized',...
-    %                   'Position',[0.68 0.05 0.3 0.9],...
-    %                   'HandleVisibility','off');
-
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
+%% ------------------------- IMAGE PROCESSING ------------------------------
 
 
 
@@ -1036,6 +898,7 @@ disableButtons; pause(.02);
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
 
+        XLSdata.sizeIMG = size(IMG);
 
 enableButtons        
 disp('Image smoothing completed!')
@@ -1079,6 +942,9 @@ disableButtons; pause(.02);
 
         update_IMGfactors()
         
+        XLSdata.cropAmount = cropAmount;
+        XLSdata.sizeIMG = size(IMG);
+        
 enableButtons        
 disp('Crop Images completed!')
 end
@@ -1088,77 +954,8 @@ end
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 %----------------------------------------------------
-%        IMGBLOCKS POPUP MENU CALLBACK
-%----------------------------------------------------
-function imgblockspopup(hObject, eventdata)
-        
-    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
-    
-    fprintf('\n\n New tile size: % s \n\n', num2str(blockSize));
-    
-    % imgblockspopupH.String
-    % imgblockspopupH.Value
-
-end
-
-
-
-%----------------------------------------------------
-%  GET FACTORS THAT DIVIDE EVENLY INTO size(IMG,1)
-%----------------------------------------------------
-function update_IMGfactors()
-    
-    szIMG = size(IMG,1);
-        
-    s=1:szIMG;
-    
-    IMGfactors = s(rem(szIMG,s)==0);
-    
-    imgblockspopupH.String = IMGfactors;
-    
-    
-    
-    if any(IMGfactors == 22)
-        
-        imgblockspopupH.Value = find(IMGfactors==22);
-        blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
-        
-    elseif numel(IMGfactors) > 2
-
-        imgblockspopupH.Value = round(numel(IMGfactors)/2)+1;
-        blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
-        
-    else
-        
-        imgblockspopupH.Value = ceil(numel(IMGfactors)/2);
-        blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
-    
-    end
-
-    % fprintf('\n\n New tile size: % s \n\n', num2str(blockSize));
-
-end
-
-
-
-
-
-%----------------------------------------------------
-%        CREATE IMAGE TILES
+%        CREATE IMAGE TILES BLOCKS
 %----------------------------------------------------
 function imgblocks(hObject, eventdata)
 % disableButtons; pause(.02);
@@ -1226,11 +1023,68 @@ function imgblocks(hObject, eventdata)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
 
         
+        XLSdata.blockSize = blockSize;
+        XLSdata.sizeIMG = size(IMG);
+        
 enableButtons
 disp('Block-Segment Images completed!')        
 end
 
 
+
+
+
+%--------------------------------------------
+%        IMGBLOCKS POPUP MENU CALLBACK
+%--------------------------------------------
+function imgblockspopup(hObject, eventdata)
+        
+    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+    
+    fprintf('\n\n New tile size: % s \n\n', num2str(blockSize));
+    
+    % imgblockspopupH.String
+    % imgblockspopupH.Value
+
+end
+
+
+
+%--------------------------------------------
+%  GET FACTORS DIVIDE EVENLY INTO size(IMG,1)
+%--------------------------------------------
+function update_IMGfactors()
+    
+    szIMG = size(IMG,1);
+        
+    s=1:szIMG;
+    
+    IMGfactors = s(rem(szIMG,s)==0);
+    
+    imgblockspopupH.String = IMGfactors;
+    
+    
+    
+    if any(IMGfactors == 22)
+        
+        imgblockspopupH.Value = find(IMGfactors==22);
+        blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+        
+    elseif numel(IMGfactors) > 2
+
+        imgblockspopupH.Value = round(numel(IMGfactors)/2)+1;
+        blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+        
+    else
+        
+        imgblockspopupH.Value = ceil(numel(IMGfactors)/2);
+        blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+    
+    end
+
+    % fprintf('\n\n New tile size: % s \n\n', num2str(blockSize));
+
+end
 
 
 
@@ -1259,6 +1113,8 @@ disableButtons; pause(.02);
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
 
+        
+        XLSdata.sizeIMG = size(IMG);
 
 enableButtons
 disp('Reshape stack by trial completed!')
@@ -1289,14 +1145,13 @@ disableButtons; pause(.02);
         
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+        
+        XLSdata.sizeIMG = size(IMG);
 
 
 enableButtons
 disp('Undo reshape (make 3D) completed!')
 end
-
-
-
 
 
 
@@ -1360,11 +1215,6 @@ end
 
 
 
-
-
-
-
-
 %----------------------------------------------------
 %        deltaF OVER F
 %----------------------------------------------------
@@ -1416,11 +1266,6 @@ disableButtons; pause(.02);
 enableButtons        
 disp('dF/F computation completed!')
 end
-
-
-
-
-
 
 
 
@@ -1482,8 +1327,6 @@ end
 
 
 
-
-
 %----------------------------------------------------
 %        RUN ALL IMAGE PROCESSING FUNCTIONS
 %----------------------------------------------------
@@ -1519,8 +1362,11 @@ conon
     if checkbox7H.Value
         timepointMeans
     end
+    
+    XLSdata.sizeIMG = size(IMG);
 
-
+    disp('disp(''XLSdata'') >>')
+    disp(XLSdata)
     
 disp('PROCESSING COMPLETED - ALL SELECTED FUNCTIONS FINISHED RUNNING!')
 conoff
@@ -1535,8 +1381,786 @@ end
 
 
 
+%% ------------------------- PLOTS FIGURES GRAPHS ------------------------------
 
 
+%----------------------------------------------------
+%        GET ROI STATISTICS
+%----------------------------------------------------
+function getROIstats(hObject, eventdata)
+disableButtons; pause(.02);
+
+
+    if size(muIMGS,1) < 1
+       
+        msgbox('DATA HAS NOT BEEN PROCESSED'); 
+        
+        enableButtons
+        
+        return
+        
+    end
+
+    
+    % PREVIEW AN ROI FOR A SINGLE CSUS AVERAGED OVER TRIALS
+    disp(' '); disp('GETTING ROI STATISTICS'); 
+
+    fh1=figure('Units','normalized','OuterPosition',[.40 .22 .59 .75],'Color','w');
+    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[]);
+
+    ih1 = imagesc(muIMGS(:,:,1,1));
+
+    disp('Use mouse to trace around a region of interest on the figure.')
+    hROI = imfreehand(hax1);   
+    ROIpos = hROI.getPosition;
+    ROIarea = polyarea(ROIpos(:,1),ROIpos(:,2));
+
+
+    ROImask = hROI.createMask(ih1);
+    
+    ROI_INTENSITY = muIMGS(:,:,1,1) .* ROImask;
+    figure; imagesc(ROI_INTENSITY); colorbar;
+
+
+
+
+    % Here we are computing the average intensity for the selected ROI
+    % N.B. here it is assumed that a pixel value (actually dF/F value)
+    % has virtually a zero probability of equaling exactly zero; this
+    % allows us to multiply the mask T/F matrix by the image matrix
+    % and disclude from the average all pixels that equal exactly zero
+    
+    ROImu = zeros(size(muIMGS,4),size(muIMGS,3));
+    for mm = 1:size(muIMGS,4)
+        for nn = 1:size(muIMGS,3)
+        
+        ROI_INTENSITY = muIMGS(:,:,nn,mm) .* ROImask;
+        ROImu(mm,nn) = mean(ROI_INTENSITY(ROI_INTENSITY ~= 0));
+
+        end
+    end
+
+    CSUSplot(ROImu', GRINstruct);
+    % CSUSplot(ROImu', GRINstruct, CSUSonoff);
+    % previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff, ROImu)
+    
+    
+    
+    
+enableButtons
+disp('Compute ROI statistics completed!')
+end
+
+
+
+
+
+%----------------------------------------------------
+%        PLOT TILE STATS DATA
+%----------------------------------------------------
+function plotTileStats(hObject, eventdata)
+% disableButtons; pause(.02);
+
+    if size(muIMGS,1) < 1
+       
+        msgbox('DATA HAS NOT BEEN PROCESSED'); 
+        
+        enableButtons
+        
+        return
+        
+    end
+
+    disp(' '); disp('PLOTTING TILE STATS DATA (PLEASE WAIT)...'); 
+    
+    
+    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+
+    pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
+
+    pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
+    
+    CSids = unique(GRINstruct.csus);
+    
+    
+    %-------------------------- MULTI-TILE FIGURE --------------------------
+
+    fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
+    
+    set(fh10,'ButtonDownFcn',@(~,~)disp('figure'),...
+   'HitTest','off')
+    
+    
+    
+    aXlocs =  (0:(size(pxl,1))) .* (1/(size(pxl,1)));
+    aXlocs(end) = [];
+    aYlocs =  (0:(size(pxl,2))) .* (1/(size(pxl,2)));
+    aYlocs(end) = [];
+    aXlocs = aXlocs+.005;
+    aYlocs = aYlocs+.005;
+    [aX,aY] = meshgrid(aXlocs,aYlocs);
+    YL=[-.15 .15];
+    
+
+    for ii = 1:size(pixels,1)
+
+        axh{ii} = axes('Position',[aX(ii) aY(ii) (1/(size(pxl,1)+1)) (1/(size(pxl,2)+1))],...
+        'Color','none','Tag',num2str(ii)); 
+        % axis off;
+        hold on;
+    
+        % h = squeeze(pixels(ii,:,:));
+        pha = plot( 1:size(pixels,2) , squeeze(pixels(ii,:,:)));
+        set(gca,'YLim',YL)
+        line([CSUSonoff(1) CSUSonoff(1)],YL,'Color',[.8 .8 .8])
+        line([CSUSonoff(2) CSUSonoff(2)],YL,'Color',[.8 .8 .8])
+        
+        
+        set(axh{ii},'ButtonDownFcn',@(~,~)disp(gca),...
+        'HitTest','on')
+        
+    end
+        pause(.05)
+    
+    
+    
+    
+    legpos = {  [0.01,0.94,0.15,0.033], ...
+                [0.01,0.90,0.15,0.033], ...
+                [0.01,0.86,0.15,0.033], ...
+                [0.01,0.82,0.15,0.033], ...
+                [0.01,0.78,0.15,0.033], ...
+                [0.01,0.74,0.15,0.033], ...
+                };
+    
+    pc = {pha.Color};
+    pt = CSids;
+    
+    for nn = 1:size(pixels,3)
+        
+    annotation(fh10,'textbox',...
+    'Position',legpos{nn},...
+    'Color',pc{nn},...
+    'FontWeight','bold',...
+    'String',pt(nn),...
+    'FontSize',14,...
+    'FitBoxToText','on',...
+    'EdgeColor',pc{nn},...
+    'FaceAlpha',.7,...
+    'Margin',3,...
+    'LineWidth',2,...
+    'VerticalAlignment','bottom',...
+    'BackgroundColor',[1 1 1]);
+    
+    end
+    
+    annotation(fh10,'textbox',...
+    'Position',[.01 .97 .2 .05],...
+    'Color',[0 0 0],...
+    'FontWeight','bold',...
+    'String','RIGHT-CLICK ON ANY GRAPH TO OPEN ADVANCED REPLOT GUI',...
+    'FontSize',14,...
+    'FitBoxToText','on',...
+    'EdgeColor','none',...
+    'FaceAlpha',.7,...
+    'Margin',3,...
+    'LineWidth',2,...
+    'VerticalAlignment','bottom',...
+    'BackgroundColor',[1 1 1]);
+    
+    
+    % haxN = axes('Position',[.001 .001 .99 .99],'Color','none');
+    % axis off; hold on;
+    pause(.2)
+    %-------------------------------------------------------------------------
+    
+
+    hcmenu = uicontextmenu;
+
+    item1 = uimenu(hcmenu,'Label','OPEN IN ADVANCED PLOT GUI','Callback',@plottile);
+
+    haxe = findall(fh10,'Type','axes');
+
+         % Attach the context menu to each axes
+    for aa = 1:length(haxe)
+        set(haxe(aa),'uicontextmenu',hcmenu)
+    end   
+        
+                
+%     % Add 'doprint' checkbox before implementing this code
+%     print(fh10,'-dpng','-r300','tilefig')
+%     
+%     hFig = figure('Toolbar','none',...
+%               'Menubar','none');
+%     hIm = imshow('tilefig.png');
+%     hSP = imscrollpanel(hFig,hIm);
+%     set(hSP,'Units','normalized',...
+%         'Position',[0 .1 1 .9])        
+        
+        
+enableButtons
+disp('PLOTTING TILE STATS DATA COMPLETED!')
+end
+
+
+
+
+
+%----------------------------------------------------
+%        PLOT TILE CALLBACK - LAUNCH TILEplotGUI.m
+%----------------------------------------------------
+function plottile(hObject, eventdata)
+% disableButtons; pause(.02);
+
+    axdat = gca;
+    
+    axesdata = axdat.Children;
+    
+    TILEplotGUI(axesdata, GRINstruct)
+ 
+end
+
+
+
+
+
+%----------------------------------------------------
+%    ADVANCED PLOTTING GUI - LAUNCH GRINplotGUI.m
+%----------------------------------------------------
+function plotGUI(hObject, eventdata)
+% disableButtons; pause(.02);
+
+    if size(muIMGS,1) < 1
+       
+        msgbox('DATA HAS NOT BEEN PROCESSED'); 
+        
+        enableButtons
+        
+        return
+        
+    end
+    
+    GRINplotGUI(IMG, GRINstruct, XLSdata, LICK)
+ 
+end
+
+
+
+
+%----------------------------------------------------
+%        VIEW GRID OVERLAY
+%----------------------------------------------------
+function viewGridOverlay(hObject, eventdata)
+% disableButtons; pause(.02);
+    
+    %-------------------------- IMGraw FIGURE GRID --------------------------
+    
+    
+    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+    
+    fprintf('\n\n Grid size is% d pixels \n\n', blockSize)
+
+    if length(muIMGS) < 1
+        
+        pxl = zeros(size(IMG,1) / blockSize);
+        
+    else
+    
+        pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
+        pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
+    
+    end
+    
+    
+    aXlocs =  (0:(size(pxl,1))) .* (1/(size(pxl,1)));
+    aXlocs(end) = [];
+    aYlocs =  (0:(size(pxl,2))) .* (1/(size(pxl,2)));
+    aYlocs(end) = [];
+    aXlocs = aXlocs+.005;
+    aYlocs = aYlocs+.005;
+    [aX,aY] = meshgrid(aXlocs,aYlocs);
+    YL=[-.15 .15];
+
+    fhR = figure('Units','normalized','OuterPosition',[.1 .1 .5 .8],'Color','w');
+    axR = axes;
+    phR = imagesc(IMGraw);
+    grid on
+    axR.YTick = [0:blockSize:size(IMGraw,1)];
+    axR.XTick = [0:blockSize:size(IMGraw,1)];
+    % axR.YTickLabel = 1:30;
+    
+    axR.GridAlpha = .8;
+    axR.GridColor = [0.99 0.1 0.1];
+    
+        tv1 = 1:size(IMGraw,1);
+        
+        pause(.2)
+        
+        
+        % NUMBERING IS TECHNICALLY INCORRECT SINCE BELOW AXIS #1 STARTS IN THE
+        % BOTTOM LEFT CORNER AND GOES UP, AND HERE IT STARTS IN THE TOP
+        % LEFT CORNER AND GOES DOWN. NOT SURE THAT IT MATTERS...
+        for ii = 1:size(pxl,1)^2
+            
+            tv2 = [  aX(ii)*size(IMGraw,1)   aY(ii)*size(IMGraw,1)+2 ...
+                    (1/(size(pxl,1)+1))     (1/(size(pxl,2)+1))];
+
+            text(tv2(1),tv2(2),num2str(tv1(ii)),'Color','r','Parent',axR);
+    
+        end
+        
+     pause(.1)
+    %-------------------------------------------------------------------------
+    
+
+        
+enableButtons
+disp('GRID OVERLAY HAS BEEN GENERATED.')
+end
+
+
+
+
+%----------------------------------------------------
+%        PLOT GROUP MEANS (CI ENVELOPE PLOT)
+%----------------------------------------------------
+function plotGroupMeans(hObject, eventdata)
+% disableButtons; pause(.02);
+
+
+    if size(muIMGS,1) < 1
+       
+        msgbox('Group means have not yet been calculated'); 
+        
+        return
+        
+    end
+
+    disp(' '); disp('PLOTTING GROUP MEANS (PLEASE WAIT)...'); 
+        
+    fh1=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
+    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax1.YLim = [-.15 .15];
+    hax2 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax2.YLim = [-.15 .15];
+    axis off; hold on;
+    hax3 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax3.YLim = [-.15 .15];
+    axis off; hold on;
+    hax4 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax4.YLim = [-.15 .15];
+    axis off; hold on;
+    hax5 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax5.YLim = [-.15 .15];
+    axis off; hold on;
+    hax6 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax6.YLim = [-.15 .15];
+    axis off; hold on;
+    hax0 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    hax0.YLim = [-.15 .15];
+    axis off; hold on;
+    allhax = {hax1, hax2, hax3, hax4, hax5, hax6};
+    colorz = {  [.99 .01 .01], ...
+                [.01 .99 .01], ...
+                [.01 .01 .99], ...
+                [.99 .01 .99], ...
+                [.99 .99 .01], ...
+                [.01 .99 .99], ...
+                };
+    legpos = {  [0.75,0.85,0.15,0.06], ...
+                [0.75,0.80,0.15,0.06], ...
+                [0.75,0.75,0.15,0.06], ...
+                [0.75,0.70,0.15,0.06], ...
+                [0.75,0.65,0.15,0.06], ...
+                [0.75,0.60,0.15,0.06], ...
+                };
+
+    
+            
+
+    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+
+    pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
+
+    pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
+    
+    CSids = unique(GRINstruct.csus);
+    
+    
+    
+    
+    %-------------------------- CI ENVELOPE FIGURE --------------------------
+    for nn = 1:size(pixels,3)
+    
+    pixCS = pixels(:,:,nn);
+	
+	Mu = mean(pixCS,1);
+    Sd = std(pixCS,0,1);
+    Se = Sd./sqrt(numel(Mu));
+	y_Mu = Mu';
+    x_Mu = (1:numel(Mu))';
+    % e_Mu = Se';
+    e_Mu = Sd';
+	xx_Mu = 1:0.1:max(x_Mu);
+	yy_Mu = spline(x_Mu,y_Mu,xx_Mu);
+    ee_Mu = spline(x_Mu,e_Mu,xx_Mu);
+    
+    axes(allhax{nn})
+    [ph1, po1] = envlineplot(xx_Mu',yy_Mu', ee_Mu','cmap',colorz{nn},...
+                            'alpha','transparency', 0.6);
+    hp1{nn} = plot(xx_Mu,yy_Mu,'Color',colorz{nn});
+    pause(.2)
+    
+    % lh1{nn} = legend(allhax{nn},CSids(nn),'Position',legpos{nn},'Box','off');
+    
+    end
+    
+    text(1, -.12, ['CS ON/OFF US ON/OFF:  ', num2str(CSUSonoff)])
+    
+    leg1 = legend([hp1{:}],CSids);
+	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
+    
+        
+    for mm = 1:4
+    text(CSUSonoff(mm),allhax{nn}.YLim(1),{'\downarrow'},...
+        'HorizontalAlignment','center','VerticalAlignment','bottom',...
+        'FontSize',20,'FontWeight','bold')
+    end
+    line([CSUSonoff(1) CSUSonoff(1)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
+    line([CSUSonoff(2) CSUSonoff(2)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
+    pause(.1)
+    %-------------------------------------------------------------------------
+    
+    
+    
+    
+    
+    
+    
+    
+        
+enableButtons
+disp('PLOTTING GROUP MEANS COMPLETED!')
+end
+
+
+
+
+
+%----------------------------------------------------
+% VISUALIZE TRIAL BLOCKS AND CS / US ONSET / OFFSET
+%----------------------------------------------------
+function viewTrialTimings(hObject, eventdata)
+    
+    
+    if length(delaytoCS) < 2
+       
+        msgbox('DATA HAS NOT BEEN IMPORTED'); 
+        
+        return
+        
+    end
+    
+trials = zeros(total_trials,round(secondsPerTrial));
+
+
+for nn = 1:total_trials
+    
+    trials(nn,delaytoCS(nn):delaytoCS(nn)+10) = GRINstruct.id(nn);
+    
+end
+
+cm = [ 1  1  1
+      .95 .05 .05
+      .90 .75 .15
+      .95 .05 .95
+      .05 .95 .05
+      .05 .75 .95
+      .05 .05 .95
+      .45 .45 .25
+      ];
+
+fh1=figure('Units','normalized','OuterPosition',[.1 .08 .8 .85],'Color','w');
+hax1 = axes('Position',[.15 .05 .82 .92],'Color','none');
+hax2 = axes('Position',[.15 .05 .82 .92],'Color','none','NextPlot','add');
+axis off; hold on;
+
+axes(hax1)
+ih = imagesc(trials);
+colormap(cm)
+grid on
+hax1.YTick = [.5:1:total_trials-.5];
+hax1.YTickLabel = 1:total_trials;
+hax1.XLabel.String = 'Time (seconds)';
+
+hax1.YTickLabel = GRINstruct.csus;
+% hax1.YTickLabelRotation = 30;
+
+
+% tv1 = [];
+% tv2 = [];
+% tv3 = [];
+% tv4 = [];
+% 
+% tv1 = {'\color[rgb]{.95,.05,.05}'};
+% tv1 = {'\color[rgb]{.90 .75 .15}'};
+% tv1 = {'\color[rgb]{.95 .05 .95}'};
+% tv1 = {'\color[rgb]{.9,.1,.1}'};
+% tv1 = {'\color[rgb]{.9,.1,.1}'};
+% tv1 = {'\color[rgb]{.9,.1,.1}'};
+% 
+% keyboard
+% 
+% tv2 = repmat(tv1,total_trials,1);
+% 
+% for nn=1:total_trials
+% tv3{nn} = strcat(tv2{nn}, GRINstruct.csus{nn});
+% end
+% 
+% 
+% hax1.YTickLabel = tv3{nn};
+% 
+% 
+% % annotation(fh1,'textbox',...
+% %     'Position',[.1 .1 .3 .3],...
+% %     'String',tv3{nn},...
+% %     'BackgroundColor',[1 1 1]);
+
+
+end
+
+
+
+
+
+
+%% ------------------------- OUT OF USE ------------------------------
+
+
+%----------------------------------------------------
+%   MAIN GUI CLOSE REQUEST FUNCTION
+%----------------------------------------------------
+function mainGUIclosereq(src,callbackdata)
+   selection = questdlg('Clear globals from memory?',...
+      'Close Request Function',...
+      'Yes','No','Yes'); 
+   switch selection, 
+      case 'Yes',
+         clc
+         initialVars = who;
+         disp('Clearing globals...')
+         disp(initialVars)
+         clearvars -global
+         % clearvars IMG;
+         disp('Global variables cleared from memory.')
+         disp('GRIN toolbox closed.')
+         delete(gcf)
+      case 'No'
+      delete(gcf)
+      disp('GRIN toolbox closed.')
+   end
+end
+
+
+
+
+%----------------------------------------------------
+%        COMING SOON NOTIFICATION
+%----------------------------------------------------
+function comingsoon(hObject, eventdata)
+   msgbox('Coming Soon!'); 
+end
+
+
+
+
+
+%----------------------------------------------------
+%        MOTION CORRECTION
+%----------------------------------------------------
+function motioncorrection(hObject, eventdata)
+   msgbox('Coming Soon!'); 
+   return
+   
+    % clc; clear all; close all;
+
+    % Input video file which needs to be stabilized.
+    % filename = 'shaky_car.avi';
+    filename = 'GRIN_zstack.avi';
+
+    hVideoSource = vision.VideoFileReader(filename, ...
+              'ImageColorSpace', 'Intensity','VideoOutputDataType', 'double');
+
+
+    % Create geometric translator object used to compensate for movement.
+    hTranslate = vision.GeometricTranslator( ...
+           'OutputSize', 'Same as input image', 'OffsetSource', 'Input port');
+
+
+    % Create template matcher object to compute location of best target match
+    % in frame. Use location to find translation between successive frames.
+    hTM = vision.TemplateMatcher('ROIInputPort', true, ...
+                                'BestMatchNeighborhoodOutputPort', true);
+
+
+    % Create object to display the original video and the stabilized video.
+    hVideoOut = vision.VideoPlayer('Name', 'Video Stabilization');
+    hVideoOut.Position(1) = round(0.4*hVideoOut.Position(1));
+    hVideoOut.Position(2) = round(1.5*(hVideoOut.Position(2)));
+    hVideoOut.Position(3:4) = [900 550];
+
+
+        imgA = step(hVideoSource); % Read first frame into imgA
+        figure
+        imagesc(imgA);
+        title('USE MOUSE TO DRAW BOX AROUND BEST STABILIZATION OBJECT')
+        h1 = imrect;
+        pos1 = round(getPosition(h1)); % [xmin ymin width height]
+
+
+    % Here we initialize some variables used in the processing loop.
+
+    pos.template_orig = [pos1(1) pos1(2)]; % [x y] upper left corner
+    pos.template_size = [pos1(3:4)];    % [width height]
+    pos.search_border = [10 10];        % max horizontal and vertical displacement
+
+    pos.template_center = floor((pos.template_size-1)/2);
+    pos.template_center_pos = (pos.template_orig + pos.template_center - 1);
+    fileInfo = info(hVideoSource);
+    W = fileInfo.VideoSize(1); % Width in pixels
+    H = fileInfo.VideoSize(2); % Height in pixels
+    BorderCols = [1:pos.search_border(1)+4 W-pos.search_border(1)+4:W];
+    BorderRows = [1:pos.search_border(2)+4 H-pos.search_border(2)+4:H];
+    sz = fileInfo.VideoSize;
+    TargetRowIndices = ...
+      pos.template_orig(2)-1:pos.template_orig(2)+pos.template_size(2)-2;
+    TargetColIndices = ...
+      pos.template_orig(1)-1:pos.template_orig(1)+pos.template_size(1)-2;
+    SearchRegion = pos.template_orig - pos.search_border - 1;
+    Offset = [0 0];
+    Target = zeros(20,20);
+    % Target = zeros(18,22);
+    firstTime = true;
+
+
+
+    % Stream Processing Loop
+
+    % Processing loop using objects created above to perform stabilization
+    nn = 0;
+    while ~isDone(hVideoSource)
+    nn = nn+1;
+
+        input = step(hVideoSource);
+
+        % Find location of Target in the input video frame
+        if firstTime
+          Idx = int32(pos.template_center_pos);
+          MotionVector = [0 0];
+          firstTime = false;
+        else
+          IdxPrev = Idx;
+
+          ROI = [SearchRegion, pos.template_size+2*pos.search_border];
+          Idx = step(hTM, input, Target, ROI);
+
+          MotionVector = double(Idx-IdxPrev);
+        end
+
+        [Offset, SearchRegion] = updatesearch(sz, MotionVector, ...
+            SearchRegion, Offset, pos);
+
+        % Translate video frame to offset the camera motion
+        Stabilized = step(hTranslate, input, fliplr(Offset));
+
+        Target = Stabilized(TargetRowIndices, TargetColIndices);
+
+        % Add black border for display
+        Stabilized(:, BorderCols) = minmin;
+        Stabilized(BorderRows, :) = minmin;
+
+        TargetRect = [pos.template_orig-Offset, pos.template_size];
+        SearchRegionRect = [SearchRegion, pos.template_size + 2*pos.search_border];
+
+        % Draw rectangles on input to show target and search region
+        input = insertShape(input, 'Rectangle', [TargetRect; SearchRegionRect],...
+                            'Color', 'white');
+        % Display the offset (displacement) values on the input image
+        txt = sprintf('(%+05.1f,%+05.1f)', Offset);
+        input = insertText(input(:,:,1),[191 215],txt,'FontSize',16, ...
+                        'TextColor', 'white', 'BoxOpacity', 0);
+        % Display video
+        step(hVideoOut, [input(:,:,1) Stabilized]);
+
+
+        sGRINs{nn} = Stabilized;
+    end
+
+    % Release hVideoSource
+    release(hVideoSource);
+    % ===============================================
+   
+end
+
+
+
+%----------------------------------------------------
+%        RADIO BUTTON CALLBACK
+%----------------------------------------------------
+function stimselection(source,callbackdata)
+        
+    % strcmp(stimtypeh.SelectedObject.String,'CSxUS')
+    stimtype = stimtypeh.SelectedObject.String;
+    
+    display(['Previous Stim: ' callbackdata.OldValue.String]);
+    display(['Current Stim: ' callbackdata.NewValue.String]);
+    display('------------------');
+    
+    
+    % % RADIO BUTTON GROUP FOR TIMEPOINT MEANS
+    % stimtypeh = uibuttongroup('Parent', IPpanelH, 'Visible','on',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.63 0.31 0.35 0.06],...
+    %                   'SelectionChangedFcn',@stimselection);              
+    % stimtypeh1 = uicontrol(stimtypeh,'Style','radiobutton',...
+    %                   'String','CSxUS',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.04 0.05 0.38 0.9],...
+    %                   'HandleVisibility','off');
+    % stimtypeh2 = uicontrol(stimtypeh,'Style','radiobutton',...
+    %                   'String','CS',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.42 0.05 0.3 0.9],...
+    %                   'HandleVisibility','off');
+    % stimtypeh3 = uicontrol(stimtypeh,'Style','radiobutton',...
+    %                   'String','US',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.68 0.05 0.3 0.9],...
+    %                   'HandleVisibility','off');
+
+end
+
+
+
+
+%----------------------------------------------------
+%        FORMAT XLS DATASHEETS
+%----------------------------------------------------
+function formatXLS()
+    
+    msgbox('Coming Soon!'); 
+   return
+   
+   xlsdata = formatXLS(varargin);
+     
+end
+
+
+
+
+
+%% ------------------------- CALLBACKS & HELPERS ------------------------------
 
 
 %----------------------------------------------------
@@ -1716,10 +2340,11 @@ function exportvars(hObject, eventdata)
         checkLabels = {'Save IMG to variable named:' ...
                    'Save GRINstruct to variable named:' ...
                    'Save GRINtable to variable named:' ...
+                   'Save XLSdata to variable named:' ...
                    'Save IMGraw to variable named:'...
                    'Save LICK to variable named:'}; 
-        varNames = {'IMG','GRINstruct','GRINtable','IMGraw','LICK'}; 
-        items = {IMG,GRINstruct,GRINtable,IMGraw,LICK};
+        varNames = {'IMG','GRINstruct','GRINtable','XLSdata','IMGraw','LICK'}; 
+        items = {IMG,GRINstruct,GRINtable,XLSdata,IMGraw,LICK};
         export2wsdlg(checkLabels,varNames,items,...
                      'Save Variables to Workspace');
 
@@ -1730,6 +2355,8 @@ function exportvars(hObject, eventdata)
     
 enableButtons        
 end
+
+
 
 
 %----------------------------------------------------
@@ -1752,7 +2379,7 @@ function savedataset(hObject, eventdata)
         % IMGint16 = uint16(IMG);
                 
         disp('Saving data to .mat file, please wait...')
-        save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable',...
+        save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable','XLSdata',...
             'LICK','GRINraw','-v7.3')
         % save(fullfile(pathn,filen),'IMGint16','GRINstruct','GRINtable','-v7.3')
         disp('Dataset saved!')
@@ -1788,7 +2415,6 @@ function loadmatdata(hObject, eventdata)
 disp('Dataset loaded!')
 enableButtons        
 end
-
 
 
 
@@ -1853,6 +2479,8 @@ disp('ImageJ (FIJI) processes completed!')
 end
 
 
+
+
 %----------------------------------------------------
 %        DATA EXPLORATION FUNCTIONS
 %----------------------------------------------------
@@ -1912,1166 +2540,129 @@ end
 
 
 
-
 %----------------------------------------------------
 %        IMAGE SIDER CALLBACK
 %----------------------------------------------------
 function imgslider(hObject, eventdata)
 
-% Hints: hObject.Value returns position of slider
-%        hObject.Min and hObject.Max determine range of slider
-% sunel = get(handles.sunelslider,'value'); % Get current light elev.
-% sunaz = get(hObject,'value');   % Varies from -180 -> 0 deg
+    % Hints: hObject.Value returns position of slider
+    %        hObject.Min and hObject.Max determine range of slider
+    % sunel = get(handles.sunelslider,'value'); % Get current light elev.
+    % sunaz = get(hObject,'value');   % Varies from -180 -> 0 deg
 
-slideVal = ceil(imgsliderH.Value);
+    slideVal = ceil(imgsliderH.Value);
 
-if size(IMG,3) > 99
+    if size(IMG,3) > 99
 
-    phGRIN = imagesc(IMG(:,:,slideVal) , 'Parent', haxGRIN);
-              pause(.05)
+        phGRIN = imagesc(IMG(:,:,slideVal) , 'Parent', haxGRIN);
+                  pause(.05)
 
-    disp(['image' num2str(slideVal)])
-    
-else
-    
-    disp('There must be at least 100 images in the stack')
-    disp('(per trial) to use the slider; currently there are')
-    disp(size(IMG,3))
+        disp(['image' num2str(slideVal)])
 
-end
-
-end
-
-
-
-
-
-%----------------------------------------------------
-%        MOTION CORRECTION
-%----------------------------------------------------
-function motioncorrection(hObject, eventdata)
-   msgbox('Coming Soon!'); 
-   return
-   
-    % clc; clear all; close all;
-
-    % Input video file which needs to be stabilized.
-    % filename = 'shaky_car.avi';
-    filename = 'GRIN_zstack.avi';
-
-    hVideoSource = vision.VideoFileReader(filename, ...
-              'ImageColorSpace', 'Intensity','VideoOutputDataType', 'double');
-
-
-    % Create geometric translator object used to compensate for movement.
-    hTranslate = vision.GeometricTranslator( ...
-           'OutputSize', 'Same as input image', 'OffsetSource', 'Input port');
-
-
-    % Create template matcher object to compute location of best target match
-    % in frame. Use location to find translation between successive frames.
-    hTM = vision.TemplateMatcher('ROIInputPort', true, ...
-                                'BestMatchNeighborhoodOutputPort', true);
-
-
-    % Create object to display the original video and the stabilized video.
-    hVideoOut = vision.VideoPlayer('Name', 'Video Stabilization');
-    hVideoOut.Position(1) = round(0.4*hVideoOut.Position(1));
-    hVideoOut.Position(2) = round(1.5*(hVideoOut.Position(2)));
-    hVideoOut.Position(3:4) = [900 550];
-
-
-        imgA = step(hVideoSource); % Read first frame into imgA
-        figure
-        imagesc(imgA);
-        title('USE MOUSE TO DRAW BOX AROUND BEST STABILIZATION OBJECT')
-        h1 = imrect;
-        pos1 = round(getPosition(h1)); % [xmin ymin width height]
-
-
-    % Here we initialize some variables used in the processing loop.
-
-    pos.template_orig = [pos1(1) pos1(2)]; % [x y] upper left corner
-    pos.template_size = [pos1(3:4)];    % [width height]
-    pos.search_border = [10 10];        % max horizontal and vertical displacement
-
-    pos.template_center = floor((pos.template_size-1)/2);
-    pos.template_center_pos = (pos.template_orig + pos.template_center - 1);
-    fileInfo = info(hVideoSource);
-    W = fileInfo.VideoSize(1); % Width in pixels
-    H = fileInfo.VideoSize(2); % Height in pixels
-    BorderCols = [1:pos.search_border(1)+4 W-pos.search_border(1)+4:W];
-    BorderRows = [1:pos.search_border(2)+4 H-pos.search_border(2)+4:H];
-    sz = fileInfo.VideoSize;
-    TargetRowIndices = ...
-      pos.template_orig(2)-1:pos.template_orig(2)+pos.template_size(2)-2;
-    TargetColIndices = ...
-      pos.template_orig(1)-1:pos.template_orig(1)+pos.template_size(1)-2;
-    SearchRegion = pos.template_orig - pos.search_border - 1;
-    Offset = [0 0];
-    Target = zeros(20,20);
-    % Target = zeros(18,22);
-    firstTime = true;
-
-
-
-    % Stream Processing Loop
-
-    % Processing loop using objects created above to perform stabilization
-    nn = 0;
-    while ~isDone(hVideoSource)
-    nn = nn+1;
-
-        input = step(hVideoSource);
-
-        % Find location of Target in the input video frame
-        if firstTime
-          Idx = int32(pos.template_center_pos);
-          MotionVector = [0 0];
-          firstTime = false;
-        else
-          IdxPrev = Idx;
-
-          ROI = [SearchRegion, pos.template_size+2*pos.search_border];
-          Idx = step(hTM, input, Target, ROI);
-
-          MotionVector = double(Idx-IdxPrev);
-        end
-
-        [Offset, SearchRegion] = updatesearch(sz, MotionVector, ...
-            SearchRegion, Offset, pos);
-
-        % Translate video frame to offset the camera motion
-        Stabilized = step(hTranslate, input, fliplr(Offset));
-
-        Target = Stabilized(TargetRowIndices, TargetColIndices);
-
-        % Add black border for display
-        Stabilized(:, BorderCols) = minmin;
-        Stabilized(BorderRows, :) = minmin;
-
-        TargetRect = [pos.template_orig-Offset, pos.template_size];
-        SearchRegionRect = [SearchRegion, pos.template_size + 2*pos.search_border];
-
-        % Draw rectangles on input to show target and search region
-        input = insertShape(input, 'Rectangle', [TargetRect; SearchRegionRect],...
-                            'Color', 'white');
-        % Display the offset (displacement) values on the input image
-        txt = sprintf('(%+05.1f,%+05.1f)', Offset);
-        input = insertText(input(:,:,1),[191 215],txt,'FontSize',16, ...
-                        'TextColor', 'white', 'BoxOpacity', 0);
-        % Display video
-        step(hVideoOut, [input(:,:,1) Stabilized]);
-
-
-        sGRINs{nn} = Stabilized;
-    end
-
-    % Release hVideoSource
-    release(hVideoSource);
-    % ===============================================
-   
-end
-
-
-
-
-
-%----------------------------------------------------
-%        COMING SOON NOTIFICATION
-%----------------------------------------------------
-function comingsoon(hObject, eventdata)
-   msgbox('Coming Soon!'); 
-end
-
-
-
-
-
-
-
-%----------------------------------------------------
-%        GET ROI STATISTICS
-%----------------------------------------------------
-function getROIstats(hObject, eventdata)
-disableButtons; pause(.02);
-
-
-    if size(muIMGS,1) < 1
-       
-        msgbox('DATA HAS NOT BEEN PROCESSED'); 
-        
-        enableButtons
-        
-        return
-        
-    end
-
-    
-    % PREVIEW AN ROI FOR A SINGLE CSUS AVERAGED OVER TRIALS
-    disp(' '); disp('GETTING ROI STATISTICS'); 
-
-    fh1=figure('Units','normalized','OuterPosition',[.40 .22 .59 .75],'Color','w');
-    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[]);
-
-    ih1 = imagesc(muIMGS(:,:,1,1));
-
-    disp('Use mouse to trace around a region of interest on the figure.')
-    hROI = imfreehand(hax1);   
-    ROIpos = hROI.getPosition;
-    ROIarea = polyarea(ROIpos(:,1),ROIpos(:,2));
-
-
-    ROImask = hROI.createMask(ih1);
-    
-    ROI_INTENSITY = muIMGS(:,:,1,1) .* ROImask;
-    figure; imagesc(ROI_INTENSITY); colorbar;
-
-
-
-
-    % Here we are computing the average intensity for the selected ROI
-    % N.B. here it is assumed that a pixel value (actually dF/F value)
-    % has virtually a zero probability of equaling exactly zero; this
-    % allows us to multiply the mask T/F matrix by the image matrix
-    % and disclude from the average all pixels that equal exactly zero
-    
-    ROImu = zeros(size(muIMGS,4),size(muIMGS,3));
-    for mm = 1:size(muIMGS,4)
-        for nn = 1:size(muIMGS,3)
-        
-        ROI_INTENSITY = muIMGS(:,:,nn,mm) .* ROImask;
-        ROImu(mm,nn) = mean(ROI_INTENSITY(ROI_INTENSITY ~= 0));
-
-        end
-    end
-
-    CSUSplot(ROImu', GRINstruct);
-    % CSUSplot(ROImu', GRINstruct, CSUSonoff);
-    % previewstack(squeeze(muIMGS(:,:,:,1)), CSUSonoff, ROImu)
-    
-    
-    
-    
-enableButtons
-disp('Compute ROI statistics completed!')
-end
-
-
-
-
-
-
-
-
-%----------------------------------------------------
-%        PLOT TILE STATS DATA
-%----------------------------------------------------
-function plotTileStats(hObject, eventdata)
-% disableButtons; pause(.02);
-
-    if size(muIMGS,1) < 1
-       
-        msgbox('DATA HAS NOT BEEN PROCESSED'); 
-        
-        enableButtons
-        
-        return
-        
-    end
-
-    disp(' '); disp('PLOTTING TILE STATS DATA (PLEASE WAIT)...'); 
-    
-    
-    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
-
-    pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
-
-    pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
-    
-    CSids = unique(GRINstruct.csus);
-    
-    
-    %-------------------------- MULTI-TILE FIGURE --------------------------
-
-    fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
-    
-    set(fh10,'ButtonDownFcn',@(~,~)disp('figure'),...
-   'HitTest','off')
-    
-    
-    
-    aXlocs =  (0:(size(pxl,1))) .* (1/(size(pxl,1)));
-    aXlocs(end) = [];
-    aYlocs =  (0:(size(pxl,2))) .* (1/(size(pxl,2)));
-    aYlocs(end) = [];
-    aXlocs = aXlocs+.005;
-    aYlocs = aYlocs+.005;
-    [aX,aY] = meshgrid(aXlocs,aYlocs);
-    YL=[-.15 .15];
-    
-
-    for ii = 1:size(pixels,1)
-
-        axh{ii} = axes('Position',[aX(ii) aY(ii) (1/(size(pxl,1)+1)) (1/(size(pxl,2)+1))],...
-        'Color','none','Tag',num2str(ii)); 
-        % axis off;
-        hold on;
-    
-        % h = squeeze(pixels(ii,:,:));
-        pha = plot( 1:size(pixels,2) , squeeze(pixels(ii,:,:)));
-        set(gca,'YLim',YL)
-        line([CSUSonoff(1) CSUSonoff(1)],YL,'Color',[.8 .8 .8])
-        line([CSUSonoff(2) CSUSonoff(2)],YL,'Color',[.8 .8 .8])
-        
-        
-        set(axh{ii},'ButtonDownFcn',@(~,~)disp(gca),...
-        'HitTest','on')
-        
-    end
-        pause(.05)
-    
-    
-    
-    
-    legpos = {  [0.01,0.94,0.15,0.033], ...
-                [0.01,0.90,0.15,0.033], ...
-                [0.01,0.86,0.15,0.033], ...
-                [0.01,0.82,0.15,0.033], ...
-                [0.01,0.78,0.15,0.033], ...
-                [0.01,0.74,0.15,0.033], ...
-                };
-    
-    pc = {pha.Color};
-    pt = CSids;
-    
-    for nn = 1:size(pixels,3)
-        
-    annotation(fh10,'textbox',...
-    'Position',legpos{nn},...
-    'Color',pc{nn},...
-    'FontWeight','bold',...
-    'String',pt(nn),...
-    'FontSize',14,...
-    'FitBoxToText','on',...
-    'EdgeColor',pc{nn},...
-    'FaceAlpha',.7,...
-    'Margin',3,...
-    'LineWidth',2,...
-    'VerticalAlignment','bottom',...
-    'BackgroundColor',[1 1 1]);
-    
-    end
-    
-    annotation(fh10,'textbox',...
-    'Position',[.01 .97 .2 .05],...
-    'Color',[0 0 0],...
-    'FontWeight','bold',...
-    'String','RIGHT-CLICK ON ANY GRAPH TO OPEN ADVANCED REPLOT GUI',...
-    'FontSize',14,...
-    'FitBoxToText','on',...
-    'EdgeColor','none',...
-    'FaceAlpha',.7,...
-    'Margin',3,...
-    'LineWidth',2,...
-    'VerticalAlignment','bottom',...
-    'BackgroundColor',[1 1 1]);
-    
-    
-    % haxN = axes('Position',[.001 .001 .99 .99],'Color','none');
-    % axis off; hold on;
-    pause(.2)
-    %-------------------------------------------------------------------------
-    
-
-    hcmenu = uicontextmenu;
-
-    item1 = uimenu(hcmenu,'Label','OPEN IN ADVANCED PLOT GUI','Callback',@plottile);
-
-    haxe = findall(fh10,'Type','axes');
-
-         % Attach the context menu to each axes
-    for aa = 1:length(haxe)
-        set(haxe(aa),'uicontextmenu',hcmenu)
-    end   
-        
-                
-%     % Add 'doprint' checkbox before implementing this code
-%     print(fh10,'-dpng','-r300','tilefig')
-%     
-%     hFig = figure('Toolbar','none',...
-%               'Menubar','none');
-%     hIm = imshow('tilefig.png');
-%     hSP = imscrollpanel(hFig,hIm);
-%     set(hSP,'Units','normalized',...
-%         'Position',[0 .1 1 .9])        
-        
-        
-enableButtons
-disp('PLOTTING TILE STATS DATA COMPLETED!')
-end
-
-
-
-
-
-
-
-
-
-
-%----------------------------------------------------
-%        ADVANCED PLOTTING GUI
-%----------------------------------------------------
-function plottile(hObject, eventdata)
-% disableButtons; pause(.02);
-
-    axdat = gca;
-    
-    axesdata = axdat.Children;
-    
-    TILEplotGUI(axesdata, GRINstruct)
- 
-end
-
-
-
-
-
-
-
-%----------------------------------------------------
-%        ADVANCED PLOTTING GUI
-%----------------------------------------------------
-function plotGUI(hObject, eventdata)
-% disableButtons; pause(.02);
-
-    if size(muIMGS,1) < 1
-       
-        msgbox('DATA HAS NOT BEEN PROCESSED'); 
-        
-        enableButtons
-        
-        return
-        
-    end
-    
-    GRINplotGUI(IMG, GRINstruct, LICK)
- 
-end
-
-
-
-
-%----------------------------------------------------
-%        VIEW GRID OVERLAY
-%----------------------------------------------------
-function viewGridOverlay(hObject, eventdata)
-% disableButtons; pause(.02);
-    
-    %-------------------------- IMGraw FIGURE GRID --------------------------
-    
-    
-    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
-    
-    fprintf('\n\n Grid size is% d pixels \n\n', blockSize)
-
-    if length(muIMGS) < 1
-        
-        pxl = zeros(size(IMG,1) / blockSize);
-        
     else
-    
-        pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
-        pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
-    
-    end
-    
-    
-    aXlocs =  (0:(size(pxl,1))) .* (1/(size(pxl,1)));
-    aXlocs(end) = [];
-    aYlocs =  (0:(size(pxl,2))) .* (1/(size(pxl,2)));
-    aYlocs(end) = [];
-    aXlocs = aXlocs+.005;
-    aYlocs = aYlocs+.005;
-    [aX,aY] = meshgrid(aXlocs,aYlocs);
-    YL=[-.15 .15];
 
-    fhR = figure('Units','normalized','OuterPosition',[.1 .1 .5 .8],'Color','w');
-    axR = axes;
-    phR = imagesc(IMGraw);
-    grid on
-    axR.YTick = [0:blockSize:size(IMGraw,1)];
-    axR.XTick = [0:blockSize:size(IMGraw,1)];
-    % axR.YTickLabel = 1:30;
-    
-    axR.GridAlpha = .8;
-    axR.GridColor = [0.99 0.1 0.1];
-    
-        tv1 = 1:size(IMGraw,1);
-        
-        pause(.2)
-        
-        
-        % NUMBERING IS TECHNICALLY INCORRECT SINCE BELOW AXIS #1 STARTS IN THE
-        % BOTTOM LEFT CORNER AND GOES UP, AND HERE IT STARTS IN THE TOP
-        % LEFT CORNER AND GOES DOWN. NOT SURE THAT IT MATTERS...
-        for ii = 1:size(pxl,1)^2
-            
-            tv2 = [  aX(ii)*size(IMGraw,1)   aY(ii)*size(IMGraw,1)+2 ...
-                    (1/(size(pxl,1)+1))     (1/(size(pxl,2)+1))];
+        disp('There must be at least 100 images in the stack')
+        disp('(per trial) to use the slider; currently there are')
+        disp(size(IMG,3))
 
-            text(tv2(1),tv2(2),num2str(tv1(ii)),'Color','r','Parent',axR);
-    
-        end
-        
-     pause(.1)
-    %-------------------------------------------------------------------------
-    
-
-        
-enableButtons
-disp('GRID OVERLAY HAS BEEN GENERATED.')
-end
-
-
-
-%----------------------------------------------------
-%        PLOT GROUP MEANS (CI ENVELOPE PLOT)
-%----------------------------------------------------
-function plotGroupMeans(hObject, eventdata)
-% disableButtons; pause(.02);
-
-
-    if size(muIMGS,1) < 1
-       
-        msgbox('Group means have not yet been calculated'); 
-        
-        return
-        
     end
 
-    disp(' '); disp('PLOTTING GROUP MEANS (PLEASE WAIT)...'); 
+end
+
+
+
+
+
+%----------------------------------------------------
+%        CONSOLE DIARY ON / OFF / OPEN
+%----------------------------------------------------
+function conon
+    diary on
+end
+function conoff
+    diary(confile)
+    diary off
+    
+    % UNCOMMENT TO OPEN DIARY WHEN DONE IMAGE PROCESSING
+    % web(confilefullpath{1})
+end
+
+
+
+%----------------------------------------------------
+%        CSUS DROPDOWN MENU CALLBACK
+%----------------------------------------------------
+function CSUSpopup(hObject, eventdata)
+
+    if numel(GRINtable) > 0 
+        disp('reminder of CS/US combos...')
+        GRINtable(1:7,1:2)
+        % GRINstruct
+    end
         
-    fh1=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
-    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax1.YLim = [-.15 .15];
-    hax2 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax2.YLim = [-.15 .15];
-    axis off; hold on;
-    hax3 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax3.YLim = [-.15 .15];
-    axis off; hold on;
-    hax4 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax4.YLim = [-.15 .15];
-    axis off; hold on;
-    hax5 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax5.YLim = [-.15 .15];
-    axis off; hold on;
-    hax6 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax6.YLim = [-.15 .15];
-    axis off; hold on;
-    hax0 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    hax0.YLim = [-.15 .15];
-    axis off; hold on;
-    allhax = {hax1, hax2, hax3, hax4, hax5, hax6};
-    colorz = {  [.99 .01 .01], ...
-                [.01 .99 .01], ...
-                [.01 .01 .99], ...
-                [.99 .01 .99], ...
-                [.99 .99 .01], ...
-                [.01 .99 .99], ...
-                };
-    legpos = {  [0.75,0.85,0.15,0.06], ...
-                [0.75,0.80,0.15,0.06], ...
-                [0.75,0.75,0.15,0.06], ...
-                [0.75,0.70,0.15,0.06], ...
-                [0.75,0.65,0.15,0.06], ...
-                [0.75,0.60,0.15,0.06], ...
-                };
+    stimnum = CSUSpopupH.Value;
 
-    
-            
+    % CSUSvals = unique(GRINstruct.csus);
+    % set(CSUSpopupH, 'String', CSUSvals);
 
-    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+end
 
-    pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
 
-    pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
+
+
+%----------------------------------------------------
+%        ENABLE AND DISABLE GUI BUTTONS
+%----------------------------------------------------
+function enableButtons()
+
+    smoothimgH.Enable = 'on';
+    cropimgH.Enable = 'on';
+    imgblocksH.Enable = 'on';
+    dFoverFH.Enable = 'on';
+    reshapeDataH.Enable = 'on';
+    unshapeDataH.Enable = 'on';
+    alignCSFramesH.Enable = 'on';
+    timepointMeansH.Enable = 'on';
+    getROIstatsH.Enable = 'on';
+    plotTileStatsH.Enable = 'on';
+    runallIPH.Enable = 'on';
+    previewStackH.Enable = 'on';
+    viewGridOverlayH.Enable = 'on';
+    plotGroupMeansH.Enable = 'on';
+    viewTrialTimingsH.Enable = 'on';
+    plotGUIH.Enable = 'on';
     
-    CSids = unique(GRINstruct.csus);
     
-    
-    
-    
-    %-------------------------- CI ENVELOPE FIGURE --------------------------
-    for nn = 1:size(pixels,3)
-    
-    pixCS = pixels(:,:,nn);
-	
-	Mu = mean(pixCS,1);
-    Sd = std(pixCS,0,1);
-    Se = Sd./sqrt(numel(Mu));
-	y_Mu = Mu';
-    x_Mu = (1:numel(Mu))';
-    % e_Mu = Se';
-    e_Mu = Sd';
-	xx_Mu = 1:0.1:max(x_Mu);
-	yy_Mu = spline(x_Mu,y_Mu,xx_Mu);
-    ee_Mu = spline(x_Mu,e_Mu,xx_Mu);
-    
-    axes(allhax{nn})
-    [ph1, po1] = envlineplot(xx_Mu',yy_Mu', ee_Mu','cmap',colorz{nn},...
-                            'alpha','transparency', 0.6);
-    hp1{nn} = plot(xx_Mu,yy_Mu,'Color',colorz{nn});
-    pause(.2)
-    
-    % lh1{nn} = legend(allhax{nn},CSids(nn),'Position',legpos{nn},'Box','off');
-    
+
+    if numel(size(IMG)) > 1 && numel(size(IMG)) < 4;
+        openImageJH.Enable = 'on';
+    else
+        openImageJH.Enable = 'off';
     end
-    
-    text(1, -.12, ['CS ON/OFF US ON/OFF:  ', num2str(CSUSonoff)])
-    
-    leg1 = legend([hp1{:}],CSids);
-	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
-    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
-    
-        
-    for mm = 1:4
-    text(CSUSonoff(mm),allhax{nn}.YLim(1),{'\downarrow'},...
-        'HorizontalAlignment','center','VerticalAlignment','bottom',...
-        'FontSize',20,'FontWeight','bold')
-    end
-    line([CSUSonoff(1) CSUSonoff(1)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
-    line([CSUSonoff(2) CSUSonoff(2)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
-    pause(.1)
-    %-------------------------------------------------------------------------
-    
-    
-    
-    
-    
-    
-    
-    
-        
-enableButtons
-disp('PLOTTING GROUP MEANS COMPLETED!')
 end
-
-
-
-
-
-
-
-
-
-
-%----------------------------------------------------
-% VISUALIZE TRIAL BLOCKS AND CS / US ONSET / OFFSET
-%----------------------------------------------------
-function viewTrialTimings(hObject, eventdata)
+function disableButtons()
     
-    
-    if length(delaytoCS) < 2
-       
-        msgbox('DATA HAS NOT BEEN IMPORTED'); 
-        
-        return
-        
-    end
-    
-trials = zeros(total_trials,round(secondsPerTrial));
-
-
-for nn = 1:total_trials
-    
-    trials(nn,delaytoCS(nn):delaytoCS(nn)+10) = GRINstruct.id(nn);
-    
-end
-
-cm = [ 1  1  1
-      .95 .05 .05
-      .90 .75 .15
-      .95 .05 .95
-      .05 .95 .05
-      .05 .75 .95
-      .05 .05 .95
-      .45 .45 .25
-      ];
-
-fh1=figure('Units','normalized','OuterPosition',[.1 .08 .8 .85],'Color','w');
-hax1 = axes('Position',[.15 .05 .82 .92],'Color','none');
-hax2 = axes('Position',[.15 .05 .82 .92],'Color','none','NextPlot','add');
-axis off; hold on;
-
-axes(hax1)
-ih = imagesc(trials);
-colormap(cm)
-grid on
-hax1.YTick = [.5:1:total_trials-.5];
-hax1.YTickLabel = 1:total_trials;
-hax1.XLabel.String = 'Time (seconds)';
-
-hax1.YTickLabel = GRINstruct.csus;
-% hax1.YTickLabelRotation = 30;
-
-
-% tv1 = [];
-% tv2 = [];
-% tv3 = [];
-% tv4 = [];
-% 
-% tv1 = {'\color[rgb]{.95,.05,.05}'};
-% tv1 = {'\color[rgb]{.90 .75 .15}'};
-% tv1 = {'\color[rgb]{.95 .05 .95}'};
-% tv1 = {'\color[rgb]{.9,.1,.1}'};
-% tv1 = {'\color[rgb]{.9,.1,.1}'};
-% tv1 = {'\color[rgb]{.9,.1,.1}'};
-% 
-% keyboard
-% 
-% tv2 = repmat(tv1,total_trials,1);
-% 
-% for nn=1:total_trials
-% tv3{nn} = strcat(tv2{nn}, GRINstruct.csus{nn});
-% end
-% 
-% 
-% hax1.YTickLabel = tv3{nn};
-% 
-% 
-% % annotation(fh1,'textbox',...
-% %     'Position',[.1 .1 .3 .3],...
-% %     'String',tv3{nn},...
-% %     'BackgroundColor',[1 1 1]);
-
+    smoothimgH.Enable = 'off';
+    cropimgH.Enable = 'off';
+    imgblocksH.Enable = 'off';
+    dFoverFH.Enable = 'off';
+    reshapeDataH.Enable = 'off';
+    unshapeDataH.Enable = 'off';
+    alignCSFramesH.Enable = 'off';
+    timepointMeansH.Enable = 'off';
+    getROIstatsH.Enable = 'off';
+    plotTileStatsH.Enable = 'off';
+    runallIPH.Enable = 'off';
+    openImageJH.Enable = 'off';
+    previewStackH.Enable = 'off';
+    viewGridOverlayH.Enable = 'off';
+    plotGroupMeansH.Enable = 'off';
+    viewTrialTimingsH.Enable = 'off';
+    plotGUIH.Enable = 'off';
 
 end
 
 
-
-
-
-
-
-
-
-
-
-
-
-function mainGUIclosereq(src,callbackdata)
-% Close request function 
-% to display a question dialog box 
-   selection = questdlg('IMG stack still exists; clear from memory?',...
-      'Close Request Function',...
-      'Yes','No','Yes'); 
-   switch selection, 
-      case 'Yes',
-         clearvars IMG;
-         disp('IMG stack cleared.')
-         disp('GRIN toolbox closed.')
-         delete(gcf)
-      case 'No'
-      delete(gcf)
-      disp('GRIN toolbox closed.')
-   end
-end
-
-
-
-
-%----------------------------------------------------
-%   CONTEXT MENU CALLBACK TO MAKE LARGER TILE PLOT
-%----------------------------------------------------
-% MOVED TO OWN FUNCTION FILE
-%{
-function plottile(boxidselecth, eventdata)
-% disableButtons; pause(.02);
-    
-    axdat = gca;
-    
-    tv1 = axdat.Children;
-    
-    tv2 = [tv1(3:end).XData];
-    tv3 = [tv1(3:end).YData];
-    
-    tv2 = fliplr(reshape(tv2,[],(size(tv1,1)-2)));
-    tv3 = fliplr(reshape(tv3,[],(size(tv1,1)-2)));
-    
-    fhrp=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
-    hx1 = axes('Position',[.05 .08 .9 .85],'Color','none');
-    hx1.YLim = [-.15 .15]; hold on;
-    
-    hp = plot(tv2, tv3 , 'LineWidth',2);
-    
-    leg1 = legend(hp,unique(GRINstruct.csus));
-	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
-    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
-    
-    tv2 = [tv1(1:2).XData];
-    tv3 = [tv1(1:2).YData];
-    
-    tv2 = reshape(tv2,[],2);
-    tv3 = reshape(tv3,[],2);
-    
-    plot(tv2, tv3 , 'Color',[.5 .5 .5])
-    
-    hx1.XTickLabel = num2str(round(hx1.XTick .* framesPerSec)');
-    hx1.XLabel.String = 'Time (seconds)';
-
-    % disp(' '); disp('PLOTTING TILE STATS DATA (PLEASE WAIT)...'); 
-        
-% enableButtons
-% disp('PLOTTING TILE STATS DATA COMPLETED!')
-end
-%}
-
-
-
-
-
-
-
-
-%----------------------------------------------------
-%        ADVANCED PLOTTING GUI OLD
-%----------------------------------------------------
-%{
-function plottile(boxidselecth, eventdata)
-% disableButtons; pause(.02);
-
-
-    axdat = gca;
-    
-    axesdata = axdat.Children;
-    
-    TILEplotGUI(axesdata, GRINstruct)
- 
-    
-
-    return
-    
-    
-    
-    
-    
-    
-    tv2 = [tv1(3:end).XData];
-    tv3 = [tv1(3:end).YData];
-    
-    tv2 = fliplr(reshape(tv2,[],(size(tv1,1)-2)));
-    tv3 = fliplr(reshape(tv3,[],(size(tv1,1)-2)));
-    
-    
-    
-    
-    
-    
-%% -------- MAIN FIGURE WINDOW --------   
-% close(graphguih)
-% mainguih.CurrentCharacter = '+';
-graphguih = figure('Units', 'normalized','Position', [.02 .1 .85 .65], 'BusyAction',...
-    'cancel', 'Name', 'mainguih', 'Tag', 'graphguih'); 
-
-
-GhaxGRIN = axes('Parent', graphguih, 'NextPlot', 'replacechildren',...
-    'Position', [0.05 0.08 0.55 0.85]);
-    GhaxGRIN.YLim = [-.15 .15];
-    hold on;
-    % 'XColor','none','YColor','none','YDir','reverse'
-    % ,'XDir','reverse',... 'PlotBoxAspectRatio', [1 1 1],
-    
-GimgsliderYAH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','slider',...
-	'Max',1,'Min',0,'Value',.15,'SliderStep',[0.01 0.10],...
-	'Position', [-.01 0.62 0.03 0.30], 'Callback', @GimgsliderYA);
-
-GimgsliderYBH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','slider',...
-	'Max',0,'Min',-1,'Value',-.15,'SliderStep',[0.01 0.10],...
-	'Position', [-.01 0.08 0.03 0.30], 'Callback', @GimgsliderYB);
-
-GimgsliderXAH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','slider',...
-	'Max',200,'Min',0,'Value',100,'SliderStep',[0.01 0.10],...
-	'Position', [0.40 0.01 0.20 0.03], 'Callback', @GimgsliderXA);
-
-GimgsliderXBH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','slider',...
-	'Max',200,'Min',0,'Value',1,'SliderStep',[0.01 0.10],...
-	'Position', [0.05 0.01 0.20 0.03], 'Callback', @GimgsliderXB);
-
-
-%----------------------------------------------------
-%           IMAGE PROCESSING PANEL
-%----------------------------------------------------
-GIPpanelH = uipanel('Title','Image Processing','FontSize',10,...
-    'BackgroundColor',[.95 .95 .95],...
-    'Position', [0.65 0.25 0.15 0.73]); % 'Visible', 'Off',
-
-
-% csustxt = unique(GRINstruct.csus);
-
-GupdateGraphH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
-    'Position', [.05 0.88 .90 .10], 'FontSize', 13, 'String', 'Update Graph',...
-    'Callback', @GupdateGraph, 'Enable','off');
-
-if size(CSUSvals,1) > 0
-Gcheckbox1H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.71 .90 .05] ,'String',CSUSvals(1), 'Value',1);
-end
-if size(CSUSvals,1) > 1
-Gcheckbox2H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.61 .90 .05] ,'String',CSUSvals(2), 'Value',1);
-end
-if size(CSUSvals,1) > 2
-Gcheckbox3H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.51 .90 .05] ,'String',CSUSvals(3), 'Value',1);
-end
-if size(CSUSvals,1) > 3
-Gcheckbox4H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.41 .90 .05] ,'String',CSUSvals(4), 'Value',1);
-end
-if size(CSUSvals,1) > 4 
-Gcheckbox5H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.31 .90 .05] ,'String',CSUSvals(5), 'Value',1);
-end
-if size(CSUSvals,1) > 5
-Gcheckbox6H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.21 .90 .05] ,'String',CSUSvals(6), 'Value',1);
-end
-if size(CSUSvals,1) > 6
-Gcheckbox7H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.11 .90 .05] ,'String',CSUSvals(7), 'Value',1);
-end
-
-
-
-GCSUSpopupH = uicontrol('Parent', GIPpanelH,'Style', 'popup',...
-    'Units', 'normalized', 'String', {'CS','US'},...
-    'Position', [.05 .02 0.9 0.05],...
-    'Callback', @GCSUSpopup);
-
-           
-% keyboard
-%----------------------------------------------------
-%    CUSTOM FUNCTIONS PANEL
-%----------------------------------------------------
-GcustomfunpanelH = uipanel('Title','Custom Code & Data Exploration','FontSize',10,...
-    'BackgroundColor',[.95 .95 .95],...
-    'Position', [0.81 0.64 0.18 0.34]); % 'Visible', 'Off',
-              
-GrunCustomAH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function A',...
-    'Callback', @GrunCustomA, 'Enable','off');
-
-GrunCustomBH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function B',...
-    'Callback', @GrunCustomB, 'Enable','off');
-
-GrunCustomCH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function C',...
-    'Callback', @GrunCustomC, 'Enable','off');
-
-GrunCustomDH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function D',...
-    'Callback', @GrunCustomD, 'Enable','off');
-
-
-
-
-
-%----------------------------------------------------
-%    DATA EXPLORATION & API PANEL
-%----------------------------------------------------
-GexplorepanelH = uipanel('Title','Data Exploration & API','FontSize',10,...
-    'BackgroundColor',[.95 .95 .95],...
-    'Position', [0.81 0.25 0.18 0.34]); % 'Visible', 'Off',
-              
-GopenImageJH = uicontrol('Parent', GexplorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Open stack in ImageJ ',...
-    'Callback', @GopenImageJ, 'Enable','off');
-
-GexploreAH = uicontrol('Parent', GexplorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', 'Explore Data A',...
-    'Callback', @GexploreA, 'Enable','off');
-
-GexploreBH = uicontrol('Parent', GexplorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Explore Data B',...
-    'Callback', @GexploreB, 'Enable','off');
-
-GresetwsH = uicontrol('Parent', GexplorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Reset Toolbox',...
-    'Callback', @Gresetws, 'Enable','off');
-
-
-
-%----------------------------------------------------
-%    SAVE AND EXPORT DATA
-%----------------------------------------------------
-GexportpanelH = uipanel('Title','I/O','FontSize',10,...
-    'BackgroundColor',[.95 .95 .95],...
-    'Position', [0.81 0.02 0.18 0.20]); % 'Visible', 'Off',
-              
-GexportvarsH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.65 0.95 0.28], 'FontSize', 13, 'String', 'Export Vars to Workspace ',...
-    'Callback', @Gexportvars, 'Enable','off');
-
-GsavedatasetH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.34 0.95 0.28], 'FontSize', 13, 'String', 'Save Dataset',...
-    'Callback', @Gsavedataset, 'Enable','off');
-
-GloadmatdataH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.03 0.95 0.28], 'FontSize', 13, 'String', 'Load .mat Dataset',...
-    'Callback', @Gloadmatdata, 'Enable','off');
-
-    
-    
-
-    hp = plot(tv2, tv3 , 'LineWidth',2);
-    
-    leg1 = legend(hp,unique(GRINstruct.csus));
-	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
-    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
-    
-    tv2 = [tv1(1:2).XData];
-    tv3 = [tv1(1:2).YData];
-    
-    tv2 = reshape(tv2,[],2);
-    tv3 = reshape(tv3,[],2);
-    
-    reph = plot(tv2, tv3 , 'Color',[.5 .5 .5]);
-    
-    
-    % GhaxGRIN.XTickLabel = num2str(round(GhaxGRIN.XTick .* framesPerSec)');
-    % GhaxGRIN.XLabel.String = 'Time (seconds)';
-    
-    
-    
-    % plottiles(hp, reph, leg1, GRINstruct)
-    
-
-
-% enableButtons
-% disp('PLOTTING TILE STATS DATA COMPLETED!')
-
-end
-%}
-%{
-%----------------------------------------------------
-%        IMAGE SIDER CALLBACK
-%----------------------------------------------------
-function GimgsliderYA(hObject, eventdata)
-slideValYA = GimgsliderYAH.Value;
-GhaxGRIN.YLim = [slideValYB slideValYA];
-end
-
-function GimgsliderYB(hObject, eventdata)
-slideValYB = GimgsliderYBH.Value;
-GhaxGRIN.YLim = [slideValYB slideValYA];
-end
-
-
-function GimgsliderXA(hObject, eventdata)
-slideValXA = GimgsliderXAH.Value;
-GhaxGRIN.XLim = [slideValXB slideValXA];
-end
-
-function GimgsliderXB(hObject, eventdata)
-slideValXB = GimgsliderXBH.Value;
-GhaxGRIN.XLim = [slideValXB slideValXA];
-end
-
-
-%----------------------------------------------------
-%        UPDATE GRAPH CALLBACK
-%----------------------------------------------------
-function GupdateGraph(boxidselecth, eventdata)
-disableButtons; pause(.02);
-conon
-        
-
-    if Gcheckbox1H.Value
-        smoothimg
-    end
-    
-    if Gcheckbox2H.Value
-        cropimg
-    end
-    
-    if Gcheckbox3H.Value
-        imgblocks
-    end
-
-    if Gcheckbox4H.Value
-        reshapeData
-    end
-
-    if Gcheckbox5H.Value
-        alignCSframes
-    end
-
-    if Gcheckbox6H.Value
-        dFoverF
-    end
-
-    if Gcheckbox7H.Value
-        timepointMeans
-    end
-
-
-    
-disp('PROCESSING COMPLETED - ALL SELECTED FUNCTIONS FINISHED RUNNING!')
-conoff
-enableButtons        
-end
-
-%}
-
-
-
-
-
-%----------------------------------------------------
-% VISUALIZE TRIAL BLOCKS AND CS / US ONSET / OFFSET
-%----------------------------------------------------
-%{
-
-trials = zeros(30,69);
-
-y = randsample(30,15)
-
-t = 1:30;
-t(y) = 0;
-z = find(t)
-
-trials(y,25:35) = 1;
-trials(y,36) = 0;
-trials(y,37:47) = 3;
-
-trials(z,35:45) = 2;
-trials(z,46) = 0;
-trials(z,47:57) = 4;
-
-
-
-
-cm = [ 1  1  1
-      .9 .1 .1
-      .95 .2 .4
-      .1 .9 .1
-      .1 .95 .6
-      ];
-
-close all
-fh1=figure('Units','normalized','OuterPosition',[.1 .1 .8 .6],'Color','w');
-ih = imagesc(trials);
-colormap(cm)
-grid on
-ax = gca;
-ax.YTick = [.5:1:29.5];
-ax.YTickLabel = 1:30;
-
-%}
 
 
 end
