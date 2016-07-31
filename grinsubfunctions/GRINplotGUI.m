@@ -1,30 +1,40 @@
-function GRINplotGUI(IMG, GRINstruct, LICK, varargin)
-
-% (axdat, GRINstruct, varargin)
-% (IMG, GRINstruct, LICK)
-% disableButtons; pause(.02);
-
+function [] = GRINplotGUI(IMG, GRINstruct, LICK, varargin)
+%% GRINplotGUI.m
+%----------------------------------------------------
+%%     ESTABLISH GLOBALS
+%----------------------------------------------------
+clc
 global GhaxGRIN GimgsliderYAH GimgsliderYBH GimgsliderXAH GimgsliderXBH
-global slideValYA slideValYB slideValXA slideValXB
+global slideValYA slideValYB slideValXA slideValXB slideValIM
+global GupdateGraphH Gcheckbox1H Gcheckbox2H Gcheckbox3H Gcheckbox4H
+global Gcheckbox5H Gcheckbox6H Gcheckbox7H
+global CSUSvals
+
+
 slideValYA = 0.15;
 slideValYB = -0.15;
 slideValXA = 100;
 slideValXB = 0;
-global GupdateGraphH Gcheckbox1H Gcheckbox2H Gcheckbox3H Gcheckbox4H
-global Gcheckbox5H Gcheckbox6H Gcheckbox7H
-
-
-global CSUSvals
+slideValIM = size(IMG,1);
 CSUSvals = unique(GRINstruct.csus);
 
 
 
-%% -------- MAIN FIGURE WINDOW --------   
+
+
+
+%----------------------------------------------------
+%%     CREATE GRINplotGUI FIGURE WINDOW
+%----------------------------------------------------
 % close(graphguih)
 % mainguih.CurrentCharacter = '+';
 graphguih = figure('Units', 'normalized','Position', [.02 .1 .85 .65], 'BusyAction',...
-    'cancel', 'Name', 'mainguih', 'Tag', 'graphguih','MenuBar', 'none'); 
+    'cancel', 'Name', 'GRINplotGUI', 'Tag', 'graphguih','MenuBar', 'none'); 
 
+
+%----------------------------------------------------
+%%     LEFT PANE MAIN PLOT WINDOW
+%----------------------------------------------------
 
 GhaxGRIN = axes('Parent', graphguih, 'NextPlot', 'replacechildren',...
     'Position', [0.05 0.08 0.55 0.85],...
@@ -50,14 +60,50 @@ GimgsliderXBH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','sl
 	'Position', [0.05 0.01 0.20 0.03], 'Callback', @GimgsliderXB);
 
 
+% SLIDER CALLBACK FUNCTIONS
+function GimgsliderYA(hObject, eventdata)
+slideValYA = GimgsliderYAH.Value;
+GhaxGRIN.YLim = [slideValYB slideValYA];
+end
+
+function GimgsliderYB(hObject, eventdata)
+slideValYB = GimgsliderYBH.Value;
+GhaxGRIN.YLim = [slideValYB slideValYA];
+end
+
+function GimgsliderXA(hObject, eventdata)
+slideValXA = GimgsliderXAH.Value;
+GhaxGRIN.XLim = [slideValXB slideValXA];
+end
+
+function GimgsliderXB(hObject, eventdata)
+slideValXB = GimgsliderXBH.Value;
+GhaxGRIN.XLim = [slideValXB slideValXA];
+end
+
+
+
+
+
+
+
+
+
+
 %----------------------------------------------------
-%           IMAGE PROCESSING PANEL
+%%     RIGHT PANE FIGURE PANELS
 %----------------------------------------------------
 
 tabgp = uitabgroup(graphguih,'Position',[0.61 0.02 0.38 0.95]);
 btabs = uitab(tabgp,'Title','Graphics Options');
 dtabs = uitab(tabgp,'Title','Data View');
+itabs = uitab(tabgp,'Title','Image View');
 
+
+
+%----------------------------------------------------
+%%     GRAPHICS OPTIONS PANEL
+%----------------------------------------------------
 
 GIPpanelH = uipanel('Parent', btabs,'Title','Image Processing','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
@@ -66,7 +112,7 @@ GIPpanelH = uipanel('Parent', btabs,'Title','Image Processing','FontSize',10,...
 
 GupdateGraphH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
     'Position', [.05 0.88 .90 .10], 'FontSize', 13, 'String', 'Update Graph',...
-    'Callback', @GupdateGraph);
+    'Callback', @GupdateGraph, 'Enable','off');
 
 chva = 1;
 
@@ -101,13 +147,12 @@ end
 
 
 
-GCSUSpopupH = uicontrol('Parent', GIPpanelH,'Style', 'popup',...
-    'Units', 'normalized', 'String', {'CS','US'},...
-    'Position', [.05 .02 0.9 0.05],...
-    'Callback', @GCSUSpopup);
+% GCSUSpopupH = uicontrol('Parent', GIPpanelH,'Style', 'popup',...
+%     'Units', 'normalized', 'String', {'CS','US'},...
+%     'Position', [.05 .02 0.9 0.05],...
+%     'Callback', @GCSUSpopup);
 
-
-%%              
+          
 %----------------------------------------------------
 %    CUSTOM FUNCTIONS PANEL
 %----------------------------------------------------
@@ -180,32 +225,6 @@ GloadmatdataH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
     'Callback', @Gloadmatdata);
 
 
-
-%----------------------------------------------------
-%        IMAGE SIDER CALLBACK
-%----------------------------------------------------
-function GimgsliderYA(hObject, eventdata)
-slideValYA = GimgsliderYAH.Value;
-GhaxGRIN.YLim = [slideValYB slideValYA];
-end
-
-function GimgsliderYB(hObject, eventdata)
-slideValYB = GimgsliderYBH.Value;
-GhaxGRIN.YLim = [slideValYB slideValYA];
-end
-
-
-function GimgsliderXA(hObject, eventdata)
-slideValXA = GimgsliderXAH.Value;
-GhaxGRIN.XLim = [slideValXB slideValXA];
-end
-
-function GimgsliderXB(hObject, eventdata)
-slideValXB = GimgsliderXBH.Value;
-GhaxGRIN.XLim = [slideValXB slideValXA];
-end
-
-
 %----------------------------------------------------
 %        UPDATE GRAPH CALLBACK
 %----------------------------------------------------
@@ -246,7 +265,136 @@ end
 
 
 
+%----------------------------------------------------
+%%    IMAGE VIEW PANEL
+%----------------------------------------------------
 
+IMGpanelH = uipanel('Parent', itabs,'Title','GRIN Image','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],...
+    'Position', [0.01 0.01 0.98 0.97]); % 'Visible', 'Off',
+
+haxIMG = axes('Parent', IMGpanelH, 'NextPlot', 'replacechildren',...
+    'Position', [0.01 0.01 0.90 0.85], 'PlotBoxAspectRatio', [1 1 1], ...
+    'XColor','none','YColor','none','YDir','reverse');
+
+    haxIMG.XLim = [1 slideValIM];
+    haxIMG.YLim = [1 slideValIM];
+
+IMGsliderH = uicontrol('Parent', IMGpanelH, 'Units', 'normalized','Style','slider',...
+	'Max',size(IMG,3),'Min',1,'Value',1,'SliderStep',[1 1]./size(IMG,3),...
+	'Position', [0.01 0.86 0.94 0.05], 'Callback', @IMGslider);
+
+AXsliderH = uicontrol('Parent', IMGpanelH, 'Units', 'normalized','Style','slider',...
+	'Max',size(IMG,1)*2,'Min',size(IMG,1)/2,'Value',size(IMG,1),...
+    'SliderStep',[1 1]./(size(IMG,1)),...
+	'Position', [0.93 0.02 0.05 0.80], 'Callback', @AXslider);
+
+hIMG = imagesc(IMG(:,:,1,1) , 'Parent',haxIMG);
+
+% IMAGE SIDER CALLBACK
+function IMGslider(hObject, eventdata)
+
+    slideVal = ceil(IMGsliderH.Value);
+
+    hIMG = imagesc(IMG(:,:,slideVal) , 'Parent', haxIMG);
+              pause(.05)
+
+    % disp(['image: ' num2str(slideVal) ' (' num2str(IMGsliderH.Value) ')'])
+    disp(['image: ' num2str(slideVal) ' (' num2str(IMGsliderH.Value) ')'])
+    
+
+end
+
+% IMAGE AXES SIZE CALLBACK
+function AXslider(hObject, eventdata)
+
+    slideValIM = AXsliderH.Value;
+    haxIMG.XLim = [1 slideValIM];
+    haxIMG.YLim = [1 slideValIM];
+    
+    disp(['XLim: ' num2str(haxIMG.XLim) ' YLim: ' num2str(haxIMG.YLim)])
+    
+end
+
+
+%%
+keyboard
+%%
+
+
+
+hROI = imrect(haxIMG);
+
+ROImask = hROI.createMask(hIMG);
+ROIpos = hROI.getPosition;
+
+ROIarea = ROIpos(3) * ROIpos(4);
+% ROIarea = polyarea(ROIpos(:,1),ROIpos(:,2));
+
+ROI_INTENSITY = IMG(:,:,1,1) .* ROImask;
+
+ROI_INTENSITY_MEAN = mean(ROI_INTENSITY(ROI_INTENSITY > 0));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%%    DATA VIEW PANEL
+%----------------------------------------------------
+
+function plot_callback(hObject, eventdata, column)
+
+    % htable.ColumnName{column}
+
+    if (hObject.Value)
+
+        GhaxGRIN.NextPlot = 'Add';
+
+        plot(GhaxGRIN, htable.Data(:,column),...
+            'DisplayName', htable.ColumnName{column},...
+            'Color', colorz{column}, 'LineWidth',2);
+    else
+        delete(findobj(GhaxGRIN, 'DisplayName', htable.ColumnName{column}))
+    end
+end
+
+function select_callback(hObject, eventdata)
+
+    set(hmkrs, 'Visible', 'off') % turn them off to begin
+
+    sel = eventdata.Indices;
+
+    selcols = unique(sel(:,2));
+    table = hObject.Data;
+
+    for idx = 1:numel(selcols)
+        col = selcols(idx);
+        xvals = sel(:,1);
+        xvals(sel(:,2) ~= col) = [];
+
+        if col <= size(table,2)
+            yvals = table(xvals, col)';
+            % Create Z-vals = 1 in order to plot markers above lines
+            zvals = col*ones(size(xvals));
+            % Plot markers for xvals and yvals using a line object
+            hmkrs(col).Visible = 'on';
+            hmkrs(col).XData = xvals;
+            hmkrs(col).YData = yvals;
+            hmkrs(col).ZData = zvals;
+        end
+
+    end
+end
 
 
 
@@ -262,7 +410,14 @@ keyboard
 % YDat = [axdat(3:end).YData];
 
 XDat = 1:size(IMG,3);
-YDat = mean(IMG,4);
+
+YDat = {};
+for nn = 1:size(CSUSvals,1)
+    YDat{nn} = mean(IMG(:,:,:,GRINstruct.tf(:,nn)),4);
+end
+
+plot(GhaxGRIN, squeeze(YDat{1}(1,1,:)))
+
 
 XDat = fliplr(reshape(XDat,[],(size(axdat,1)-2)));
 YDat = fliplr(reshape(YDat,[],(size(axdat,1)-2)));
@@ -310,10 +465,10 @@ set(hmkrs,'Visible','off','HandleVisibility', 'off')
 %----------------------------------------------------
 %    PLOT CS ON / OFF POINTS
 %----------------------------------------------------                
-    csonoffx = [axdat(1:2).XData];
-    csonoffy = [axdat(1:2).YData];
-    csonoffx = reshape(csonoffx,[],2);
-    csonoffy = reshape(csonoffy,[],2);                
+%     csonoffx = [axdat(1:2).XData];
+%     csonoffy = [axdat(1:2).YData];
+%     csonoffx = reshape(csonoffx,[],2);
+%     csonoffy = reshape(csonoffy,[],2);                
                 
 plot(GhaxGRIN, csonoffx, csonoffy, 'Color',[.5 .5 .5],'HandleVisibility', 'off');                
 
@@ -374,54 +529,6 @@ end
 %           'DisplayName', htable.ColumnName{1}, 'Color', colorz{nn}, 'LineWidth',2);
 
 
-%----------------------------------------------------
-%     CALLBACK FUNCTIONS FOR UPDATING PLOT
-%----------------------------------------------------
-
-    function plot_callback(hObject, eventdata, column)
-
-        % htable.ColumnName{column}
-
-    if (hObject.Value)
-        
-        GhaxGRIN.NextPlot = 'Add';
-
-        plot(GhaxGRIN, htable.Data(:,column),...
-            'DisplayName', htable.ColumnName{column},...
-            'Color', colorz{column}, 'LineWidth',2);
-    else
-        delete(findobj(GhaxGRIN, 'DisplayName', htable.ColumnName{column}))
-    end
-    end
-
-
-    function select_callback(hObject, eventdata)
-        
-        set(hmkrs, 'Visible', 'off') % turn them off to begin
-        
-        sel = eventdata.Indices;
-                                
-        selcols = unique(sel(:,2));
-        table = hObject.Data;
-        
-        for idx = 1:numel(selcols)
-            col = selcols(idx);
-            xvals = sel(:,1);
-            xvals(sel(:,2) ~= col) = [];
-            
-            if col <= size(table,2)
-                yvals = table(xvals, col)';
-                % Create Z-vals = 1 in order to plot markers above lines
-                zvals = col*ones(size(xvals));
-                % Plot markers for xvals and yvals using a line object
-                hmkrs(col).Visible = 'on';
-                hmkrs(col).XData = xvals;
-                hmkrs(col).YData = yvals;
-                hmkrs(col).ZData = zvals;
-            end
-            
-        end
-    end
 
 
 
