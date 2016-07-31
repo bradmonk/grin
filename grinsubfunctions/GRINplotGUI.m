@@ -1,5 +1,46 @@
-function [] = GRINplotGUI(IMG, GRINstruct, XLSdata, LICK, varargin)
+function [] = GRINplotGUI()
+% function [] = GRINplotGUI(IMG, GRINstruct, XLSdata, LICK, varargin)
 %% GRINplotGUI.m
+
+
+
+clc; close all; clear all; clear java;
+
+global IMG GRINstruct XLSdata GRINtable LICK IMGraw
+
+disp('Contents of workspace before loading file:'); whos
+
+grinmat = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/gc33_031916g.mat';
+
+disp('File contains the following vars:'); whos('-file',grinmat);
+
+fprintf('Loading .mat file from... \n % s \n\n', grinmat); 
+% if ~exist('IMG','var')
+   
+    load(grinmat)
+    
+    IMG = double(IMG);
+    
+    % IMG = IMG./10000;
+    % max(max(max(max(IMG))))
+    % min(min(min(min(IMG))))
+    
+% end
+
+disp('Contents of workspace after loading file:'); whos
+
+
+tv1 = [];
+tv2 = [];
+tv3 = [];
+tv4 = [];
+tv5 = [];
+tv6 = [];
+tv7 = [];
+tv8 = [];
+tv9 = [];
+
+
 %----------------------------------------------------
 %%     ESTABLISH GLOBALS
 %----------------------------------------------------
@@ -8,7 +49,7 @@ global GhaxGRIN GimgsliderYAH GimgsliderYBH GimgsliderXAH GimgsliderXBH
 global slideValYA slideValYB slideValXA slideValXB slideValIM
 global GupdateGraphH Gcheckbox1H Gcheckbox2H Gcheckbox3H Gcheckbox4H
 global Gcheckbox5H Gcheckbox6H Gcheckbox7H
-global CSUSvals
+global CSUSvals IMGt ROIs LICKs LhaxGRIN
 
 
 slideValYA = 0.15;
@@ -36,9 +77,13 @@ graphguih = figure('Units', 'normalized','Position', [.02 .1 .85 .65], 'BusyActi
 %%     LEFT PANE MAIN PLOT WINDOW
 %----------------------------------------------------
 
+% LhaxGRIN = axes('Parent', graphguih, 'NextPlot', 'replacechildren',...
+%     'Position', [0.05 0.08 0.55 0.85],'Color','none','XTick',[],'YTick',[],...
+%     'XColor','none','YColor','none'); hold on;
+
 GhaxGRIN = axes('Parent', graphguih, 'NextPlot', 'replacechildren',...
     'Position', [0.05 0.08 0.55 0.85],...
-    'XLimMode', 'manual','YLimMode', 'manual');
+    'XLimMode', 'manual','YLimMode', 'manual','Color','none');
     GhaxGRIN.YLim = [-.15 .15];
     GhaxGRIN.XLim = [1 100];
 
@@ -110,9 +155,9 @@ GIPpanelH = uipanel('Parent', btabs,'Title','Image Processing','FontSize',10,...
     'Position', [0.02 0.25 0.45 0.73]); % 'Visible', 'Off',
 
 
-GupdateGraphH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
-    'Position', [.05 0.88 .90 .10], 'FontSize', 13, 'String', 'Update Graph',...
-    'Callback', @GupdateGraph, 'Enable','off');
+plotLickDataH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
+    'Position', [.05 0.88 .90 .10], 'FontSize', 13, 'String', 'Plot Lick Data',...
+    'Callback', @plotLickData, 'Enable','on');
 
 chva = 1;
 
@@ -162,19 +207,19 @@ GcustomfunpanelH = uipanel('Parent', btabs,'Title','Custom Code & Data Explorati
               
 GrunCustomAH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function A',...
-    'Callback', @GrunCustomA);
+    'Callback', @GrunCustomA, 'Enable','off');
 
 GrunCustomBH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function B',...
-    'Callback', @GrunCustomB);
+    'Callback', @GrunCustomB, 'Enable','off');
 
 GrunCustomCH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function C',...
-    'Callback', @GrunCustomC);
+    'Callback', @GrunCustomC, 'Enable','off');
 
 GrunCustomDH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function D',...
-    'Callback', @GrunCustomD);
+    'Callback', @GrunCustomD, 'Enable','off');
 
 
 
@@ -214,15 +259,15 @@ GexportpanelH = uipanel('Parent', btabs,'Title','I/O','FontSize',10,...
               
 GexportvarsH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.65 0.95 0.28], 'FontSize', 13, 'String', 'Export Vars to Workspace ',...
-    'Callback', @Gexportvars);
+    'Callback', @Gexportvars, 'Enable','off');
 
 GsavedatasetH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.34 0.95 0.28], 'FontSize', 13, 'String', 'Save Dataset',...
-    'Callback', @Gsavedataset);
+    'Callback', @Gsavedataset, 'Enable','off');
 
 GloadmatdataH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.03 0.95 0.28], 'FontSize', 13, 'String', 'Load .mat Dataset',...
-    'Callback', @Gloadmatdata);
+    'Callback', @Gloadmatdata, 'Enable','off');
 
 
 %----------------------------------------------------
@@ -277,19 +322,38 @@ haxIMG = axes('Parent', IMGpanelH, 'NextPlot', 'replacechildren',...
     'Position', [0.01 0.01 0.90 0.85], 'PlotBoxAspectRatio', [1 1 1], ...
     'XColor','none','YColor','none','YDir','reverse');
 
-    haxIMG.XLim = [1 slideValIM];
-    haxIMG.YLim = [1 slideValIM];
+    haxIMG.XLim = [.5 slideValIM+.5];
+    haxIMG.YLim = [.5 slideValIM+.5];
+
+if all(IMG(1) == IMG(1:XLSdata.blockSize))
+
+    IMG = IMG(1:XLSdata.blockSize:end,1:XLSdata.blockSize:end,:,:);
+    IMGt = squeeze(reshape(IMG,numel(IMG(:,:,1)),[],size(IMG,3),size(IMG,4)));
+    hIMG = imagesc(IMG(:,:,1,1) , 'Parent',haxIMG);
+    slideValIM = size(IMG,1);
+    XLSdata.blockSize = 1;
+
+end
+
+    % haxIMG.XLim = [0 slideValIM];
+    % haxIMG.YLim = [0 slideValIM];
+    
+    axis(haxIMG,[.5 slideValIM+.5 .5 slideValIM+.5]);
+    
+    
 
 IMGsliderH = uicontrol('Parent', IMGpanelH, 'Units', 'normalized','Style','slider',...
 	'Max',size(IMG,3),'Min',1,'Value',1,'SliderStep',[1 1]./size(IMG,3),...
 	'Position', [0.01 0.86 0.94 0.05], 'Callback', @IMGslider);
+
 
 AXsliderH = uicontrol('Parent', IMGpanelH, 'Units', 'normalized','Style','slider',...
 	'Max',size(IMG,1)*2,'Min',size(IMG,1)/2,'Value',size(IMG,1),...
     'SliderStep',[1 1]./(size(IMG,1)),...
 	'Position', [0.93 0.02 0.05 0.80], 'Callback', @AXslider);
 
-hIMG = imagesc(IMG(:,:,1,1) , 'Parent',haxIMG);
+
+
 
 % IMAGE SIDER CALLBACK
 function IMGslider(hObject, eventdata)
@@ -309,47 +373,27 @@ end
 function AXslider(hObject, eventdata)
 
     slideValIM = AXsliderH.Value;
-    haxIMG.XLim = [1 slideValIM];
-    haxIMG.YLim = [1 slideValIM];
+    
+    axis(haxIMG,[.5 slideValIM+.5 .5 slideValIM+.5]);
+    
+    % haxIMG.XLim = [0 slideValIM];
+    % haxIMG.YLim = [0 slideValIM];
     
     disp(['XLim: ' num2str(haxIMG.XLim) ' YLim: ' num2str(haxIMG.YLim)])
     
 end
 
 
-%%
-keyboard
-%%
-
-
-
-hROI = imrect(haxIMG);
-
-ROImask = hROI.createMask(hIMG);
-ROIpos = hROI.getPosition;
-
-ROIarea = ROIpos(3) * ROIpos(4);
-% ROIarea = polyarea(ROIpos(:,1),ROIpos(:,2));
-
-ROI_INTENSITY = IMG(:,:,1,1) .* ROImask;
-
-ROI_INTENSITY_MEAN = mean(ROI_INTENSITY(ROI_INTENSITY > 0));
-
-
-
-
-
-
-
-
-
+updateROIH = uicontrol('Parent', IMGpanelH, 'Units', 'normalized', ...
+    'Position', [0.25 0.92 0.5 0.07], 'FontSize', 13, 'String', 'Update ROI',...
+    'Callback', @updateROI);
 
 
 
 
 
 %----------------------------------------------------
-%%    DATA VIEW PANEL
+%%     DATA VIEW PANEL
 %----------------------------------------------------
 
 function plot_callback(hObject, eventdata, column)
@@ -403,37 +447,41 @@ end
 
 
 %----------------------------------------------------
-%        CREATE DATA TABLE
+%%        CREATE DATA TABLE
 %----------------------------------------------------
-keyboard
-% XDat = [axdat(3:end).XData];
-% YDat = [axdat(3:end).YData];
 
-XDat = 1:size(IMG,3);
 
-YDat = {};
-for nn = 1:size(CSUSvals,1)
-    YDat{nn} = mean(IMG(:,:,:,GRINstruct.tf(:,nn)),4);
+hROI = imrect(haxIMG, [XLSdata.blockSize*4+.5 XLSdata.blockSize*4+.5 ...
+                       XLSdata.blockSize*2 XLSdata.blockSize*2]);
+
+ROIpos = hROI.getPosition;
+
+
+tv1 = round(ROIpos(1):ROIpos(1)+ROIpos(3));
+tv2 = round(ROIpos(2):ROIpos(2)+ROIpos(4));
+
+tv3 = squeeze(mean(mean(IMG(tv1,tv2,:,:))));
+
+
+for nn = 1:size(XLSdata.CSUSvals,1)
+    
+    ROIs(:,nn) = mean(tv3(:,GRINstruct.tf(:,nn)),2);
+    
 end
 
-plot(GhaxGRIN, squeeze(YDat{1}(1,1,:)))
 
 
-XDat = fliplr(reshape(XDat,[],(size(axdat,1)-2)));
-YDat = fliplr(reshape(YDat,[],(size(axdat,1)-2)));
 
-tablesize = size(YDat);
+tablesize = size(ROIs);
 colnames = CSUSvals;
 colfmt = repmat({'numeric'},1,length(colnames));
 coledit = zeros(1,length(colnames))>1;
 colwdt = repmat({100},1,length(colnames));
 
 
-
-
 htable = uitable('Parent', dtabs,'Units', 'normalized',...
                  'Position', [0.02 0.02 0.95 0.95],...
-                 'Data',  YDat,... 
+                 'Data',  ROIs,... 
                  'ColumnName', colnames,...
                  'ColumnFormat', colfmt,...
                  'ColumnWidth', colwdt,...
@@ -450,7 +498,8 @@ htable = uitable('Parent', dtabs,'Units', 'normalized',...
 %----------------------------------------------------
 %    PLOT DOT MARKERS AND MAKE THEM INVISIBLE
 %----------------------------------------------------
-hmkrs = plot(GhaxGRIN, YDat, 'LineStyle', 'none',...
+GhaxGRIN.ColorOrderIndex = 1; 
+hmkrs = plot(GhaxGRIN, ROIs, 'LineStyle', 'none',...
                     'Marker', '.',...
                     'MarkerSize',45);
                 
@@ -465,38 +514,28 @@ set(hmkrs,'Visible','off','HandleVisibility', 'off')
 %----------------------------------------------------
 %    PLOT CS ON / OFF POINTS
 %----------------------------------------------------                
-%     csonoffx = [axdat(1:2).XData];
-%     csonoffy = [axdat(1:2).YData];
-%     csonoffx = reshape(csonoffx,[],2);
-%     csonoffy = reshape(csonoffy,[],2);                
+
+CSonsetFrame = round(XLSdata.CSonsetDelay .* XLSdata.framesPerSec);
+CSoffsetFrame = round((XLSdata.CSonsetDelay+XLSdata.CS_length) .* XLSdata.framesPerSec);
+
+
+line([CSonsetFrame CSonsetFrame],GhaxGRIN.YLim,...
+    'Color',[.8 .8 .8],'HandleVisibility', 'off','Parent',GhaxGRIN)
+line([CSoffsetFrame CSoffsetFrame],GhaxGRIN.YLim,...
+    'Color',[.8 .8 .8],'HandleVisibility', 'off','Parent',GhaxGRIN)
                 
-plot(GhaxGRIN, csonoffx, csonoffy, 'Color',[.5 .5 .5],'HandleVisibility', 'off');                
-
-
-
+               
 
 
 %------------------------------------------------------------------------------
 %        MAIN FUNCTION PROCESSES
 %------------------------------------------------------------------------------
-
-    tv1 = axdat;
-    
-    tv2 = [tv1(3:end).XData];
-    tv3 = [tv1(3:end).YData];
-    
-    tv2 = fliplr(reshape(tv2,[],(size(tv1,1)-2)));
-    tv3 = fliplr(reshape(tv3,[],(size(tv1,1)-2)));
-    
-    tv4 = [tv1(1:2).XData];
-    tv5 = [tv1(1:2).YData];
-    
-    tv4 = reshape(tv4,[],2);
-    tv5 = reshape(tv5,[],2);
         
     CSUSvals = unique(GRINstruct.csus);
 
-    hp = plot(GhaxGRIN, tv2, tv3 , 'LineWidth',2);
+    
+    GhaxGRIN.ColorOrderIndex = 1; 
+    hp = plot(GhaxGRIN, ROIs , 'LineWidth',2);
     
     pause(1)
     
@@ -518,6 +557,7 @@ end
 
 GhaxGRIN.NextPlot = 'Add';
 
+GhaxGRIN.ColorOrderIndex = 1; 
 for nn = 1:size(htable.Data,2)
     
 	plot(GhaxGRIN, htable.Data(:,nn),...
@@ -525,8 +565,177 @@ for nn = 1:size(htable.Data,2)
 
 end
 
-%     plot(GhaxGRIN, htable.Data(:,nn),...
-%           'DisplayName', htable.ColumnName{1}, 'Color', colorz{nn}, 'LineWidth',2);
+
+
+%------------------------------------------------------------------------------
+%        UPDATE ROI
+%------------------------------------------------------------------------------
+function updateROI(hObject, eventdata)
+    
+    set(hmkrs,'Visible','on','HandleVisibility', 'on')
+    delete(hmkrs)
+    
+    delete(leg1)
+    delete(hp)
+    
+    delete(findobj(haxIMG,'Tag','imrect'))
+    
+    delete(GhaxGRIN.Children)
+
+    disp('UPDATING ROI...')
+    % keyboard
+    
+    hROI = imrect(haxIMG);
+
+ROIpos = hROI.getPosition;
+
+% ROImask = hROI.createMask(hIMG);
+% ROIarea = ROIpos(3) * ROIpos(4);
+% ROIarea = polyarea(ROIpos(:,1),ROIpos(:,2));
+
+tv1 = round(ROIpos(1):ROIpos(1)+ROIpos(3));
+tv2 = round(ROIpos(2):ROIpos(2)+ROIpos(4));
+
+tv3 = squeeze(mean(mean(IMG(tv1,tv2,:,:))));
+
+
+for nn = 1:size(XLSdata.CSUSvals,1)
+    
+    ROIs(:,nn) = mean(tv3(:,GRINstruct.tf(:,nn)),2);
+    
+end
+
+
+
+
+tablesize = size(ROIs);
+colnames = CSUSvals;
+colfmt = repmat({'numeric'},1,length(colnames));
+coledit = zeros(1,length(colnames))>1;
+colwdt = repmat({100},1,length(colnames));
+
+
+htable = uitable('Parent', dtabs,'Units', 'normalized',...
+                 'Position', [0.02 0.02 0.95 0.95],...
+                 'Data',  ROIs,... 
+                 'ColumnName', colnames,...
+                 'ColumnFormat', colfmt,...
+                 'ColumnWidth', colwdt,...
+                 'ColumnEditable', coledit,...
+                 'ToolTipString',...
+                 'Select cells to highlight them on the plot',...
+                 'CellSelectionCallback', {@select_callback});
+
+
+
+
+
+
+%----------------------------------------------------
+%    PLOT DOT MARKERS AND MAKE THEM INVISIBLE
+%----------------------------------------------------
+GhaxGRIN.ColorOrderIndex = 1; 
+hmkrs = plot(GhaxGRIN, ROIs, 'LineStyle', 'none',...
+                    'Marker', '.',...
+                    'MarkerSize',45);
+                
+
+leg1 = legend(hmkrs,unique(GRINstruct.csus));
+	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])                
+                
+set(hmkrs,'Visible','off','HandleVisibility', 'off')
+                
+                
+%----------------------------------------------------
+%    PLOT CS ON / OFF POINTS
+%----------------------------------------------------                
+
+CSonsetFrame = round(XLSdata.CSonsetDelay .* XLSdata.framesPerSec);
+CSoffsetFrame = round((XLSdata.CSonsetDelay+XLSdata.CS_length) .* XLSdata.framesPerSec);
+
+
+line([CSonsetFrame CSonsetFrame],GhaxGRIN.YLim,...
+    'Color',[.8 .8 .8],'HandleVisibility', 'off','Parent',GhaxGRIN)
+line([CSoffsetFrame CSoffsetFrame],GhaxGRIN.YLim,...
+    'Color',[.8 .8 .8],'HandleVisibility', 'off','Parent',GhaxGRIN)
+                
+               
+
+
+%------------------------------------------------------------------------------
+%        MAIN FUNCTION PROCESSES
+%------------------------------------------------------------------------------
+        
+    CSUSvals = unique(GRINstruct.csus);
+
+    GhaxGRIN.ColorOrderIndex = 1; 
+    hp = plot(GhaxGRIN, ROIs , 'LineWidth',2);
+    
+    pause(1)
+    
+                            
+%----------------------------------------------------
+%        MAKE LINE PLOT OF DATA FROM COLUMN 1
+%----------------------------------------------------
+
+axdata = hp;
+for cc = 1:size(axdata,1)
+
+    colorz{cc} = axdata(cc).Color;
+    % colors = {'b','m','r','y','c','k'}; % Use consistent color for lines
+end
+
+    set(hp,'Visible','off','HandleVisibility', 'off')
+    
+
+
+GhaxGRIN.NextPlot = 'Add';
+GhaxGRIN.ColorOrderIndex = 1; 
+
+for nn = 1:size(htable.Data,2)
+    
+	plot(GhaxGRIN, htable.Data(:,nn),...
+        'DisplayName', htable.ColumnName{nn}, 'Color', colorz{nn}, 'LineWidth',2);
+
+end
+
+
+end
+
+
+
+
+
+
+function plotLickData(hObject, eventdata)
+
+    LICKmu = squeeze(sum(LICK,1));
+
+    for nn = 1:size(XLSdata.CSUSvals,1)
+
+        LICKs(:,nn) = mean(LICKmu(:,GRINstruct.tf(:,nn)),2);
+
+    end
+
+    % LhaxGRIN.ColorOrderIndex = 1; 
+    % hpLick = plot(LhaxGRIN, LICKs , ':', 'LineWidth',2,'HandleVisibility', 'off');
+
+    lickfigh = figure('Units', 'normalized','Position', [.02 .05 .50 .32], 'BusyAction',...
+    'cancel', 'Name', 'lickfigh', 'Tag', 'lickfigh','MenuBar', 'none'); 
+
+%     LhaxGRIN = axes('Parent', lickfigh, 'NextPlot', 'replacechildren',...
+%     'Position', [0.05 0.05 0.9 0.9],'Color','none','XTick',[],'YTick',[],...
+%     'XColor','none','YColor','none'); hold on;
+
+    LhaxGRIN = axes('Parent', lickfigh, 'NextPlot', 'replacechildren',...
+    'Position', [0.05 0.05 0.9 0.9],'Color','none'); hold on;
+
+    LhaxGRIN.ColorOrderIndex = 1; 
+    hpLick = plot(LhaxGRIN, LICKs , ':', 'LineWidth',2,'HandleVisibility', 'off');
+
+end
+
 
 
 

@@ -126,9 +126,11 @@ CSUSvals = {'CS','US'};
 
 
 global CSonset CSoffset USonset USoffset CSUSonoff
-global CSonsetDelay baselineTime
+global CSonsetDelay baselineTime CSonsetFrame CSoffsetFrame
 CSonsetDelay = 10;
 baselineTime = 10;
+CSonsetFrame = 25;
+CSoffsetFrame = 35;
 
 
 global smoothHeight smoothWidth smoothSD smoothRes
@@ -773,7 +775,8 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
      CSUSvals = unique(GRINstruct.csus);
      set(CSUSpopupH, 'String', CSUSvals);
      
-     
+     CSonsetFrame = round(CSonsetDelay .* framesPerSec);
+     CSoffsetFrame = round((CSonsetDelay+CS_length) .* framesPerSec);
      
     XLSdata.frame_period    = frame_period;
     XLSdata.framesUncomp    = framesUncomp;
@@ -790,6 +793,8 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     XLSdata.total_frames    = total_frames;
     XLSdata.CS_lengthFrames = CS_lengthFrames;
     XLSdata.CSonsetDelay    = CSonsetDelay;
+    XLSdata.CSonsetFrame    = CSonsetFrame;
+    XLSdata.CSoffsetFrame   = CSoffsetFrame;
     XLSdata.baselineTime    = baselineTime;
     XLSdata.CSUSvals        = CSUSvals;
     XLSdata.blockSize       = blockSize;
@@ -1170,7 +1175,8 @@ disableButtons; pause(.02);
 
     % Make all CS onsets this many seconds from trial start
     CSonsetDelay = str2num(alignCSFramesnumH.String);
-    
+    CSonsetFrame = round(CSonsetDelay .* framesPerSec);
+    CSoffsetFrame = round((CSonsetDelay+CS_length) .* framesPerSec);
 
 
     EqualizeCSdelay  = round((delaytoCS-CSonsetDelay) .* framesPerSec);
@@ -1206,6 +1212,8 @@ disableButtons; pause(.02);
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
 
+        XLSdata.CSonsetFrame = CSonsetFrame;
+        XLSdata.CSoffsetFrame = CSoffsetFrame;
         
 enableButtons
 disp('Align frames by CS onset completed!')
@@ -2368,6 +2376,42 @@ function savedataset(hObject, eventdata)
     if size(IMG,3) > 1
         
         
+%         IMGmax = max(max(max(max(IMG))));
+%         IMGmin = min(min(min(min(IMG))));
+%         
+%         if (IMGmax < 1) && (IMGmin > -1)
+%             
+%                 spfq = sprintf([...
+%                 'The data in the variable "IMG" can be compressed \n'...
+%                 'saving a significant amount of space. \n'...
+%                 'The data currently ranges from 1 to -1 and is \n'...
+%                 'of class double precision. This compression will \n'...
+%                 'multiply IMG by 10,000 and convert class to int16 \n'...
+%                 'which allows integer values of +/- 32767. This program  \n'...
+%                 'will uncompress the var IMG when of class int16 when \n'...
+%                 'loaded from a .mat file by dividing IMG by 10,000 so \n'...
+%                 'overall there are 4 significant digets after the decimal. \n'...
+%                 'THIS FILE WILL BE ~20x SMALLER. \n'...
+%                 'Do you wish to compress this data? \n'...
+%                 ]);
+%             
+%             
+%             comchoice = questdlg(spfq, ...
+%                 'Compress IMG Stack', ...
+%                 'Yes','No','Yes');
+%             
+%             switch comchoice
+%                 case 'Yes'
+%                     disp('SAVING COMPRESSED DATA')
+%                     IMG = int16(IMG.*10000);
+%                 case 'No'
+%                     disp('SAVING DATA WITHOUT COMPRESSION')
+%             end        
+%         
+%         end
+        
+        
+        
         [filen,pathn] = uiputfile([GRINstruct.file(1:end-4),'.mat'],'Save Vars to Workspace');
             
         if isequal(filen,0) || isequal(pathn,0)
@@ -2377,16 +2421,26 @@ function savedataset(hObject, eventdata)
         end
         
         % IMGint16 = uint16(IMG);
+        IMG = single(IMG);
                 
         disp('Saving data to .mat file, please wait...')
         save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable','XLSdata',...
-            'LICK','GRINraw','-v7.3')
+            'LICK','IMGraw','-v7.3')
         % save(fullfile(pathn,filen),'IMGint16','GRINstruct','GRINtable','-v7.3')
         disp('Dataset saved!')
         
         % whos('-file','newstruct.mat')
         % m = matfile(filename,'Writable',isWritable)
         % save(filename,variables,'-append')
+        
+%         switch comchoice
+%             case 'Yes'
+%                 disp('YOU ARE NOW USING COMPRESSED IMG DATA')
+%                 disp('IF YOU WANT TO WORK WITH UNCOMPRESSED DATA, RELAUNCH TOOLBOX')
+%                 IMG = int16(IMG./10000);
+%             case 'No'
+%                 disp('CONTINUE USING UNCOMPRESSED IMG DATA')
+%         end        
 
     else
         disp('No data to save')
