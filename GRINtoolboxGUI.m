@@ -695,7 +695,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     
     
     % ------------- IMG STACK IMPORT CODE -----------
-    grinano('import',[imgpathname , imgfilename])
+    fprintf('\n Importing tif stack from...\n % s \n', [imgpathname , imgfilename]);
 
     FileTif=[imgpathname , imgfilename];
     InfoImage=imfinfo(FileTif);
@@ -725,7 +725,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
               
               
     % ------------- XLS IMPORT CODE -----------
-    grinano('importxls',[xlspathname , xlsfilename])
+    fprintf('\n Importing xls info from...\n % s \n', [xlspathname , xlsfilename]);
 
     [xlsN,xlsT,xlsR] = xlsread([xlspathname , xlsfilename]);
     
@@ -754,8 +754,15 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
     
     disp('XLS data successfully imported and processed!')
-    grinano('xlsparams',total_trials, framesPerTrial, secPerFrame, framesPerSec, secondsPerTrial)
-
+    
+    fprintf('\n\n In this dataset there are...')
+    fprintf('\n    total trials: %10.1f  ', total_trials)
+    fprintf('\n    frames per trial: %7.1f  ', framesPerTrial)
+    fprintf('\n    seconds per frame: %8.5f  ', secPerFrame)
+    fprintf('\n    frames per second: %8.5f  ', framesPerSec)
+    fprintf('\n    seconds per trial: %8.4f  \n\n', secondsPerTrial)  
+    
+    
     % CREATE ID FOR EACH UNIQUE CS+US COMBO AND DETERMINE ROW 
     [GRINstruct, GRINtable] = gettrialtypes(total_trials, CS_type, US_type, framesPerTrial);
 
@@ -939,8 +946,14 @@ pause(.02);
 
     IMGt = IMG((cropAmount+1):(end-cropAmount) , (cropAmount+1):(end-cropAmount) , :);
 
-        % VISUALIZE AND ANNOTATE
-        grinano('trim',IMG,IMGt)
+        % VISUALIZE AND ANNOTATE        
+        st1 = {'rows(y)';'cols(x)';'frames'};
+        sp1 = sprintf('\n  % 34.10s % s % s  \n', st1{1:3});
+        sp2 = sprintf('\n Imported image was size: %6.0f %8.0f %8.0f  \n', size(IMG));
+        sp3 = sprintf('\n Trimmed image is size: %8.0f %8.0f %8.0f  \n', size(IMGt));
+        disp([sp1 sp2 sp3])
+        
+        
         % fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
         % fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGt)));
         % GRINcompare(IMG, IMGt, previewNframes)
@@ -2586,14 +2599,27 @@ function visualexplorer(hObject, eventdata)
 % disableButtons; pause(.02);
 
 
-    IM = IMG(:,:,1:100);
+
+
+    if numel(size(IMG))==3
+
+        IM = IMG(:,:,1:100);
+        
+        vol = [75,100,75,100,1,100];
+        
+    else
+        
+        IM = IMG(:,:,1:100,1);
+        vol = [50,100,50,100,1,100];
+    
+    end
     
     
     disp('CREATING SUBVOLUME FROM IMAGE STACK...')
 
-    [x,y,z,D] = subvolume(IM,[75,100,75,100,1,100]);
+    [x,y,z,D] = subvolume(IM,vol);
 
-    
+%     keyboard
 %     fh10=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],...
 %         'Color','w','MenuBar','none','Pointer','circle');
 %     hax10 = axes('Position',[.05 .05 .9 .9],'Color','none');
