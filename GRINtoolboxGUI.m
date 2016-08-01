@@ -49,6 +49,7 @@ function [] = GRINtoolboxGUI(varargin)
 clc; close all; clear all; clear java;
 % clearvars -except varargin
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
+% set(0,'HideUndocumented','off')
 
 global thisfilepath
 thisfile = 'GRINtoolboxGUI.m';
@@ -581,7 +582,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
                         'Select Excel file associated with the TIF stack',...
                         imgpathname);
                 end
-                
+
 
         % NOTHING MATCHED - ALLOW MANUAL SELECTION    
         else
@@ -759,6 +760,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     [GRINstruct, GRINtable] = gettrialtypes(total_trials, CS_type, US_type, framesPerTrial);
 
     GRINstruct.file  = imgfilename;
+    GRINstruct.path  = [imgpathname imgfilename];
 
     disp('GRINstruct contains the following structural arrays:')
     disp('{  Example usage: GRINstruct.tf(:,1)  }')
@@ -862,7 +864,12 @@ end
 %        SMOOTH IMAGES
 %----------------------------------------------------
 function smoothimg(hObject, eventdata)    
-disableButtons; pause(.02);
+disableButtons; 
+smoothimgH.FontWeight = 'bold';
+pause(.02);
+
+
+
 
     % PERFORM IMAGE SMOOTHING
     disp(' '); disp('PERFORMING IMAGE SMOOTHING')
@@ -879,14 +886,14 @@ disableButtons; pause(.02);
     % Mask = GRINkernel(.8, 9, .14, .1, 1);
     Mask = GRINkernel(smoothHeight, smoothWidth, smoothSD, smoothRes, 1);
     pause(.2)
-    % IMGmsk = IMG(:,:,1);
-    % IMGmsk(1:size(Mask),1:size(Mask)) = Mask;
-    % figure; imagesc(IMGmsk);
+
     
+        
     mbh = waitbar(.5,'Performing convolution smoothing, please wait...');
-    % mbh = msgbox('Performing convolution smoothing, please wait...');
+
     IMGc = convn( IMG, Mask,'same');
-    close(mbh);
+    
+    waitbar(.8); close(mbh);
 
         % VISUALIZE AND ANNOTATE
         fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
@@ -905,6 +912,8 @@ disableButtons; pause(.02);
 
         XLSdata.sizeIMG = size(IMG);
 
+        
+smoothimgH.FontWeight = 'normal';        
 enableButtons        
 disp('Image smoothing completed!')
 end
@@ -918,7 +927,9 @@ end
 %        CROP IMAGES
 %----------------------------------------------------
 function cropimg(hObject, eventdata)
-disableButtons; pause(.02);
+disableButtons; 
+cropimgH.FontWeight = 'bold';
+pause(.02);
 
     % TRIM EDGES FROM IMAGE
     disp(' '); disp('TRIMMING EDGES FROM IMAGE')
@@ -950,6 +961,8 @@ disableButtons; pause(.02);
         XLSdata.cropAmount = cropAmount;
         XLSdata.sizeIMG = size(IMG);
         
+        
+cropimgH.FontWeight = 'normal';        
 enableButtons        
 disp('Crop Images completed!')
 end
@@ -963,7 +976,10 @@ end
 %        CREATE IMAGE TILES BLOCKS
 %----------------------------------------------------
 function imgblocks(hObject, eventdata)
-% disableButtons; pause(.02);
+disableButtons; 
+imgblocksH.FontWeight = 'bold';
+pause(.02);
+
 
     % CREATE IMAGES TILES PER ROBERT'S SPEC
     disp('SEGMENTING IMGAGES INTO TILES')
@@ -1031,6 +1047,8 @@ function imgblocks(hObject, eventdata)
         XLSdata.blockSize = blockSize;
         XLSdata.sizeIMG = size(IMG);
         
+        
+imgblocksH.FontWeight = 'normal';        
 enableButtons
 disp('Block-Segment Images completed!')        
 end
@@ -1101,7 +1119,10 @@ end
 %        RESHAPE DATA BY TRIALS
 %----------------------------------------------------
 function reshapeData(hObject, eventdata)
-disableButtons; pause(.02);
+disableButtons; 
+reshapeDataH.FontWeight = 'bold';
+pause(.02);
+
 
     % RESHAPE IMAGE STACK INTO SIZE: YPIXELS by XPIXELS in NFRAMES per NTRIALS
     disp(' '); disp('RESHAPING DATASET (ADDINING DIM FOR TRIALS)'); 
@@ -1121,6 +1142,8 @@ disableButtons; pause(.02);
         
         XLSdata.sizeIMG = size(IMG);
 
+        
+reshapeDataH.FontWeight = 'normal';        
 enableButtons
 disp('Reshape stack by trial completed!')
 end
@@ -1167,7 +1190,10 @@ end
 %        ALIGN CS FRAMES BY CS ONSET
 %----------------------------------------------------
 function alignCSframes(hObject, eventdata)
-disableButtons; pause(.02);
+disableButtons;
+alignCSFramesH.FontWeight = 'bold';
+pause(.02);
+
 
     % MAKE DELAY TO CS EQUAL TO t SECONDS FOR ALL TRIALS
     fprintf('\n\n MAKING CS DELAY EQUAL TO [ % s  ]SECONDS FOR ALL TRIALS'...
@@ -1215,6 +1241,8 @@ disableButtons; pause(.02);
         XLSdata.CSonsetFrame = CSonsetFrame;
         XLSdata.CSoffsetFrame = CSoffsetFrame;
         
+        
+alignCSFramesH.FontWeight = 'normal';        
 enableButtons
 disp('Align frames by CS onset completed!')
 end
@@ -1227,7 +1255,10 @@ end
 %        deltaF OVER F
 %----------------------------------------------------
 function dFoverF(hObject, eventdata)
-disableButtons; pause(.02);
+disableButtons; 
+dFoverFH.FontWeight = 'bold';
+pause(.02);
+
 
     % COMPUTE dF/F FOR ALL FRAMES
     disp(' '); disp('COMPUTING dF/F FOR ALL FRAMES')
@@ -1270,7 +1301,7 @@ disableButtons; pause(.02);
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
 
-        
+dFoverFH.FontWeight = 'normal';        
 enableButtons        
 disp('dF/F computation completed!')
 end
@@ -1283,7 +1314,9 @@ end
 %        GET TIMEPOINT MEANS
 %----------------------------------------------------
 function timepointMeans(hObject, eventdata)
-disableButtons; pause(.02);    
+disableButtons; 
+timepointMeansH.FontWeight = 'bold';
+pause(.02);
     
     disp(' '); disp('COMPUTING TRIAL MEANS (AVERAGING SAME-TIMEPOINTS ACROSS TRIALS)'); 
     
@@ -1327,6 +1360,8 @@ disableButtons; pause(.02);
         % axes(haxGRIN)
         % phGRIN = imagesc(muIMGS(:,:,1,1) , 'Parent', haxGRIN);
 
+        
+timepointMeansH.FontWeight = 'normal';         
 enableButtons        
 disp('Compute same-timepoint means completed!')
 end
@@ -1624,7 +1659,7 @@ function plottile(hObject, eventdata)
     
     axesdata = axdat.Children;
     
-    TILEplotGUI(axesdata, GRINstruct)
+    TILEplotGUI(axesdata, GRINstruct, XLSdata, LICK)
  
 end
 
@@ -2291,10 +2326,10 @@ end
 function runCustomA(hObject, eventdata)
 % disableButtons; pause(.02);
 
-    disp('RUNNING YOUR CUSTOM FUNCTION!')
-        
-    grincustomA(IMG, GRINstruct, GRINtable)
-    
+    disp('RUNNING CUSTOM FUNCTION A!')
+
+    [varargin] = grincustomA(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, LICK);
+
 enableButtons        
 disp('Run custom function completed!')
 end
@@ -2302,9 +2337,10 @@ end
 function runCustomB(hObject, eventdata)
 % disableButtons; pause(.02);
 
-    disp('RUNNING YOUR CUSTOM FUNCTION!')
-        
-    grincustomB(IMG, GRINstruct, GRINtable)
+    disp('RUNNING CUSTOM FUNCTION B!')
+
+    [varargin] = grincustomB(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, LICK);
+
     
 enableButtons        
 disp('Run custom function completed!')
@@ -2313,9 +2349,10 @@ end
 function runCustomC(hObject, eventdata)
 % disableButtons; pause(.02);
 
-    disp('RUNNING YOUR CUSTOM FUNCTION!')
-            
-    grincustomC(IMG, GRINstruct, GRINtable)
+    disp('RUNNING CUSTOM FUNCTION C!')
+
+    [varargin] = grincustomC(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, LICK);
+
     
 enableButtons        
 disp('Run custom function completed!')
@@ -2323,14 +2360,14 @@ end
 
 function runCustomD(hObject, eventdata)
 % disableButtons; pause(.02);
-
-    disp('RUNNING YOUR CUSTOM FUNCTION!')
     
     mainguih.HandleVisibility = 'off';
     close all;
     mainguih.HandleVisibility = 'on';
         
-    grincustomD(IMG, GRINstruct, GRINtable)
+    disp('RUNNING CUSTOM FUNCTION D!')
+
+    [varargin] = grincustomD(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, LICK);
     
 enableButtons        
 disp('Run custom function completed!')
@@ -2478,55 +2515,17 @@ end
 %        OPEN IMAGEJ API
 %----------------------------------------------------
 function openImageJ(hObject, eventdata)
-disableButtons; pause(.02);
+% disableButtons; pause(.02);
 
-    % TRIM EDGES FROM IMAGE
-    disp('LAUNCHING ImageJ!')
+
+    disp('LAUNCHING ImageJ (FIJI) using MIJ!')
     
-    % tifimg = IMG;
-    matfiji(IMG)
+    matfiji(IMG(:,:,1:100), GRINstruct, XLSdata, LICK)
         
 
+  
     
-%{    
-% ----------------------------------------
-    [str,maxsize,endian] = computer;
-
-
-if strcmp(str,'PCWIN') || strcmp(str,'PCWIN64')
-    
-    javaaddpath 'C:\Program Files\MATLAB\R2014b\java\jar\mij.jar'
-    javaaddpath 'C:\Program Files\MATLAB\R2014b\java\jar\ij.jar'
-    MIJ.start('E:\Program Files (x86)\ImageJ')
-    MIJ.setupExt('E:\Program Files (x86)\ImageJ');
-
-
-    % strr1=strcat('open=[Y:\\ShareData\\LABMEETINGS\\Steve\\GRIN lens data\\RM\\*.tif] starting=1 increment=1 scale=100 file=Ch2 or=[] sort');
-    % MIJ.run('Image Sequence...', strr1); %works!! will generate tif stack in imageJ
-
-    MIJ.createImage('result', IMG, true);
-    
-end
-
-
-if strcmp(str,'MACI64')
-    
-    javaaddpath '/Applications/MATLAB_R2014b.app/java/jar/mij.jar';
-    javaaddpath '/Applications/MATLAB_R2014b.app/java/jar/ij.jar';
-    MIJ.start('/Applications/Fiji');
-    MIJ.setupExt('/Applications/Fiji');
-    
-    % strr1=strcat('open=[/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/031016_gc33_green_keep.tif]');
-    % MIJ.run('Image Sequence...', strr1); %works!! will generate tif stack in imageJ
-    
-    MIJ.createImage('result', IMG, true);
-    
-end
-% ----------------------------------------    
-%}    
-    
-    
-GRINtoolboxGUI    
+% GRINtoolboxGUI
 return
 enableButtons        
 disp('ImageJ (FIJI) processes completed!')
@@ -2579,7 +2578,7 @@ function resetws(hObject, eventdata)
     switch choice
         case 'reset toolbox'
             disp(' Resetting GRIN Lens Toolbox...')
-            pause(2)
+            pause(1)
             GRINtoolboxGUI()
             return
         case 'abort reset'

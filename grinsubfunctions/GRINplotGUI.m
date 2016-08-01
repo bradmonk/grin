@@ -1,31 +1,34 @@
-function [] = GRINplotGUI()
-% function [] = GRINplotGUI(IMG, GRINstruct, XLSdata, LICK, varargin)
+function [] = GRINplotGUI(IMG, GRINstruct, XLSdata, LICK, varargin)
+% function [] = GRINplotGUI()
 %% GRINplotGUI.m
 
 
+if ~exist('IMG','var')
 
-clc; close all; clear all; clear java;
+    clc; close all; clear all; clear java;
+    
+    disp('Contents of workspace before loading file:'); whos
 
-global IMG GRINstruct XLSdata GRINtable LICK IMGraw
+    grinmat = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/gc33_031916g.mat';
 
-disp('Contents of workspace before loading file:'); whos
+    disp('File contains the following vars:'); whos('-file',grinmat);
 
-grinmat = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/gc33_031916g.mat';
-
-disp('File contains the following vars:'); whos('-file',grinmat);
-
-fprintf('Loading .mat file from... \n % s \n\n', grinmat); 
-% if ~exist('IMG','var')
+    fprintf('Loading .mat file from... \n % s \n\n', grinmat); 
+    
+    % global IMG GRINstruct XLSdata GRINtable LICK IMGraw
    
-    load(grinmat)
+    load(grinmat, 'IMG', 'GRINstruct', 'XLSdata', 'GRINtable', 'LICK', 'IMGraw')
     
     IMG = double(IMG);
     
     % IMG = IMG./10000;
     % max(max(max(max(IMG))))
     % min(min(min(min(IMG))))
+else
     
-% end
+    % global IMG GRINstruct XLSdata GRINtable LICK IMGraw
+    
+end
 
 disp('Contents of workspace after loading file:'); whos
 
@@ -39,6 +42,7 @@ tv6 = [];
 tv7 = [];
 tv8 = [];
 tv9 = [];
+
 
 
 %----------------------------------------------------
@@ -707,8 +711,11 @@ end
 
 
 
-
+%------------------------------------------------------------------------------
+%        PLOT LICKING DATA
+%------------------------------------------------------------------------------
 function plotLickData(hObject, eventdata)
+    
 
     LICKmu = squeeze(sum(LICK,1));
 
@@ -733,6 +740,12 @@ function plotLickData(hObject, eventdata)
 
     LhaxGRIN.ColorOrderIndex = 1; 
     hpLick = plot(LhaxGRIN, LICKs , ':', 'LineWidth',2,'HandleVisibility', 'off');
+    
+    
+    legLick = legend(hpLick,XLSdata.CSUSvals);
+	set(legLick, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+    set(legLick, 'Position', legLick.Position .* [1 .94 1 1.4])                
+    
 
 end
 

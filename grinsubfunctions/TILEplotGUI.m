@@ -1,4 +1,4 @@
-function TILEplotGUI(axdat, GRINstruct, varargin)
+function TILEplotGUI(axdat, GRINstruct, XLSdata, LICK, varargin)
 % disableButtons; pause(.02);
 
 global GhaxGRIN GimgsliderYAH GimgsliderYBH GimgsliderXAH GimgsliderXBH
@@ -56,14 +56,14 @@ btabs = uitab(tabgp,'Title','Graphics Options');
 dtabs = uitab(tabgp,'Title','Data View');
 
 
-GIPpanelH = uipanel('Parent', btabs,'Title','Image Processing','FontSize',10,...
+GIPpanelH = uipanel('Parent', btabs,'Title','Graph Options','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
     'Position', [0.02 0.25 0.45 0.73]); % 'Visible', 'Off',
 
 
-GupdateGraphH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
-    'Position', [.05 0.88 .90 .10], 'FontSize', 13, 'String', 'Update Graph',...
-    'Callback', @GupdateGraph);
+plotLickDataH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
+    'Position', [.05 0.88 .90 .10], 'FontSize', 13, 'String', 'Plot Lick Data',...
+    'Callback', @plotLickData, 'Enable','on');
 
 chva = 1;
 
@@ -98,12 +98,6 @@ end
 
 
 
-GCSUSpopupH = uicontrol('Parent', GIPpanelH,'Style', 'popup',...
-    'Units', 'normalized', 'String', {'CS','US'},...
-    'Position', [.05 .02 0.9 0.05],...
-    'Callback', @GCSUSpopup);
-
-
 %%              
 %----------------------------------------------------
 %    CUSTOM FUNCTIONS PANEL
@@ -114,19 +108,19 @@ GcustomfunpanelH = uipanel('Parent', btabs,'Title','Custom Code & Data Explorati
               
 GrunCustomAH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function A',...
-    'Callback', @GrunCustomA);
+    'Callback', @GrunCustomA, 'Enable','off');
 
 GrunCustomBH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function B',...
-    'Callback', @GrunCustomB);
+    'Callback', @GrunCustomB, 'Enable','off');
 
 GrunCustomCH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function C',...
-    'Callback', @GrunCustomC);
+    'Callback', @GrunCustomC, 'Enable','off');
 
 GrunCustomDH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function D',...
-    'Callback', @GrunCustomD);
+    'Callback', @GrunCustomD, 'Enable','off');
 
 
 
@@ -166,15 +160,15 @@ GexportpanelH = uipanel('Parent', btabs,'Title','I/O','FontSize',10,...
               
 GexportvarsH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.65 0.95 0.28], 'FontSize', 13, 'String', 'Export Vars to Workspace ',...
-    'Callback', @Gexportvars);
+    'Callback', @Gexportvars, 'Enable','off');
 
 GsavedatasetH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.34 0.95 0.28], 'FontSize', 13, 'String', 'Save Dataset',...
-    'Callback', @Gsavedataset);
+    'Callback', @Gsavedataset, 'Enable','off');
 
 GloadmatdataH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.03 0.95 0.28], 'FontSize', 13, 'String', 'Load .mat Dataset',...
-    'Callback', @Gloadmatdata);
+    'Callback', @Gloadmatdata, 'Enable','off');
 
 
 
@@ -418,5 +412,49 @@ end
     end
 
 
+
+
+
+
+
+
+
+%------------------------------------------------------------------------------
+%        PLOT LICKING DATA
+%------------------------------------------------------------------------------
+function plotLickData(hObject, eventdata)
+    
+
+    LICKmu = squeeze(sum(LICK,1));
+
+    for nn = 1:size(XLSdata.CSUSvals,1)
+
+        LICKs(:,nn) = mean(LICKmu(:,GRINstruct.tf(:,nn)),2);
+
+    end
+
+    % LhaxGRIN.ColorOrderIndex = 1; 
+    % hpLick = plot(LhaxGRIN, LICKs , ':', 'LineWidth',2,'HandleVisibility', 'off');
+
+    lickfigh = figure('Units', 'normalized','Position', [.02 .05 .50 .32], 'BusyAction',...
+    'cancel', 'Name', 'lickfigh', 'Tag', 'lickfigh','MenuBar', 'none'); 
+
+%     LhaxGRIN = axes('Parent', lickfigh, 'NextPlot', 'replacechildren',...
+%     'Position', [0.05 0.05 0.9 0.9],'Color','none','XTick',[],'YTick',[],...
+%     'XColor','none','YColor','none'); hold on;
+
+    LhaxGRIN = axes('Parent', lickfigh, 'NextPlot', 'replacechildren',...
+    'Position', [0.05 0.05 0.9 0.9],'Color','none'); hold on;
+
+    LhaxGRIN.ColorOrderIndex = 1; 
+    hpLick = plot(LhaxGRIN, LICKs , ':', 'LineWidth',2,'HandleVisibility', 'off');
+    
+    
+    legLick = legend(hpLick,XLSdata.CSUSvals);
+	set(legLick, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+    set(legLick, 'Position', legLick.Position .* [1 .94 1 1.4])                
+    
+
+end
 
 end
