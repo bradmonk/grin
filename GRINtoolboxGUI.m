@@ -2540,6 +2540,14 @@ end
 function exploreA(hObject, eventdata)
 % disableButtons; pause(.02);
 
+
+fh1=figure('Units','normalized','OuterPosition',[.1 .1 .8 .6],'Color','w');
+hax1 = axes('Position',[.05 .05 .45 .9],'Color','none');
+
+    contourslice(IMG,[],[],[1,12,19,27],8)
+
+
+
     disp('RUNNING DATA EXPLORER A!')
     disp('COMING SOON!')
     
