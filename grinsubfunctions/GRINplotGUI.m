@@ -510,7 +510,7 @@ hmkrs = plot(GhaxGRIN, ROIs, 'LineStyle', 'none',...
 
 leg1 = legend(hmkrs,unique(GRINstruct.csus));
 	set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
-    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])                
+    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
                 
 set(hmkrs,'Visible','off','HandleVisibility', 'off')                
                 

@@ -105,7 +105,7 @@ global mainguih imgLogo
 global IMG GRINstruct GRINtable XLSdata LICK
 global xlsN xlsT xlsR
 global lickN %lickT lickR
-global IMGraw
+global IMGraw IM
 
 global frame_period framesUncomp CS_type US_type delaytoCS CS_length compressFrms
 global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial 
@@ -407,13 +407,13 @@ openImageJH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Open stack in ImageJ ',...
     'Callback', @openImageJ, 'Enable','off');
 
-exploreAH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', 'Explore Data A',...
-    'Callback', @exploreA, 'Enable','off');
+img3dH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', '3D Views',...
+    'Callback', @img3d, 'Enable','off');
 
-exploreBH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Explore Data B',...
-    'Callback', @exploreB, 'Enable','off');
+visualexplorerH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Visual Explorer',...
+    'Callback', @visualexplorer, 'Enable','off');
 
 resetwsH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Reset Toolbox',...
@@ -2535,36 +2535,88 @@ end
 
 
 %----------------------------------------------------
-%        DATA EXPLORATION FUNCTIONS
+%        3D DATA EXPLORATION
 %----------------------------------------------------
-function exploreA(hObject, eventdata)
-% disableButtons; pause(.02);
-
-
-fh1=figure('Units','normalized','OuterPosition',[.1 .1 .8 .6],'Color','w');
-hax1 = axes('Position',[.05 .05 .45 .9],'Color','none');
-
-    contourslice(IMG,[],[],[1,12,19,27],8)
+function img3d(hObject, eventdata)
+disableButtons; pause(.02);
 
 
 
-    disp('RUNNING DATA EXPLORER A!')
-    disp('COMING SOON!')
+    choice = questdlg({'Contour slicing could take a few minutes.',...
+                       'Do you want to continue?'},' ','Yes','No','No');
+                   
+            switch choice
+                case 'Yes'
+                     disp('CREATING CONTOUR SLICE (please wait)...')
+                case 'No'
+                    return
+            end
+
+    IM = IMG(:,:,1:50);
+
     
+    fh10=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],...
+        'Color','w','MenuBar','none','Pointer','circle');
+    hax10 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    rotate3d(fh10);
+    
+    Sx = []; 
+    Sy = [];
+    Sz = [1 25 50];
+    
+    contourslice(IM,Sx,Sy,Sz)
+        campos([0,-15,8])
+        box on
+    
+    
+
+
     
 enableButtons        
-disp('Data explorer function completed!')
+disp('3D VIEW FUNCTION COMPLETED!')
 end
 
-function exploreB(hObject, eventdata)
+
+
+
+%----------------------------------------------------
+%        VISUAL EXPLORATION
+%----------------------------------------------------
+function visualexplorer(hObject, eventdata)
 % disableButtons; pause(.02);
 
-    disp('RUNNING DATA EXPLORER B!')
-    disp('COMING SOON!')
+
+    IM = IMG(:,:,1:100);
     
+    
+    disp('CREATING SUBVOLUME FROM IMAGE STACK...')
+
+    [x,y,z,D] = subvolume(IM,[75,100,75,100,1,100]);
+
+    
+%     fh10=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],...
+%         'Color','w','MenuBar','none','Pointer','circle');
+%     hax10 = axes('Position',[.05 .05 .9 .9],'Color','none');
+%     rotate3d(fh10);
+
+    p1 = patch(isosurface(x,y,z,D, 5),...
+         'FaceColor','red','EdgeColor','none');
+    isonormals(x,y,z,D,p1);
+    p2 = patch(isocaps(x,y,z,D, 5),...
+         'FaceColor','interp','EdgeColor','none');
+    view(3); axis tight;
+    camlight right; camlight left; lighting gouraud
+    rotate3d(gca);
+
+for i = 1:150;
+   camorbit(3,0)
+   pause(.05)
+end
+
+
     
 enableButtons        
-disp('Data explorer function completed!')
+disp('SUBVOLUME CREATION COMPLETED (USE MOUSE TO ROTATE IMAGE)!')
 end
 
 
@@ -2692,6 +2744,8 @@ function enableButtons()
     plotGroupMeansH.Enable = 'on';
     viewTrialTimingsH.Enable = 'on';
     plotGUIH.Enable = 'on';
+    img3dH.Enable = 'on';
+    visualexplorerH.Enable = 'on';
     
     
 
@@ -2720,6 +2774,8 @@ function disableButtons()
     plotGroupMeansH.Enable = 'off';
     viewTrialTimingsH.Enable = 'off';
     plotGUIH.Enable = 'off';
+    img3dH.Enable = 'off';
+    visualexplorerH.Enable = 'off';
 
 end
 
