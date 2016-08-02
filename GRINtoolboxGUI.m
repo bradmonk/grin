@@ -58,10 +58,9 @@ cd(thisfilepath);
 
 fprintf('\n\n Current working path set to: \n % s \n', thisfilepath)
 
-global isbrad
-upath = userpath;
-isbrad = strcmp('/Users/bradleymonk',upath(1:18));
-% if ~isbrad
+% global isbrad
+% upath = userpath;
+% isbrad = strcmp('/Users/bradleymonk',upath(1:18));
     
     pathdir0 = thisfilepath;
     pathdir1 = [thisfilepath '/grinsubfunctions'];
@@ -69,11 +68,9 @@ isbrad = strcmp('/Users/bradleymonk',upath(1:18));
     pathdir3 = [thisfilepath '/grinfiji'];
     
     gpath = [pathdir0 ':' pathdir1 ':' pathdir2 ':' pathdir3];
-    % gpath = genpath(thisfilepath);
     
     addpath(gpath)
-    % rmpath(genpath([thisfilepath,'/.git']))
-% end
+
 fprintf('\n\n Added folders to path: \n % s \n % s \n % s \n % s \n\n',...
         pathdir0,pathdir1,pathdir2,pathdir3)
 
@@ -82,21 +79,6 @@ fprintf('\n\n Added folders to path: \n % s \n % s \n % s \n % s \n\n',...
 
 global imgfilename imgpathname xlsfilename xlspathname
 global lickfilename lickpathname
-
-if isbrad
-% imgfilename = 'gc33_031816g.tif';
-% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-% xlsfilename = 'gc33_031816.xlsx';
-% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-% lickfilename = 'gc33_031916_lick.xlsx';
-% lickpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-
-% imgfilename = 'gc33_032316g.tif';
-% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-% xlsfilename = 'gc33_032316.xlsx';
-% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/';
-end
-
 
 %% ESTABLISH GLOBALS AND SET STARTING VALUES
 
@@ -812,7 +794,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
      
      
      
-    if isbrad
+    % if isbrad
         if numel(lickfilename) > 2;
         % ------------- LICK DATA IMPORT CODE -----------
         [lickN,~,~] = xlsread([lickpathname , lickfilename]);
@@ -832,7 +814,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
         % LICK = squeeze(sum(LICK,1));
 
         end
-    end
+    % end
      
      
      
@@ -2607,31 +2589,38 @@ function visualexplorer(hObject, eventdata)
         
         vol = [75,100,75,100,1,100];
         
+        isoval = 5;
+        
     else
         
         IM = IMG(:,:,1:100,1);
         vol = [50,100,50,100,1,100];
+        isoval = -1;
     
     end
     
     
     disp('CREATING SUBVOLUME FROM IMAGE STACK...')
 
+    
+    
     [x,y,z,D] = subvolume(IM,vol);
 
-%     keyboard
+    
+    
 %     fh10=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],...
-%         'Color','w','MenuBar','none','Pointer','circle');
+%         'Color','w','MenuBar','none');
 %     hax10 = axes('Position',[.05 .05 .9 .9],'Color','none');
-%     rotate3d(fh10);
 
-    p1 = patch(isosurface(x,y,z,D, 5),...
+
+    p1 = patch(isosurface(x,y,z,D, isoval),...
          'FaceColor','red','EdgeColor','none');
     isonormals(x,y,z,D,p1);
-    p2 = patch(isocaps(x,y,z,D, 5),...
+    p2 = patch(isocaps(x,y,z,D, isoval),...
          'FaceColor','interp','EdgeColor','none');
     view(3); axis tight;
     camlight right; camlight left; lighting gouraud
+    
     rotate3d(gca);
 
 for i = 1:150;
