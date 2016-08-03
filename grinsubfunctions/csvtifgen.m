@@ -1,24 +1,30 @@
-%% makecsv.m
-clc; clear; close all;
+%% csvtifgen.m
+
+clc; close all; clear all; clear java;
+% set(0,'HideUndocumented','off')
+% thisfile = 'csvtifgen.m';
+% thisfilepath = fileparts(which(thisfile));
+% cd(thisfilepath);
 
 
 %% ------------- GET PATH INFO FOR TIF STACK AND XLS DATA -----------
 disp('Select newly converted TIF stack and badly formatted XLS sheet...')
 
-[imgfilename, imgpathname] = uigetfile({'*.tif*'}, 'Select TIF stack');
+% [imgfilename, imgpathname] = uigetfile({'*.tif*'}, 'Select TIF stack');
+% 
+% [xlsfilename, xlspathname] = uigetfile({'*.xls*'},'Select Excel file');
+% 
+% imgfullpath = [imgpathname , imgfilename];
+% 
+% xlsfullpath = [xlspathname xlsfilename];
 
-[xlsfilename, xlspathname] = uigetfile({'*.xls*'},'Select Excel file');
 
+imgfilename = 'gc33_110215go.tif';
+imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/oddstacks/';
+xlsfilename = 'gc33_110215.xlsx';
+xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/oddstacks/';
 imgfullpath = [imgpathname , imgfilename];
-
 xlsfullpath = [xlspathname xlsfilename];
-
-
-% imgfilename = 'gc33_110215go.tif';
-% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/oddstacks/';
-% xlsfilename = 'gc33_110215.xlsx';
-% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/oddstacks/';
-
 
 %% ------------- XLS DATA IMPORT CODE -----------
 
@@ -145,13 +151,36 @@ for cc = 1:size(TsF,2)
 end
 end
 
-
-
-
 IMG = IMG(:,:,TSEF(:));
 
 
+% --- Start Save
 
+IMG_uint16 = uint16(IMG);
+
+szIMG_uint16 = size(IMG_uint16);
+
+[IMpathstr,IMname,IMext] = fileparts(imgfilename);
+
+tiffullpath = [imgpathname , IMname '_NEW.tif'];
+
+t = Tiff(tiffullpath, 'w');
+
+tagstruct.ImageLength = szIMG_uint16(1)
+tagstruct.ImageWidth = szIMG_uint16(2)
+tagstruct.Photometric = Tiff.Photometric.MinIsBlack
+tagstruct.BitsPerSample = 16
+tagstruct.SamplesPerPixel = szIMG_uint16(3)
+tagstruct.PlanarConfiguration = Tiff.PlanarConfiguration.Chunky
+tagstruct.Software = 'MATLAB'
+t.setTag(tagstruct)
+
+t.write(IMG_uint16);
+t.close();
+
+% READ BACK IN AND TEST
+IMGT = imread(tiffullpath);
+imagesc(IMGT(:,:,1))
 
 
 
@@ -245,15 +274,24 @@ disp(XLStable)
 
 [FILEpathstr,FILEname,FILEext] = fileparts(xlsfilename);
 
-CSVfullfile = [xlspathname FILEname '_go.csv'];
+CSVfullfile = [xlspathname FILEname '_NEW.csv'];
 
 writetable(XLStable,CSVfullfile,'Delimiter',',','QuoteStrings',false)
 
 
 XLScell = table2cell(XLStable);
 
-% XLSXfilename = [xlspathname FILEname '_go.xlsx'];
+% XLSXfilename = [xlspathname FILEname '_NEW.xlsx'];
 % xlswrite(XLSXfilename,XLScell)
 
-disp('DONE! New .CSV file saved in:')
+disp(' ')
+disp('DONE!')
+disp('New .CSV file saved in:')
 disp(CSVfullfile)
+disp('New .TIF file saved in:')
+disp(tiffullpath)
+disp(' ')
+
+
+
+
