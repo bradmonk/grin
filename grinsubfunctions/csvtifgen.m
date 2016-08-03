@@ -10,21 +10,17 @@ clc; close all; clear all; clear java;
 %% ------------- GET PATH INFO FOR TIF STACK AND XLS DATA -----------
 disp('Select newly converted TIF stack and badly formatted XLS sheet...')
 
-% [imgfilename, imgpathname] = uigetfile({'*.tif*'}, 'Select TIF stack');
-% 
-% [xlsfilename, xlspathname] = uigetfile({'*.xls*'},'Select Excel file');
-% 
-% imgfullpath = [imgpathname , imgfilename];
-% 
-% xlsfullpath = [xlspathname xlsfilename];
-
-
-imgfilename = 'gc33_110215go.tif';
-imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/oddstacks/';
-xlsfilename = 'gc33_110215.xlsx';
-xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/oddstacks/';
+[imgfilename, imgpathname] = uigetfile({'*.tif*'}, 'Select TIF stack');
+[xlsfilename, xlspathname] = uigetfile({'*.xls*'},'Select Excel file');
 imgfullpath = [imgpathname , imgfilename];
 xlsfullpath = [xlspathname xlsfilename];
+
+% imgfilename = 'gc33_110215go.tif';
+% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/oddstacks/';
+% xlsfilename = 'gc33_110215.xlsx';
+% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/oddstacks/';
+% imgfullpath = [imgpathname , imgfilename];
+% xlsfullpath = [xlspathname xlsfilename];
 
 %% ------------- XLS DATA IMPORT CODE -----------
 
