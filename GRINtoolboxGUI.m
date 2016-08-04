@@ -583,23 +583,48 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     
     
     
-  %--- IMPORT XLS LICKING DATA
+  %--- IMPORT LICK.XLS DATA
+  
+  % DETERMINE IF LICK.XLS FILE EXISTS IN SAME DIR AS IMG DATA
+        if numel(imgfilename) == 16
+
+            lickxlsFiles = dir([imgpathname, imgfilename(1:end-5) '*_lick.xls*']);
+            
+
+        elseif numel(imgfilename) == 15
+
+            lickxlsFiles = dir([imgpathname, imgfilename(1:end-4) '*_lick.xls*']);
+
+        end
+        
+        if numel(lickxlsFiles) > 0
+            
+            doimportlicking = questdlg({'LICK DATA was found near the tif stack;',...
+            ' want to import LICK DATA?'}, ...
+                'Lick data import','Yes','No','Yes');
+                   
+        else
+            
+            doimportlicking = questdlg({'NO LICK DATA was found near the tif stack;',...
+            ' want to manually find and import LICK DATA?'}, ...
+                'Lick data import','Yes','No','No');
+
+        end
+  
     
-  doimportlicking = questdlg('Would you like to import LICKING DATA?', ...
-                      'Licking data import', ...
-                       'Yes','No','No');             
+               
   switch doimportlicking
 	case 'Yes'
     
-    % PATH TO XLS DATA WAS ALREADY SET MANUALLY ABOVE
+    % PATH TO LICK.XLS DATA WAS ALREADY SET MANUALLY ABOVE
     if numel(lickfilename) > 1
         
         disp('xls data path was set manually')
         
-    % PATH TO XLS DATA WAS NOT SET MANUALLY - GET IT NOW
+    % PATH TO LICK.XLS DATA WAS NOT SET MANUALLY - GET IT NOW
     else
     
-        % DETERMINE IF XLS FILE EXISTS IN SAME DIR AS IMG DATA
+        % DETERMINE IF LICK.XLS FILE EXISTS IN SAME DIR AS IMG DATA
         if numel(imgfilename) == 16
 
             lickxlsFiles = dir([imgpathname, imgfilename(1:end-5) '*_lick.xls*']);
@@ -714,6 +739,28 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     IMGraw = IMG(:,:,1);
     % imgslider.Max = size(IMG);
     % imgsliderH.SliderStep = [1 size(IMG)]
+    
+    % keyboard
+    % tv1 = [];
+    
+    if size(IMG,1) < 100
+        set(cropimgnumH, 'String', num2str(2));
+        set(haxGRIN, 'XLim', [1 size(IMG,2)+40], 'YLim', [1 size(IMG,1)+40]);
+    elseif (size(IMG,1) < 140) && (size(IMG,1) >= 100)
+        set(cropimgnumH, 'String', num2str(4));
+        set(haxGRIN, 'XLim', [1 size(IMG,2)+30], 'YLim', [1 size(IMG,1)+30]);
+    elseif size(IMG,1) < 180 && (size(IMG,1) >= 140)
+        set(cropimgnumH, 'String', num2str(8));
+        set(haxGRIN, 'XLim', [1 size(IMG,2)+20], 'YLim', [1 size(IMG,1)+20]);
+    elseif size(IMG,1) < 220 && (size(IMG,1) >= 180)
+        set(cropimgnumH, 'String', num2str(12));
+        set(haxGRIN, 'XLim', [1 size(IMG,2)+10], 'YLim', [1 size(IMG,1)+10]);
+    else
+        set(cropimgnumH, 'String', num2str(18));
+        set(haxGRIN, 'XLim', [1 size(IMG,2)], 'YLim', [1 size(IMG,1)]);
+    end
+    
+    
 
               
     % ------------- XLS IMPORT CODE -----------
@@ -1093,10 +1140,15 @@ function update_IMGfactors()
     
     
     
-    if any(IMGfactors == 22)
+    if ~mod(szIMG,10)        
         
-        imgblockspopupH.Value = find(IMGfactors==22);
+        imgblockspopupH.Value = find(IMGfactors==(szIMG/10));
         blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+    
+%     if any(IMGfactors == 22)
+%         
+%         imgblockspopupH.Value = find(IMGfactors==22);
+%         blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
         
     elseif numel(IMGfactors) > 2
 
@@ -1109,6 +1161,7 @@ function update_IMGfactors()
         blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
     
     end
+    
 
     % fprintf('\n\n New tile size: % s \n\n', num2str(blockSize));
 
@@ -1222,9 +1275,9 @@ pause(.02);
     
     
     % DETERMINE FIRST AND LAST FRAME FOR CS / US FOR EACH TRIAL
-    CSonset  = round(CSonsetDelay .* framesPerSec);                % CS first frame in trial
+    CSonset   = round(CSonsetDelay .* framesPerSec);               % CS first frame in trial
     CSoffset  = round((CSonsetDelay+CS_length) .* framesPerSec);   % CS last frame in trial
-    USonset  = round((CSonsetDelay+CS_length+1) .* framesPerSec);  % US first frame in trial
+    USonset   = round((CSonsetDelay+CS_length+1) .* framesPerSec); % US first frame in trial
     USoffset  = round((CSonsetDelay+CS_length+2) .* framesPerSec); % US last frame in trial
     CSUSonoff = [CSonset CSoffset USonset USoffset];
     
@@ -1265,6 +1318,7 @@ dFoverFH.FontWeight = 'bold';
 pause(.02);
 
 
+
     % COMPUTE dF/F FOR ALL FRAMES
     disp(' '); disp('COMPUTING dF/F FOR ALL FRAMES')
     
@@ -1283,13 +1337,12 @@ pause(.02);
     
     elseif numel(size(IMG)) == 4
         
-        muIMG = mean(IMG(:,:,1:baselineTime,:),3);
-        im = repmat(muIMG,1,1,size(IMG,3));
+        muIMG = mean(IMG(:,:,1:round(baselineTime*framesPerSec),:),3);
+        im = repmat(muIMG,1,1,size(IMG,3),1);
         IMGf = (IMG - im) ./ im;
         
     end
 
-    
     
     
         % VISUALIZE AND ANNOTATE
@@ -2595,16 +2648,22 @@ function visualexplorer(hObject, eventdata)
 
     if numel(size(IMG))==3
 
-        IM = IMG(:,:,1:100);
+        IM = IMG(:,:,1:XLSdata.framesPerTrial);
         
-        vol = [75,100,75,100,1,100];
+        vol = [round(XLSdata.sizeIMG(1)*.25),round(XLSdata.sizeIMG(1)*.5),...
+               round(XLSdata.sizeIMG(2)*.25),round(XLSdata.sizeIMG(2)*.5),...
+               1,XLSdata.framesPerTrial];
         
         isoval = 5;
         
     else
         
-        IM = IMG(:,:,1:100,1);
-        vol = [50,100,50,100,1,100];
+        IM = IMG(:,:,1:XLSdata.framesPerTrial,1);
+        
+        vol = [round(XLSdata.sizeIMG(1)*.25),round(XLSdata.sizeIMG(1)*.5),...
+               round(XLSdata.sizeIMG(2)*.25),round(XLSdata.sizeIMG(2)*.5),...
+               1,XLSdata.framesPerTrial];
+        
         isoval = -1;
     
     end
