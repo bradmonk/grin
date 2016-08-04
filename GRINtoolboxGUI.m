@@ -685,14 +685,25 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     nImage=InfoImage(1).Height;
     NumberImages=length(InfoImage);
     
-    IMG = zeros(nImage,mImage,NumberImages,'double');
+    if NumberImages < 2
 
-    TifLink = Tiff(FileTif, 'r');
-    for i=1:NumberImages
-       TifLink.setDirectory(i);
-       IMG(:,:,i)=TifLink.read();
+        IMG = imread(FileTif);
+
+        IMG = double(IMG);
+
+    else
+    
+        IMG = zeros(nImage,mImage,NumberImages,'double');
+
+        TifLink = Tiff(FileTif, 'r');
+        for i=1:NumberImages
+           TifLink.setDirectory(i);
+           IMG(:,:,i)=TifLink.read();
+        end
+        TifLink.close();
+    
     end
-    TifLink.close();
+    
     disp('Image stack sucessfully imported!') 
     
     axes(haxGRIN)
@@ -703,8 +714,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     IMGraw = IMG(:,:,1);
     % imgslider.Max = size(IMG);
     % imgsliderH.SliderStep = [1 size(IMG)]
-              
-              
+
               
     % ------------- XLS IMPORT CODE -----------
     fprintf('\n Importing xls info from...\n % s \n', [xlspathname , xlsfilename]);
