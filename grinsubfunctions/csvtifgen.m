@@ -10,17 +10,17 @@ clc; close all; clear all; clear java;
 %% ------------- GET PATH INFO FOR TIF STACK AND XLS DATA -----------
 disp('Select newly converted TIF stack and badly formatted XLS sheet...')
 
-[imgfilename, imgpathname] = uigetfile({'*.tif*'}, 'Select TIF stack');
-[xlsfilename, xlspathname] = uigetfile({'*.xls*'},'Select Excel file');
-imgfullpath = [imgpathname , imgfilename];
-xlsfullpath = [xlspathname xlsfilename];
-
-% imgfilename = 'gc33_110215go.tif';
-% imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/oddstacks/';
-% xlsfilename = 'gc33_110215.xlsx';
-% xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/oddstacks/';
+% [imgfilename, imgpathname] = uigetfile({'*.tif*'}, 'Select TIF stack');
+% [xlsfilename, xlspathname] = uigetfile({'*.xls*'},'Select Excel file');
 % imgfullpath = [imgpathname , imgfilename];
 % xlsfullpath = [xlspathname xlsfilename];
+
+imgfilename = 'gc33_110215go.tif';
+imgpathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/oddstacks/';
+xlsfilename = 'gc33_110215.xlsx';
+xlspathname = '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdata/oddstacks/';
+imgfullpath = [imgpathname , imgfilename];
+xlsfullpath = [xlspathname xlsfilename];
 
 %% ------------- XLS DATA IMPORT CODE -----------
 
@@ -268,22 +268,22 @@ XLStable = table(frame_period,total_frames,cs_stim,us_stim,CS_delay,CS_length,..
                  compressFrms,channel,keepFrames);
 disp(XLStable)
 
+
+
 [FILEpathstr,FILEname,FILEext] = fileparts(xlsfilename);
+XLSfullfile = [xlspathname FILEname '_NEWxls.csv'];
+writetable(XLStable,XLSfullfile,'Delimiter','\t','QuoteStrings',false)
+[XLSCSVpathstr,XLSCSVname,XLSCSVext] = fileparts(XLSfullfile);
+movefile(XLSfullfile,[XLSfullfile(1:end-7) '.xls'])
 
-CSVfullfile = [xlspathname FILEname '_NEW.csv'];
+% CSVfullfile = [xlspathname FILEname '_NEW.csv'];
+% writetable(XLStable,CSVfullfile,'Delimiter',',','QuoteStrings',false)
 
-writetable(XLStable,CSVfullfile,'Delimiter',',','QuoteStrings',false)
-
-
-XLScell = table2cell(XLStable);
-
-% XLSXfilename = [xlspathname FILEname '_NEW.xlsx'];
-% xlswrite(XLSXfilename,XLScell)
 
 disp(' ')
 disp('DONE!')
-disp('New .CSV file saved in:')
-disp(CSVfullfile)
+disp('New .XLS file saved in:')
+disp([XLSfullfile(1:end-7) '.xls'])
 disp('New .TIF file saved in:')
 disp(tiffullpath)
 disp(' ')
