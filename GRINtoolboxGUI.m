@@ -122,12 +122,12 @@ smoothWidth = 9;
 smoothSD = .14;
 smoothRes = .1;
 
-
-global muIMGS phGRIN previewStacknum
+ 
+global muIMGS phGRIN previewStacknum toggrid axGRID
 global IMGcMax IMGcMaxInd IMGcMin IMGcMinInd
 muIMGS = [];
 previewStacknum = 25;
-
+toggrid = 0;
 
 global confile confilefullpath
 confile = 'gcconsole.txt';
@@ -1687,7 +1687,23 @@ function plotTileStats(hObject, eventdata)
         set(haxe(aa),'uicontextmenu',hcmenu)
     end   
         
-                
+
+    
+    
+    
+    
+    
+    gridbutton = uicontrol(fh10,'Units','normalized',...
+                  'Position',[.01 .01 .1 .05],...
+                  'String','Toggle Grid',...
+                  'Tag','gridbutton',...
+                  'Callback',@toggleGridOverlay);
+    
+    
+    
+    
+    
+    
 %     % Add 'doprint' checkbox before implementing this code
 %     print(fh10,'-dpng','-r300','tilefig')
 %     
@@ -1753,9 +1769,11 @@ end
 %----------------------------------------------------
 function viewGridOverlay(hObject, eventdata)
 % disableButtons; pause(.02);
+
+
+
     
     %-------------------------- IMGraw FIGURE GRID --------------------------
-    
     
     blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
     
@@ -1781,8 +1799,9 @@ function viewGridOverlay(hObject, eventdata)
     aYlocs = aYlocs+.005;
     [aX,aY] = meshgrid(aXlocs,aYlocs);
     YL=[-.15 .15];
-
-    fhR = figure('Units','normalized','OuterPosition',[.1 .1 .5 .8],'Color','w');
+    
+    
+    hFig = figure('Units','normalized','OuterPosition',[.1 .1 .5 .8],'Color','w','MenuBar','none','Name','GRINGRID');
     axR = axes;
     phR = imagesc(IMGraw);
     grid on
@@ -1812,12 +1831,187 @@ function viewGridOverlay(hObject, eventdata)
         
      pause(.1)
     %-------------------------------------------------------------------------
-    
 
-        
+
+%{
+
+mjf = get(hFig, 'JavaFrame');
+jWindow = mjf.fHG2Client.getWindow;
+mjc = jWindow.getContentPane;
+mjr = jWindow.getRootPane;
+figTitle = jWindow.getTitle;
+jFrame = javaObjectEDT(javax.swing.JFrame(figTitle));
+jFrame.setUndecorated(true);
+jFrame.setLocation(mjc.getLocationOnScreen);
+jFrame.setSize(mjc.getSize);
+jFrame.setContentPane(mjc);
+jFrame.setVisible(true);
+
+
+MUtilities.setFigureFade(gcf, 0.2)
+ 
+hFig.Visible = 'off';
+    
+    
+% jFrame.setVisible(false)
+
+
+
+
+
+%------------------------------------
+
+% Create a simple Matlab figure (visible, but outside monitor area)
+t = 0 : 0.01 : 10;
+hFig = figure('Name','Plot example', 'ToolBar','none', 'MenuBar','none');
+hLine = plot(t, cos(t));
+hButton = uicontrol('String','Close', 'Position',[307,0,45,16]);
+ 
+% Ensure that everything is rendered, otherwise the following will fail
+drawnow;
+ 
+% Get the underlying Java JFrame reference handle
+mjf = get(handle(hFig), 'JavaFrame');
+jWindow = mjf.fHG2Client.getWindow;  % or: mjf.getAxisComponent.getTopLevelAncestor
+ 
+% Get the content pane's handle
+mjc = jWindow.getContentPane;
+mjr = jWindow.getRootPane;  % used for the offset below
+ 
+% Create a new pure-Java undecorated JFrame
+figTitle = jWindow.getTitle;
+jFrame = javaObjectEDT(javax.swing.JFrame(figTitle));
+jFrame.setUndecorated(true);
+ 
+% Move the JFrame's on-screen location just on top of the original
+jFrame.setLocation(mjc.getLocationOnScreen);
+ 
+% Set the JFrame's size to the Matlab figure's content size
+%jFrame.setSize(mjc.getSize);  % slightly incorrect by root-pane's offset
+jFrame.setSize(mjc.getWidth+mjr.getX, mjc.getHeight+mjr.getY);
+ 
+% Reparent (move) the contents from the Matlab JFrame to the new JFrame
+jFrame.setContentPane(mjc);
+ 
+% Make the new JFrame visible
+jFrame.setVisible(true);
+
+
+MUtilities.setFigureFade(gcf, 0.5)
+ 
+hFig.Visible = 'off';
+
+%}
+
+
 enableButtons
 disp('GRID OVERLAY HAS BEEN GENERATED.')
 end
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        TOGGLE GRID OVERLAY
+%----------------------------------------------------
+function toggleGridOverlay(hObject, eventdata)
+% disableButtons; pause(.02);
+
+    if toggrid == 1
+        delete(axGRID.Children)
+        toggrid = 0;
+        return
+    end
+    toggrid = 1;
+    
+    %-------------------------- IMGraw FIGURE GRID --------------------------
+    
+    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+    
+    fprintf('\n\n Grid size is% d pixels \n\n', blockSize)
+
+    if length(muIMGS) < 1
+        
+        pxl = zeros(size(IMG,1) / blockSize);
+        
+    else
+    
+        pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
+        pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
+    
+    end
+    
+    
+    aXlocs =  (0:(size(pxl,1))) .* (1/(size(pxl,1)));
+    aXlocs(end) = [];
+    aYlocs =  (0:(size(pxl,2))) .* (1/(size(pxl,2)));
+    aYlocs(end) = [];
+    aXlocs = aXlocs+.005;
+    aYlocs = aYlocs+.005;
+    [aX,aY] = meshgrid(aXlocs,aYlocs);
+    YL=[-.15 .15];
+    
+    
+    % keyboard
+    %-------------------------------------------------------------------------
+    % delete(phR)
+    % delete(axR)
+    % hFig = figure('Units','normalized','OuterPosition',[.1 .1 .5 .8],'Color','w','MenuBar','none','Name','GRINGRID');
+    % hFig = hObject.Parent;
+    axGRID = axes('Position',[.001 .001 .999 .999],'Color','none'); hold on;
+%     phR = imagesc(IMGraw,'Parent',axR);
+%     phR.AlphaData = .6;
+%     % alpha(object_handle,value)
+%     % grid on
+    
+    
+    phR = imagesc(IMGraw,'Parent',axGRID,...
+          'CDataMapping','scaled','AlphaData',0.6);
+    axis image;  pause(.01)
+    axis normal; pause(.01)
+    
+    
+    axGRID.YTick = [0:blockSize:size(IMGraw,1)];
+    axGRID.XTick = [0:blockSize:size(IMGraw,1)];
+    % axR.YTickLabel = 1:30;
+    
+    axGRID.GridAlpha = .8;
+    axGRID.GridColor = [0.99 0.1 0.1];
+    
+
+    
+        tv1 = 1:size(IMGraw,1);
+        
+        pause(.2)
+        
+        
+        % NUMBERING IS TECHNICALLY INCORRECT SINCE BELOW AXIS #1 STARTS IN THE
+        % BOTTOM LEFT CORNER AND GOES UP, AND HERE IT STARTS IN THE TOP
+        % LEFT CORNER AND GOES DOWN. NOT SURE THAT IT MATTERS...
+        for ii = 1:size(pxl,1)^2
+            
+            tv2 = [  aX(ii)*size(IMGraw,1)   aY(ii)*size(IMGraw,1)+2 ...
+                    (1/(size(pxl,1)+1))     (1/(size(pxl,2)+1))];
+
+            text(tv2(1),tv2(2),num2str(tv1(ii)),'Color','r','Parent',axGRID);
+    
+        end
+        
+     pause(.1)
+    %-------------------------------------------------------------------------
+
+
+
+enableButtons
+disp('GRID OVERLAY HAS BEEN GENERATED.')
+end
+
+
+
+
 
 
 
