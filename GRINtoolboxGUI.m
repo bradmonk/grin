@@ -77,8 +77,8 @@ fprintf('\n\n Added folders to path: \n % s \n % s \n % s \n % s \n\n',...
 
 %% MANUALLY SET PER-SESSION PATH PARAMETERS IF WANTED (OPTIONAL)
 
-global imgfilename imgpathname xlsfilename xlspathname
-global lickfilename lickpathname
+global imgfilename imgpathname xlsfilename xlspathname lickfilename lickpathname
+global imgfullpath xlsfullpath lickfullpath
 
 %% ESTABLISH GLOBALS AND SET STARTING VALUES
 
@@ -503,81 +503,76 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     % PATH TO IMAGE STACK WAS NOT SET - GET IT NOW    
     else
         [imgfilename, imgpathname] = uigetfile({'*.tif*'},...
-        'Select image stack to import', thisfilepath);        
+        'Select image stack to import', thisfilepath);   
+    
+        imgfullpath = [imgpathname imgfilename];
     end
     
 
-  %--- IMPORT MAIN XLS DATA OF EXPERIMENT PARAMETERS
+  %--- IMPORT MAIN XLS DATA OF EXPERIMENT PARAMETERS    
+    % tv1=[];tv2=[];tv3=[];tv4=[];tv5=[];
     
     
-    % PATH TO XLS DATA WAS ALREADY SET MANUALLY ABOVE
-    if numel(xlsfilename) > 1
-        
-        disp('xls data path was set manually')
-        
-    % PATH TO XLS DATA WAS NOT SET MANUALLY - GET IT NOW
+    
+    [IMGfpPath,IMGfpFile,IMGfpExt] = fileparts(imgfullpath);
+
+    if numel(IMGfpFile)<14
+        xlsFiles = dir([imgpathname, IMGfpFile(1:11) '*.xls*']);
     else
-    
-        % DETERMINE IF XLS FILE EXISTS IN SAME DIR AS IMG DATA
-        if numel(imgfilename) == 16
-
-            xlsFiles = dir([imgpathname, imgfilename(1:end-5) '*.xls*']);
-
-        elseif numel(imgfilename) == 15
-
-            xlsFiles = dir([imgpathname, imgfilename(1:end-4) '*.xls*']);
-
-        end
-
-        
-        % IF THERE WAS A SINGLE MATCH, BINGO!
-        if numel(xlsFiles) == 1
-
-            choice = questdlg({'Matching xls file found.', 'Would you like to import:',...
-                               xlsFiles.name}, ...
-                               'Import XLS file', ...
-                               'Yes','No (import manually)','Yes');
-            switch choice
-                case 'Yes'
-                    % disp([choice ' importing xls data...'])
-                    xlsfilename = xlsFiles.name;
-                    xlspathname = imgpathname;
-                case 'No (import manually)'
-                    [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
-                    'Select Excel file associated with the TIF stack', imgpathname);
-            end
-        
-            
-        % THERE WERE MULTIPLE MATCHING FILES
-        elseif numel(xlsFiles) > 1 
-                    
-                [s,v] = listdlg('PromptString','Select main xls file:',...
-                'SelectionMode','single',...
-                'ListString',{xlsFiles.name},...
-                'ListSize',[200 120], 'fus', 10, 'ffs', 12);
-            
-                if v == 1 % USER PRESSED 'OK'
-                        xlsfilename = xlsFiles(s).name;
-                        xlspathname = imgpathname;
-                else % USER PRESSED 'CANCEL' - ALLOW MANUAL SELECTION
-                        [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
-                        'Select Excel file associated with the TIF stack',...
-                        imgpathname);
-                end
-
-
-        % NOTHING MATCHED - ALLOW MANUAL SELECTION    
-        else
-            disp(' ');
-            disp('No matching xls files were found in the same dir as the tif stack');
-            disp('Manually select the Excel datasheet of imaging parameters');
-            [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
-                    'Select Excel file associated with the TIF stack', imgpathname);
-        end
-    
+        xlsFiles = dir([imgpathname, IMGfpFile(1:14) '*.xls*']);
     end
     
+    % IF THERE WAS A SINGLE MATCH, BINGO!
+    if numel(xlsFiles) == 1
+
+        choice = questdlg({'Matching xls file found.', 'Would you like to import:',...
+                           xlsFiles.name}, ...
+                           'Import XLS file', ...
+                           'Yes','No (import manually)','Yes');
+        switch choice
+            case 'Yes'
+                % disp([choice ' importing xls data...'])
+                xlsfilename = xlsFiles.name;
+                xlspathname = imgpathname;
+                xlsfullpath = [xlspathname xlsfilename];
+            case 'No (import manually)'
+                [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
+                'Select Excel file associated with the TIF stack', imgpathname);
+                xlsfullpath = [xlspathname xlsfilename];
+        end
+
+
+    % THERE WERE MULTIPLE MATCHING FILES
+    elseif numel(xlsFiles) > 1 
+
+            [s,v] = listdlg('PromptString','Select main xls file:',...
+            'SelectionMode','single',...
+            'ListString',{xlsFiles.name},...
+            'ListSize',[200 120], 'fus', 10, 'ffs', 12);
+
+            if v == 1 % USER PRESSED 'OK'
+                    xlsfilename = xlsFiles(s).name;
+                    xlspathname = imgpathname;
+                    xlsfullpath = [xlspathname xlsfilename];
+            else % USER PRESSED 'CANCEL' - ALLOW MANUAL SELECTION
+                    [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
+                    'Select Excel file associated with the TIF stack',...
+                    imgpathname);
+                    xlsfullpath = [xlspathname xlsfilename];
+            end
+
+
+    % NOTHING MATCHED - ALLOW MANUAL SELECTION    
+    else
+        disp(' ');
+        disp('No matching xls files were found in the same dir as the tif stack');
+        disp('Manually select the Excel datasheet of imaging parameters');
+        [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
+                'Select Excel file associated with the TIF stack', imgpathname);
+        xlsfullpath = [xlspathname xlsfilename];
+    end
     
+
     
     
     
@@ -585,34 +580,31 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     
   %--- IMPORT LICK.XLS DATA
   
-  % DETERMINE IF LICK.XLS FILE EXISTS IN SAME DIR AS IMG DATA
-        if numel(imgfilename) == 16
+  % DETERMINE IF LICK.XLS FILE EXISTS IN SAME DIR AS XLS DATA
+  
+    [XLSfpPath,XLSfpFile,XLSfpExt] = fileparts(xlsfullpath);
 
-            lickxlsFiles = dir([imgpathname, imgfilename(1:end-5) '*_lick.xls*']);
-            
-
-        elseif numel(imgfilename) == 15
-
-            lickxlsFiles = dir([imgpathname, imgfilename(1:end-4) '*_lick.xls*']);
-
-        end
+    if numel(XLSfpFile)<14
+        lickxlsFiles = dir([xlspathname, XLSfpFile(1:11) '*_lick.xls*']);
+    else
+        lickxlsFiles = dir([xlspathname, XLSfpFile(1:14) '*_lick.xls*']);
+    end
         
-        if numel(lickxlsFiles) > 0
-            
-            doimportlicking = questdlg({'LICK DATA was found near the tif stack;',...
-            ' want to import LICK DATA?'}, ...
-                'Lick data import','Yes','No','Yes');
-                   
-        else
-            
-            doimportlicking = questdlg({'NO LICK DATA was found near the tif stack;',...
-            ' want to manually find and import LICK DATA?'}, ...
-                'Lick data import','Yes','No','No');
+    if numel(lickxlsFiles) > 0
 
-        end
+        doimportlicking = questdlg({'LICK DATA was found near the tif stack;',...
+        ' want to import LICK DATA?'}, ...
+            'Lick data import','Yes','No','Yes');
+
+    else
+
+        doimportlicking = questdlg({'NO LICK DATA was found near the tif stack;',...
+        ' want to manually find and import LICK DATA?'}, ...
+            'Lick data import','Yes','No','No');
+
+    end
   
     
-               
   switch doimportlicking
 	case 'Yes'
     
@@ -624,19 +616,8 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     % PATH TO LICK.XLS DATA WAS NOT SET MANUALLY - GET IT NOW
     else
     
-        % DETERMINE IF LICK.XLS FILE EXISTS IN SAME DIR AS IMG DATA
-        if numel(imgfilename) == 16
+        lickxlsFiles = dir([xlspathname, XLSfpFile(1:14) '*_lick.xls*']);
 
-            lickxlsFiles = dir([imgpathname, imgfilename(1:end-5) '*_lick.xls*']);
-            
-
-        elseif numel(imgfilename) == 15
-
-            lickxlsFiles = dir([imgpathname, imgfilename(1:end-4) '*_lick.xls*']);
-
-        end
-
-        
         % IF THERE WAS A SINGLE MATCH, BINGO!
         if numel(lickxlsFiles) == 1
 
@@ -649,13 +630,15 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
                 case 'Yes'
                     lickfilename = lickxlsFiles.name;
                     lickpathname = imgpathname;
+                    lickfullpath = [lickpathname lickfilename];
                 case 'No (import manually)'
                     [lickfilename, lickpathname] = uigetfile({'*.xls*'},...
                     'Select Excel file of licking data', imgpathname);
+                    lickfullpath = [lickpathname lickfilename];
                 case 'No'
                     lickfilename = [];
                     lickpathname = [];
-                    
+                    lickfullpath = [];
             end
         
             
@@ -669,9 +652,11 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
                 if v == 1 % USER PRESSED 'OK'
                         lickfilename = lickxlsFiles(s).name;
                         lickpathname = imgpathname;
+                        lickfullpath = [lickpathname lickfilename];
                 else % USER PRESSED 'CANCEL' - ALLOW MANUAL SELECTION
                         [lickfilename, lickpathname] = uigetfile({'*.xls*'},...
                         'Select Excel file of licking data', imgpathname);
+                        lickfullpath = [lickpathname lickfilename];
                 end
                 
 
@@ -682,6 +667,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
             disp('Manually select the Excel licking datasheet');
             [lickfilename, lickpathname] = uigetfile({'*.xls*'},...
                     'Select Excel file of licking data', imgpathname);
+            lickfullpath = [lickpathname lickfilename];
         end
     
     end
@@ -689,6 +675,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
   case 'No'
     lickfilename = [];
     lickpathname = [];
+    lickfullpath = [];
   end
       
   %---------------------------------------------------------------------
