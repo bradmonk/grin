@@ -1590,6 +1590,8 @@ function plotTileStats(hObject, eventdata)
     YL=[-.15 .15];
     
 
+    % PLOT ALL THE TILES ON A SINGLE FIGURE WINDOW. THIS PLOTS THE FIRST
+    % AXIS IN THE BOTTOM LEFT CORNER AND FIRST FILLS UPWARD THEN RIGHTWARD
     for ii = 1:size(pixels,1)
 
         axh{ii} = axes('Position',[aX(ii) aY(ii) (1/(size(pxl,1)+1)) (1/(size(pxl,2)+1))],...
@@ -1907,9 +1909,13 @@ end
 function toggleGridOverlay(hObject, eventdata)
 % disableButtons; pause(.02);
 
+
     if toggrid == 1
-        delete(axGRID.Children)
-        toggrid = 0;
+        if isvalid(axGRID)
+            delete(axGRID.Children)
+            delete(axGRID)
+        end
+            toggrid = 0;
         return
     end
     toggrid = 1;
@@ -1942,31 +1948,22 @@ function toggleGridOverlay(hObject, eventdata)
     YL=[-.15 .15];
     
     
-    % keyboard
+    
     %-------------------------------------------------------------------------
-    % delete(phR)
-    % delete(axR)
-    % hFig = figure('Units','normalized','OuterPosition',[.1 .1 .5 .8],'Color','w','MenuBar','none','Name','GRINGRID');
-    % hFig = hObject.Parent;
+
     axGRID = axes('Position',[.001 .001 .999 .999],'Color','none'); hold on;
-%     phR = imagesc(IMGraw,'Parent',axR);
-%     phR.AlphaData = .6;
-%     % alpha(object_handle,value)
-%     % grid on
-    
-    
+
     phR = imagesc(IMGraw,'Parent',axGRID,...
           'CDataMapping','scaled','AlphaData',0.6);
-    axis image;  pause(.01)
-    axis normal; pause(.01)
+        axis image;  pause(.01)
+        axis normal; pause(.01)
     
     
-    axGRID.YTick = [0:blockSize:size(IMGraw,1)];
-    axGRID.XTick = [0:blockSize:size(IMGraw,1)];
-    % axR.YTickLabel = 1:30;
-    
-    axGRID.GridAlpha = .8;
-    axGRID.GridColor = [0.99 0.1 0.1];
+        axGRID.YTick = [0:blockSize:size(IMGraw,1)];
+        axGRID.XTick = [0:blockSize:size(IMGraw,1)];
+        
+        axGRID.GridAlpha = .8;
+        axGRID.GridColor = [0.99 0.1 0.1];
     
 
     
@@ -1975,9 +1972,9 @@ function toggleGridOverlay(hObject, eventdata)
         pause(.2)
         
         
-        % NUMBERING IS TECHNICALLY INCORRECT SINCE BELOW AXIS #1 STARTS IN THE
-        % BOTTOM LEFT CORNER AND GOES UP, AND HERE IT STARTS IN THE TOP
-        % LEFT CORNER AND GOES DOWN. NOT SURE THAT IT MATTERS...
+        % PLOT GRID IN A SINGLE FIGURE WINDOW TO OVERLAY ONTO TILE DATA
+        % TO MATCH TILE AXES ORDERING, GRID NUMBERING STARTS IN THE BOTTOM LEFT 
+        % CORNER OF THE FIGURE AND FIRST FILLS UPWARD THEN RIGHTWARD
         for ii = 1:size(pxl,1)^2
             
             tv2 = [  aX(ii)*size(IMGraw,1)   aY(ii)*size(IMGraw,1)+2 ...
@@ -1990,6 +1987,10 @@ function toggleGridOverlay(hObject, eventdata)
      pause(.1)
     %-------------------------------------------------------------------------
 
+%     
+%         keyboard
+%     axGRID.YDir = 'reverse';
+%     axis ij; axis xy;
 
 
 enableButtons
