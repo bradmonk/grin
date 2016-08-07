@@ -1,0 +1,17 @@
+run("TIFF Virtual Stack...", "open=/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/gcdat/gc33_2015_1202_g.tif");
+run("In [+]");
+run("In [+]");
+run("In [+]");
+run("Plot Z-axis Profile");
+selectWindow("gc33_2015_1202_g.tif");
+makeRectangle(52, 44, 11, 10);
+selectWindow("gc33_2015_1202_g.tif-0-0");
+selectWindow("gc33_2015_1202_g.tif");
+makeRectangle(63, 58, 11, 10);
+makeRectangle(100, 45, 11, 10);
+makeRectangle(85, 16, 11, 10);
+makeRectangle(11, 9, 11, 10);
+makeRectangle(5, 109, 11, 10);
+makeRectangle(47, 91, 11, 10);
+makeRectangle(52, 55, 11, 10);
+selectWindow("gc33_2015_1202_g.tif-0-0");
