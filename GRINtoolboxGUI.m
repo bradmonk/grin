@@ -1052,6 +1052,9 @@ pause(.02);
     end
     %-------------------------
     
+    
+    
+    
 % PREVIOUS IMPLEMENTATION OF THE LOOP ABOVE USING blockproc()
 %     fun = @(block_struct) mean(block_struct.data(:)) * ones(size(block_struct.data)); 
 %     progresstimer('Segmenting images into blocks...')
@@ -2568,7 +2571,7 @@ function runCustomA(hObject, eventdata)
 
     disp('RUNNING CUSTOM FUNCTION A!')
 
-    [varargin] = grincustomA(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, LICK);
+    [varargin] = grincustomA(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, muIMGS, LICK);
 
 enableButtons        
 disp('Run custom function completed!')
@@ -2579,7 +2582,7 @@ function runCustomB(hObject, eventdata)
 
     disp('RUNNING CUSTOM FUNCTION B!')
 
-    [varargin] = grincustomB(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, LICK);
+    [varargin] = grincustomB(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, muIMGS, LICK);
 
     
 enableButtons        
@@ -2591,7 +2594,7 @@ function runCustomC(hObject, eventdata)
 
     disp('RUNNING CUSTOM FUNCTION C!')
 
-    [varargin] = grincustomC(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, LICK);
+    [varargin] = grincustomC(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, muIMGS, LICK);
 
     
 enableButtons        
@@ -2607,7 +2610,7 @@ function runCustomD(hObject, eventdata)
         
     disp('RUNNING CUSTOM FUNCTION D!')
 
-    [varargin] = grincustomD(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, LICK);
+    [varargin] = grincustomD(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, muIMGS, LICK);
     
 enableButtons        
 disp('Run custom function completed!')
@@ -2627,9 +2630,10 @@ function exportvars(hObject, eventdata)
                    'Save GRINtable to variable named:' ...
                    'Save XLSdata to variable named:' ...
                    'Save IMGraw to variable named:'...
+                   'Save muIMGS to variable named:'...
                    'Save LICK to variable named:'}; 
-        varNames = {'IMG','GRINstruct','GRINtable','XLSdata','IMGraw','LICK'}; 
-        items = {IMG,GRINstruct,GRINtable,XLSdata,IMGraw,LICK};
+        varNames = {'IMG','GRINstruct','GRINtable','XLSdata','IMGraw','muIMGS','LICK'}; 
+        items = {IMG,GRINstruct,GRINtable,XLSdata,IMGraw,muIMGS,LICK};
         export2wsdlg(checkLabels,varNames,items,...
                      'Save Variables to Workspace');
 
@@ -2702,7 +2706,7 @@ function savedataset(hObject, eventdata)
                 
         disp('Saving data to .mat file, please wait...')
         save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable','XLSdata',...
-            'LICK','IMGraw','-v7.3')
+            'LICK','IMGraw','muIMGS','-v7.3')
         % save(fullfile(pathn,filen),'IMGint16','GRINstruct','GRINtable','-v7.3')
         disp('Dataset saved!')
         
