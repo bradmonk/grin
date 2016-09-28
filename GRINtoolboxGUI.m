@@ -2617,7 +2617,11 @@ function runCustomD(hObject, eventdata)
         
     disp('RUNNING CUSTOM FUNCTION D!')
 
-    [varargin] = grincustomD(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, muIMGS, LICK);
+    % grincustomD(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, IMGSraw, muIMGS, LICK);
+    
+    [Boundaries] = reverseSelectROI(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, IMGSraw, muIMGS, LICK);
+    
+    
     
 enableButtons        
 disp('Run custom function completed!')

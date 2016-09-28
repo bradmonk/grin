@@ -1,4 +1,4 @@
-function [varargout] = grincustomD(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, IMGSraw, muIMGS, LICK)
+function [varargout] = reverseSelectROI(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, IMGSraw, muIMGS, LICK)
 %% grincustomD.m
 
 size(IMG)
