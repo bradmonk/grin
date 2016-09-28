@@ -163,7 +163,7 @@ delete(confile)
 
 
 %########################################################################
-%%              MAIN FLIM ANALYSIS GUI WINDOW SETUP 
+%%              MAIN GRIN ANALYSIS GUI WINDOW SETUP 
 %########################################################################
 
 % mainguih.CurrentCharacter = '+';

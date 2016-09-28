@@ -33,8 +33,6 @@ IMGraw = IMG(:,:,1);
 
 szIMG = size(IMG);
 
-    
-szIMG = size(IMG);
 RSmx = 1:540*2:540*6*2;
 REmx = RSmx+540-1;
 Rmx = [RSmx; REmx]';
