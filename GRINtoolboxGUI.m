@@ -87,7 +87,7 @@ global mainguih imgLogo
 global IMG GRINstruct GRINtable XLSdata LICK
 global xlsN xlsT xlsR
 global lickN %lickT lickR
-global IMGraw IM
+global IMGraw IMGSraw IM
 
 global frame_period framesUncomp CS_type US_type delaytoCS CS_length compressFrms
 global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial 
@@ -990,6 +990,13 @@ pause(.02);
     IMG = IMGt;
     
     IMGraw = IMGt(:,:,1);
+    
+    reshapeData
+    IMGSraw = IMG(:,:,[1, XLSdata.CSonsetFrame, XLSdata.CSoffsetFrame, size(IMG,3)],:);
+    IMG = IMGt;
+    XLSdata.sizeIMG = size(IMG);
+    % unshapeData
+    
     
         previewStack
         axes(haxGRIN)
@@ -2630,10 +2637,11 @@ function exportvars(hObject, eventdata)
                    'Save GRINtable to variable named:' ...
                    'Save XLSdata to variable named:' ...
                    'Save IMGraw to variable named:'...
+                   'Save IMGSraw to variable named:'...
                    'Save muIMGS to variable named:'...
                    'Save LICK to variable named:'}; 
-        varNames = {'IMG','GRINstruct','GRINtable','XLSdata','IMGraw','muIMGS','LICK'}; 
-        items = {IMG,GRINstruct,GRINtable,XLSdata,IMGraw,muIMGS,LICK};
+        varNames = {'IMG','GRINstruct','GRINtable','XLSdata','IMGraw','IMGSraw','muIMGS','LICK'}; 
+        items = {IMG,GRINstruct,GRINtable,XLSdata,IMGraw,IMGSraw,muIMGS,LICK};
         export2wsdlg(checkLabels,varNames,items,...
                      'Save Variables to Workspace');
 

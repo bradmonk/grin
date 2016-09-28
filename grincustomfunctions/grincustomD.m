@@ -25,7 +25,6 @@ function [varargout] = grincustomD(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, 
 
 size(IMG)
 
-
 XLSdata
 GRINstruct
 GRINtable
