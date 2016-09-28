@@ -1,6 +1,6 @@
 # grin
 
-<img src="http://bradleymonk.com/img/gringui.png" width="800" border="10" />
+<img src="http://bradleymonk.com/images/GRINoverview.png" width="800" border="10" />
 
 ## GRIN lens MATLAB toolbox
 
