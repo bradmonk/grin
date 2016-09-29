@@ -8,66 +8,188 @@ GRINstruct
 GRINtable
 
 
-fhPH=figure('Units','normalized','OuterPosition',[.1 .1 .8 .6],'Color','w','MenuBar','none');
-haxPmPs = axes('Position',[.05 .05 .45 .9],'Color','none'); hold on;
-haxHist = axes('Position',[.52 .05 .45 .9],'Color','none'); hold on;
+% fhdF=figure('Units','normalized','OuterPosition',[.1 .1 .8 .6],'Color','w','MenuBar','none');
+% haxPmPs = axes('Position',[.05 .05 .45 .9],'Color','none'); hold on;
+% haxHist = axes('Position',[.52 .05 .45 .9],'Color','none'); hold on;
+% axes(haxPmPs)
+% phIM = imagesc(IMGraw);
+
+clear fid
+for nn = 1:size(GRINstruct.tf,2)
+    fid(nn) = find(GRINstruct.id==nn,1); 
+end
+TreatmentGroup = GRINstruct.csus(fid);
 
 
-axes(haxPmPs)
-phIM = imagesc(IMGraw);
+Fcson   = XLSdata.CSonsetFrame
+Fcsmid  = Fcson + round(XLSdata.CS_lengthFrames/2)
+Fcsoff  = XLSdata.CSoffsetFrame;
+Fusmid  = Fcsoff + round((XLSdata.framesPerTrial - Fcsoff)/2)
+Fusend  = XLSdata.framesPerTrial
+
+
 
 for nn = 1:size(GRINstruct.tf,2)
 
+    
+Baseline{nn} = IMG(:,:,1:Fcson,GRINstruct.tf(:,nn));    
+Baseline_meanAcrossTrials{nn} = squeeze(mean(Baseline{nn},4));
+Baseline_mean{nn} = squeeze(mean(Baseline_meanAcrossTrials{nn},3));
 
-PostCS{nn} = IMG(:,:,XLSdata.CSoffsetFrame:end,GRINstruct.tf(:,nn));
+CS{nn} = IMG(:,:,Fcson:Fcsoff,GRINstruct.tf(:,nn));
+CS_meanAcrossTrials{nn} = squeeze(mean(CS{nn},4));
+CS_mean{nn} = squeeze(mean(CS_meanAcrossTrials{nn},3));
 
-PreCS{nn} = IMG(:,:,1:XLSdata.CSonsetFrame,GRINstruct.tf(:,nn));
-
-
-
-% PostCS_meanAcrossFrames = squeeze(mean(PostCS{nn},3));
-% PreCS_meanAcrossFrames = squeeze(mean(PreCS{nn},3));
-
-PostCS_meanAcrossTrials{nn} = squeeze(mean(PostCS{nn},4));
-PreCS_meanAcrossTrials{nn} = squeeze(mean(PreCS{nn},4));
-
-
-
-PostCS_mean{nn} = squeeze(mean(PostCS_meanAcrossTrials{nn},3));
-PreCS_mean{nn} = squeeze(mean(PreCS_meanAcrossTrials{nn},3));
-
-
-PostMinusPre{nn} = PostCS_mean{nn} - PreCS_mean{nn};
-
-phIM.CData = PostMinusPre{nn};
-pause(.1)
-
-
-TSpmp{nn} = PostMinusPre{nn}(:);
+US{nn} = IMG(:,:,Fcsoff:end,GRINstruct.tf(:,nn));
+US_meanAcrossTrials{nn} = squeeze(mean(US{nn},4));
+US_mean{nn} = squeeze(mean(US_meanAcrossTrials{nn},3));
 
 
 
-TSz{nn} = zscore(TSpmp{nn});
+CSFHh{nn} = IMG(:,:,Fcson:Fcsmid,GRINstruct.tf(:,nn));
+CSFH_meanAcrossTrials{nn} = squeeze(mean(CSFHh{nn},4));
+CSFH{nn} = squeeze(mean(CSFH_meanAcrossTrials{nn},3));
 
-Zcut = min(TSpmp{nn}(TSz{nn}>1.5));
+CSLHh{nn} = IMG(:,:,Fcsmid:Fcsoff,GRINstruct.tf(:,nn));
+CSLH_meanAcrossTrials{nn} = squeeze(mean(CSLHh{nn},4));
+CSLH{nn} = squeeze(mean(CSLH_meanAcrossTrials{nn},3));
+
+USFHh{nn} = IMG(:,:,Fcsoff:Fusmid,GRINstruct.tf(:,nn));
+USFH_meanAcrossTrials{nn} = squeeze(mean(USFHh{nn},4));
+USFH{nn} = squeeze(mean(USFH_meanAcrossTrials{nn},3));
+
+USLHh{nn} = IMG(:,:,Fusmid:Fusend,GRINstruct.tf(:,nn));
+USLH_meanAcrossTrials{nn} = squeeze(mean(USLHh{nn},4));
+USLH{nn} = squeeze(mean(USLH_meanAcrossTrials{nn},3));
 
 
-TSpmpIMG{nn} = PostMinusPre{nn};
 
-TSpmpIMG{nn}(TSpmpIMG{nn}<Zcut) = 0;
+
+USMinusBaseline{nn} = US_mean{nn} - Baseline_mean{nn};
+
+
+CSFHMinusBaseline{nn} = CSFH{nn} - Baseline_mean{nn};
+CSLHMinusBaseline{nn} = CSLH{nn} - Baseline_mean{nn};
+USFHMinusBaseline{nn} = USFH{nn} - Baseline_mean{nn};
+USLHMinusBaseline{nn} = USLH{nn} - Baseline_mean{nn};
+
+
+
+UmB{nn} = USMinusBaseline{nn}(:);
+UmB_Zscore{nn} = zscore(UmB{nn});
+UmB_Zcut = min(UmB{nn}(UmB_Zscore{nn}>1.5));
+UmBz{nn} = USMinusBaseline{nn};
+UmBz{nn}(UmBz{nn}<UmB_Zcut) = 0;
+
+
+
+CSFHmB{nn} = CSFHMinusBaseline{nn}(:);
+CSFHmB_Zscore{nn} = zscore(CSFHmB{nn});
+CSFHmB_Zcut = min(CSFHmB{nn}(CSFHmB_Zscore{nn}>1.5));
+CSFHmBz{nn} = CSFHMinusBaseline{nn};
+CSFHmBz{nn}(CSFHmBz{nn}<CSFHmB_Zcut) = 0;
+
+
+
+CSLHmB{nn} = CSLHMinusBaseline{nn}(:);
+CSLHmB_Zscore{nn} = zscore(CSLHmB{nn});
+CSLHmB_Zcut = min(CSLHmB{nn}(CSLHmB_Zscore{nn}>1.5));
+CSLHmBz{nn} = CSLHMinusBaseline{nn};
+CSLHmBz{nn}(CSLHmBz{nn}<CSLHmB_Zcut) = 0;
+
+
+
+USFHmB{nn} = USFHMinusBaseline{nn}(:);
+USFHmB_Zscore{nn} = zscore(USFHmB{nn});
+USFHmB_Zcut = min(USFHmB{nn}(USFHmB_Zscore{nn}>1.5));
+USFHmBz{nn} = USFHMinusBaseline{nn};
+USFHmBz{nn}(USFHmBz{nn}<USFHmB_Zcut) = 0;
+
+
+
+USLHmB{nn} = USLHMinusBaseline{nn}(:);
+USLHmB_Zscore{nn} = zscore(USLHmB{nn});
+USLHmB_Zcut = min(USLHmB{nn}(USLHmB_Zscore{nn}>1.5));
+USLHmBz{nn} = USLHMinusBaseline{nn};
+USLHmBz{nn}(USLHmBz{nn}<USLHmB_Zcut) = 0;
+
 
 end
 
-axes(haxHist)
-histogram(TSpmp{nn})
+
+%% ------------------------------------------------------------
+clc; close all;
+
+
+for nn = 1:size(GRINstruct.tf,2)
+
+figure('Units','normalized','OuterPosition',[.02 .06 .88 .88],'Color','w','MenuBar','none');
+hax1 = axes('OuterPosition',[.00 .50 .33 .50],'Color','none'); axis off; hold on;
+hax2 = axes('OuterPosition',[.33 .50 .33 .50],'Color','none'); axis off; hold on;
+hax3 = axes('OuterPosition',[.66 .50 .33 .50],'Color','none'); axis off; hold on;
+hax4 = axes('OuterPosition',[.00 .00 .33 .50],'Color','none'); axis off; hold on;
+hax5 = axes('OuterPosition',[.33 .00 .33 .50],'Color','none'); axis off; hold on;
+hax6 = axes('OuterPosition',[.66 .00 .33 .50],'Color','none'); axis off; hold on;
+
+
+ph1 = imagesc(IMGraw, 'Parent', hax1);
+ph2 = imagesc(UmBz{nn}, 'Parent', hax2);
+ph3 = imagesc(CSFHmBz{nn}, 'Parent', hax3);
+ph4 = imagesc(CSLHmBz{nn}, 'Parent', hax4);
+ph5 = imagesc(USFHmBz{nn}, 'Parent', hax5);
+ph6 = imagesc(USLHmBz{nn}, 'Parent', hax6);
+
+
+
+axes(hax1); title('Raw Pixels');
+axes(hax2); title('US full - Baseline (dF/F)');
+axes(hax3); title('CS 1st half - Baseline (dF/F)');
+axes(hax4); title('CS 2st half - Baseline (dF/F)');
+axes(hax5); title('US 1st half - Baseline (dF/F)');
+axes(hax6); title('US 2st half - Baseline (dF/F)');
+
+       
+annotation('textbox',...
+'Position',[0.005,0.95,0.1,0.03],...
+'FontWeight','bold',...
+'String',TreatmentGroup(nn),...
+'FontSize',13,...
+'FitBoxToText','on',...
+'LineStyle','none');
+
+end
 
 
 
 
-pause(2)
-close(fhPH);
 
-% ------------------------------------------
+
+
+% ph1.CData = USMinusBaseline{nn}; pause(.1)
+% axes(hax2); hold(hax2,'off');
+% histogram(UmB{nn})
+
+%% ------------------------------------------
+
+figure('Units','normalized','OuterPosition',[.10 .10 .60 .80],'Color','w','MenuBar','none');
+hax7 = axes('OuterPosition',[.00 .00 .99 .99],'Color','none'); axis off; hold on;
+
+ph7 = imagesc(USMinusBaseline{1}, 'Parent', hax7);
+
+for mm = 1:6
+for nn = 1:size(GRINstruct.tf,2)
+    
+    ph7.CData = USMinusBaseline{nn};
+    
+    title(TreatmentGroup(nn));
+    pause(1)
+
+end
+end
+
+
+
+%% ------------------------------------------
 
 fh1=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],'Color','w','MenuBar','none');
 hax1 = axes('Position',[.001 .001 .999 .999],'Color','none'); hold on;
@@ -98,8 +220,8 @@ pause(1)
 
 axes(hax2)
 
-    xdim = size(TSpmpIMG{1},2); 
-    ydim = size(TSpmpIMG{1},1);
+    xdim = size(UmBz{1},2); 
+    ydim = size(UmBz{1},1);
 
     pause(.2)
     imXlim = hax1.XLim;
@@ -138,7 +260,7 @@ for nn = 1:size(GRINstruct.tf,2)
     
     clear TooSmall
 
-    BW = im2bw(TSpmpIMG{nn}, graythresh(TSpmpIMG{nn}));
+    BW = im2bw(UmBz{nn}, graythresh(UmBz{nn}));
     [B,L] = bwboundaries(BW,'noholes');
     
     
@@ -171,15 +293,7 @@ for nn = 1:size(GRINstruct.tf,2)
 end
 
 
-clear fid
-for nn = 1:size(GRINstruct.tf,2)
-    
-    fid(nn) = find(GRINstruct.id==nn,1);
-    
-end
 
-
-pt = GRINstruct.csus(fid);
 
 for nn = 1:size(GRINstruct.tf,2)
 
@@ -187,7 +301,7 @@ annotation(fh1,'textbox',...
 'Position',legpos{nn},...
 'Color',colorlist(nn,:),...
 'FontWeight','bold',...
-'String',pt(nn),...
+'String',TreatmentGroup(nn),...
 'FontSize',14,...
 'FitBoxToText','on',...
 'EdgeColor',colorlist(nn,:),...
