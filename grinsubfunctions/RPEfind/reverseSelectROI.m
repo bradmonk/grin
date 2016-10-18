@@ -1,5 +1,7 @@
-function [varargout] = reverseSelectROI(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, IMGSraw, muIMGS, LICK)
+% function [varargout] = reverseSelectROI(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, IMGSraw, muIMGS, LICK)
 %% grincustomD.m
+
+% load()
 
 size(IMG)
 
@@ -65,13 +67,27 @@ USLH{nn} = squeeze(mean(USLH_meanAcrossTrials{nn},3));
 
 
 
+% USMinusBaseline{nn} = US_mean{nn};
+% CSFHMinusBaseline{nn} = CSFH{nn};
+% CSLHMinusBaseline{nn} = CSLH{nn};
+% USFHMinusBaseline{nn} = USFH{nn};
+% USLHMinusBaseline{nn} = USLH{nn};
+
 USMinusBaseline{nn} = US_mean{nn} - Baseline_mean{nn};
-
-
 CSFHMinusBaseline{nn} = CSFH{nn} - Baseline_mean{nn};
 CSLHMinusBaseline{nn} = CSLH{nn} - Baseline_mean{nn};
 USFHMinusBaseline{nn} = USFH{nn} - Baseline_mean{nn};
 USLHMinusBaseline{nn} = USLH{nn} - Baseline_mean{nn};
+
+
+% USMinusBaseline{nn} = US_mean{nn} - Baseline_mean{nn};
+% 
+% CSFHMinusBaseline{nn} = CSFH{nn} - Baseline_mean{nn};
+% CSLHMinusBaseline{nn} = CSLH{nn} - CSFH{nn};
+% USFHMinusBaseline{nn} = USFH{nn} - CSLH{nn};
+% USLHMinusBaseline{nn} = USLH{nn} - USFH{nn};
+
+% CSFH{nn} - CSFH{nn}
 
 
 
@@ -88,6 +104,7 @@ CSFHmB_Zscore{nn} = zscore(CSFHmB{nn});
 CSFHmB_Zcut = min(CSFHmB{nn}(CSFHmB_Zscore{nn}>1.5));
 CSFHmBz{nn} = CSFHMinusBaseline{nn};
 CSFHmBz{nn}(CSFHmBz{nn}<CSFHmB_Zcut) = 0;
+% CSFHmBz{nn}(abs(CSFHmBz{nn})<CSFHmB_Zcut) = 0;
 
 
 
@@ -96,7 +113,7 @@ CSLHmB_Zscore{nn} = zscore(CSLHmB{nn});
 CSLHmB_Zcut = min(CSLHmB{nn}(CSLHmB_Zscore{nn}>1.5));
 CSLHmBz{nn} = CSLHMinusBaseline{nn};
 CSLHmBz{nn}(CSLHmBz{nn}<CSLHmB_Zcut) = 0;
-
+% CSLHmBz{nn}(abs(CSLHmBz{nn})<CSLHmB_Zcut) = 0;
 
 
 USFHmB{nn} = USFHMinusBaseline{nn}(:);
@@ -104,7 +121,7 @@ USFHmB_Zscore{nn} = zscore(USFHmB{nn});
 USFHmB_Zcut = min(USFHmB{nn}(USFHmB_Zscore{nn}>1.5));
 USFHmBz{nn} = USFHMinusBaseline{nn};
 USFHmBz{nn}(USFHmBz{nn}<USFHmB_Zcut) = 0;
-
+% USFHmBz{nn}(abs(USFHmBz{nn})<USFHmB_Zcut) = 0;
 
 
 USLHmB{nn} = USLHMinusBaseline{nn}(:);
@@ -112,6 +129,7 @@ USLHmB_Zscore{nn} = zscore(USLHmB{nn});
 USLHmB_Zcut = min(USLHmB{nn}(USLHmB_Zscore{nn}>1.5));
 USLHmBz{nn} = USLHMinusBaseline{nn};
 USLHmBz{nn}(USLHmBz{nn}<USLHmB_Zcut) = 0;
+% USLHmBz{nn}(abs(USLHmBz{nn})<USLHmB_Zcut) = 0;
 
 
 end
@@ -176,7 +194,7 @@ hax7 = axes('OuterPosition',[.00 .00 .99 .99],'Color','none'); axis off; hold on
 
 ph7 = imagesc(USMinusBaseline{1}, 'Parent', hax7);
 
-for mm = 1:6
+for mm = 1:3
 for nn = 1:size(GRINstruct.tf,2)
     
     ph7.CData = USMinusBaseline{nn};
@@ -260,7 +278,9 @@ for nn = 1:size(GRINstruct.tf,2)
     
     clear TooSmall
 
-    BW = im2bw(UmBz{nn}, graythresh(UmBz{nn}));
+    
+    % BW = im2bw(UmBz{nn}, graythresh(UmBz{nn}));
+    BW = im2bw(USFHmBz{nn}, graythresh(USFHmBz{nn}));
     [B,L] = bwboundaries(BW,'noholes');
     
     
@@ -314,6 +334,8 @@ annotation(fh1,'textbox',...
 end
 
 
+
+
 %% ------------------------------------------
 
 % ph2 = imagesc(TSpmpIMG,'Parent',hax2,...
@@ -327,5 +349,5 @@ end
 
 
 varargout = {Bi};
-end
+% end
 %% EOF
