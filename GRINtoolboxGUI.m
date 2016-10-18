@@ -46,7 +46,7 @@ function [] = GRINtoolboxGUI(varargin)
 %}
 %----------------------------------------------------
 
-clc; close all; clear all; clear java;
+clc; close all; clear; clear java;
 % clearvars -except varargin
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 % set(0,'HideUndocumented','off')
@@ -61,11 +61,13 @@ fprintf('\n\n Current working path set to: \n % s \n', thisfilepath)
 % global isbrad
 % upath = userpath;
 % isbrad = strcmp('/Users/bradleymonk',upath(1:18));
+
+
     
     pathdir0 = thisfilepath;
     pathdir1 = [thisfilepath '/grinsubfunctions'];
     pathdir2 = [thisfilepath '/grincustomfunctions'];
-    pathdir3 = [thisfilepath '/grinfiji'];
+    pathdir3 = [thisfilepath '/grinsubfunctions/grinfiji'];
     
     gpath = [pathdir0 ':' pathdir1 ':' pathdir2 ':' pathdir3];
     
@@ -313,8 +315,8 @@ plotTileStatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
 
 
 getROIstatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.34 0.31 0.28], 'FontSize', 12, 'String', 'Select ROI & Plot',...
-    'Callback', @getROIstats, 'Enable','off');
+    'Position', [0.03 0.34 0.31 0.28], 'FontSize', 12, 'String', 'Find RPE ROIs',...
+    'Callback', @findRPEROI, 'Enable','off');
 
 
 plotGroupMeansH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
@@ -835,6 +837,14 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     XLSdata.blockSize       = blockSize;
     XLSdata.cropAmount      = cropAmount;
     XLSdata.sizeIMG         = size(IMG);
+    
+    
+    % GET TREATMENT GROUP STRINGS
+    fid=[];
+    for nn = 1:size(GRINstruct.tf,2)
+        fid(nn) = find(GRINstruct.id==nn,1); 
+    end
+    GRINstruct.TreatmentGroups = GRINstruct.csus(fid);
      
      
      
@@ -992,7 +1002,14 @@ pause(.02);
     IMGraw = IMGt(:,:,1);
     
     reshapeData
-    IMGSraw = IMG(:,:,[1, XLSdata.CSonsetFrame, XLSdata.CSoffsetFrame, size(IMG,3)],:);
+    
+    for nn = 1:size(GRINstruct.tf,2)
+        
+        IMGSraw(:,:,:,nn) = squeeze(mean(IMG(:,:,:,GRINstruct.tf(:,nn)),4));
+    
+    end
+    
+    % IMGSraw = IMG(:,:,[1, XLSdata.CSonsetFrame, XLSdata.CSoffsetFrame, size(IMG,3)],:);
     IMG = IMGt;
     XLSdata.sizeIMG = size(IMG);
     % unshapeData
@@ -1320,6 +1337,7 @@ pause(.02);
     disp(' '); disp('COMPUTING dF/F FOR ALL FRAMES')
     
     
+    
     if numel(size(IMG)) == 3
         
         % As a shortcut and to retain the original frame number I am using
@@ -1406,6 +1424,9 @@ pause(.02);
         previewIMGSTACK(muIMGS)
         axes(haxGRIN)
         phGRIN = imagesc(muIMGS(:,:,1) , 'Parent', haxGRIN);
+
+        phGRIN.CData = squeeze(mean(squeeze(mean(muIMGS,4)),3));
+
     
         
         % GRINcompare(IMG, muIMGS, previewNframes)
@@ -1480,6 +1501,51 @@ end
 
 
 %% ------------------------- PLOTS FIGURES GRAPHS ------------------------------
+
+
+%----------------------------------------------------
+%        GET ROI STATISTICS
+%----------------------------------------------------
+function findRPEROI(hObject, eventdata)
+% disableButtons; pause(.02);
+
+
+    if size(muIMGS,1) < 1
+       
+        msgbox('DATA HAS NOT BEEN PROCESSED'); 
+        
+        enableButtons
+        
+        return
+        
+    end
+    
+    disp('Opening RPE ROI finder GUI')
+    
+    mainguih.HandleVisibility = 'off';
+    close all;
+    set(mainguih, 'Visible', 'Off');
+    
+    graphguih = RPEfinderGUI(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, IMGSraw, muIMGS, LICK);
+    waitfor(graphguih)
+    
+    close all;
+    mainguih.HandleVisibility = 'on';
+    set(mainguih, 'Visible', 'On');
+    
+enableButtons
+disp('Compute ROI statistics completed!')
+end
+
+
+
+
+
+
+
+
+
+
 
 
 %----------------------------------------------------
@@ -1756,7 +1822,7 @@ function plotGUI(hObject, eventdata)
         
     end
     
-    GRINplotGUI(IMG, GRINstruct, XLSdata, LICK)
+    GRINplotGUI(IMG, GRINstruct, XLSdata, LICK, IMGSraw)
  
 end
 
@@ -2714,11 +2780,11 @@ function savedataset(hObject, eventdata)
         end
         
         % IMGint16 = uint16(IMG);
-        IMG = single(IMG);
+        % IMG = single(IMG);
                 
         disp('Saving data to .mat file, please wait...')
         save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable','XLSdata',...
-            'LICK','IMGraw','muIMGS','-v7.3')
+            'LICK','IMGraw','muIMGS','IMGSraw','-v7.3')
         % save(fullfile(pathn,filen),'IMGint16','GRINstruct','GRINtable','-v7.3')
         disp('Dataset saved!')
         
