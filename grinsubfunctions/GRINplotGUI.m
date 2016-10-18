@@ -1,4 +1,4 @@
-function [] = GRINplotGUI(IMG, GRINstruct, XLSdata, LICK, varargin)
+function [] = GRINplotGUI(IMG, GRINstruct, XLSdata, LICK, IMGSraw, varargin)
 % function [] = GRINplotGUI()
 %% GRINplotGUI.m
 
@@ -53,8 +53,8 @@ global GhaxGRIN GimgsliderYAH GimgsliderYBH GimgsliderXAH GimgsliderXBH
 global slideValYA slideValYB slideValXA slideValXB slideValIM
 global GupdateGraphH Gcheckbox1H Gcheckbox2H Gcheckbox3H Gcheckbox4H
 global Gcheckbox5H Gcheckbox6H Gcheckbox7H
-global CSUSvals IMGt ROIs LICKs LhaxGRIN
-
+global CSUSvals IMGt ROIs LICKs LhaxGRIN 
+global IM colorord
 
 slideValYA = 0.15;
 slideValYB = -0.15;
@@ -63,9 +63,16 @@ slideValXB = 0;
 slideValIM = size(IMG,1);
 CSUSvals = unique(GRINstruct.csus);
 
+% MATLAB Default Color Order
+colorord = [0.0000    0.4470    0.7410
+            0.8500    0.3250    0.0980
+            0.9290    0.6940    0.1250
+            0.4940    0.1840    0.5560
+            0.4660    0.6740    0.1880
+            0.3010    0.7450    0.9330
+            0.6350    0.0780    0.1840];
 
-
-
+IM = squeeze(IMGSraw(:,:,:,1));
 
 
 %----------------------------------------------------
@@ -323,7 +330,7 @@ IMGpanelH = uipanel('Parent', itabs,'Title','GRIN Image','FontSize',10,...
     'Position', [0.01 0.01 0.98 0.97]); % 'Visible', 'Off',
 
 haxIMG = axes('Parent', IMGpanelH, 'NextPlot', 'replacechildren',...
-    'Position', [0.01 0.01 0.90 0.85], 'PlotBoxAspectRatio', [1 1 1], ...
+    'Position', [0.01 0.01 0.90 0.80], 'PlotBoxAspectRatio', [1 1 1], ...
     'XColor','none','YColor','none','YDir','reverse');
 
     haxIMG.XLim = [.5 slideValIM+.5];
@@ -336,8 +343,85 @@ if all(IMG(1) == IMG(1:XLSdata.blockSize))
     hIMG = imagesc(IMG(:,:,1,1) , 'Parent',haxIMG);
     slideValIM = size(IMG,1);
     XLSdata.blockSize = 1;
+    
+else
 
+    hIMG = imagesc(IMGSraw(:,:,1,1) , 'Parent',haxIMG);
+    
 end
+
+
+
+updateROIH = uicontrol('Parent', IMGpanelH, 'Units', 'normalized', ...
+    'Position', [0.05 0.92 0.25 0.07], 'FontSize', 13, 'String', 'Update ROI',...
+    'Callback', @updateROI);
+
+
+bg = uibuttongroup('Parent', IMGpanelH,'Visible','off','Units', 'normalized',...
+                  'Position',[0.31 0.86 0.60 0.13],...
+                  'SelectionChangedFcn',@bselection);
+              
+% Create three radio buttons in the button group.
+if size(CSUSvals,1) > 0
+CSUSr1 = uicontrol(bg,'Style','radiobutton','Units', 'normalized',...
+                  'String',CSUSvals(1),...
+                  'Position',[.01 .52 .32 .45],...
+                  'BackgroundColor',colorord(1,:),...
+                  'HandleVisibility','off');
+end
+if size(CSUSvals,1) > 1
+CSUSr2 = uicontrol(bg,'Style','radiobutton','Units', 'normalized',...
+                  'String',CSUSvals(2),...
+                  'Position',[.34 .52 .32 .45],...
+                  'BackgroundColor',colorord(2,:),...
+                  'HandleVisibility','off');
+end
+if size(CSUSvals,1) > 2
+CSUSr3 = uicontrol(bg,'Style','radiobutton','Units', 'normalized',...
+                  'String',CSUSvals(3),...
+                  'Position',[.67 .52 .32 .45],...
+                  'BackgroundColor',colorord(3,:),...
+                  'HandleVisibility','off');
+end
+if size(CSUSvals,1) > 3
+CSUSr4 = uicontrol(bg,'Style','radiobutton','Units', 'normalized',...
+                  'String',CSUSvals(4),...
+                  'Position',[.01 .01 .32 .45],...
+                  'BackgroundColor',colorord(4,:),...
+                  'HandleVisibility','off');
+end
+if size(CSUSvals,1) > 4              
+CSUSr5 = uicontrol(bg,'Style','radiobutton','Units', 'normalized',...
+                  'String',CSUSvals(5),...
+                  'Position',[.34 .01 .32 .45],...
+                  'BackgroundColor',colorord(5,:),...
+                  'HandleVisibility','off');
+end
+if size(CSUSvals,1) > 5
+CSUSr6 = uicontrol(bg,'Style','radiobutton','Units', 'normalized',...
+                  'String',CSUSvals(6),...
+                  'Position',[.67 .01 .32 .45],...
+                  'BackgroundColor',colorord(6,:),...
+                  'HandleVisibility','off');
+end              
+ 
+% Make the uibuttongroup visible after creating child objects. 
+bg.Visible = 'on';
+%%
+function bselection(source,callbackdata)
+   display(['Previous: ' callbackdata.OldValue.String]);
+   display(['Current: ' callbackdata.NewValue.String]);
+   display('------------------');
+   
+   IMnow = find(strcmp(callbackdata.NewValue.String,CSUSvals));
+   
+   IM = squeeze(IMGSraw(:,:,:,IMnow));
+   
+   slideVal = ceil(IMGsliderH.Value);
+   hIMG = imagesc(IM(:,:,slideVal) , 'Parent', haxIMG);
+   drawnow
+end
+
 
     % haxIMG.XLim = [0 slideValIM];
     % haxIMG.YLim = [0 slideValIM];
@@ -348,7 +432,7 @@ end
 
 IMGsliderH = uicontrol('Parent', IMGpanelH, 'Units', 'normalized','Style','slider',...
 	'Max',size(IMG,3),'Min',1,'Value',1,'SliderStep',[1 1]./size(IMG,3),...
-	'Position', [0.01 0.86 0.94 0.05], 'Callback', @IMGslider);
+	'Position', [0.01 0.801 0.94 0.05], 'Callback', @IMGslider);
 
 
 AXsliderH = uicontrol('Parent', IMGpanelH, 'Units', 'normalized','Style','slider',...
@@ -364,12 +448,11 @@ function IMGslider(hObject, eventdata)
 
     slideVal = ceil(IMGsliderH.Value);
 
-    hIMG = imagesc(IMG(:,:,slideVal) , 'Parent', haxIMG);
-              pause(.05)
+    hIMG = imagesc(IM(:,:,slideVal) , 'Parent', haxIMG);
+              pause(.01)
 
     % disp(['image: ' num2str(slideVal) ' (' num2str(IMGsliderH.Value) ')'])
     disp(['image: ' num2str(slideVal) ' (' num2str(IMGsliderH.Value) ')'])
-    
 
 end
 
@@ -388,9 +471,7 @@ function AXslider(hObject, eventdata)
 end
 
 
-updateROIH = uicontrol('Parent', IMGpanelH, 'Units', 'normalized', ...
-    'Position', [0.25 0.92 0.5 0.07], 'FontSize', 13, 'String', 'Update ROI',...
-    'Callback', @updateROI);
+
 
 
 
