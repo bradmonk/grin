@@ -53,9 +53,11 @@ global Gcheckbox5H Gcheckbox6H Gcheckbox7H
 global CSUSvals IMGt ROIs LICKs LhaxGRIN 
 global IM IMsz colorord haxRPE IMpanel phIM
 global tabgp btabs dtabs itabs gtabs
-global RPEROI RPEfac RPEcof RPEf RPEc dfDiff RPEfacDat RPEcofDat RPEDATA
+global RPEROI RPEfac RPEcof RPEf RPEc dfDiff rawDiff RPEfacDat RPEcofDat RPEDATA
 global RPEgroups IMGSdf RPEinfo RPEMASK RPEMASKNEW
 global RPEDATANEW RPEROINEW RPEfacDatNEW RPEcofDatNEW RPEinfoNEW
+global BlurVal zcrit zout
+
 
 RPEDATA = {};
 RPEinfo.file = GRINstruct.file(1:end-4);
@@ -68,6 +70,9 @@ slideValIM = size(IMG,1);
 CSUSvals = unique(GRINstruct.csus);
 RPEfac = '1';
 RPEcof = '1';
+BlurVal = .14;
+zcrit = 5;
+zout = 9;
 
 % MATLAB Default Color Order
 colorord = [0.0000    0.4470    0.7410
@@ -1041,16 +1046,63 @@ function findRPEcallback(hObject, eventdata)
 tabgp.SelectedTab = tabgp.Children(4);
 pause(1)
 
+
+%-----------------------------------------
+% phIM.CData = IMGraw;
+% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
+% cmax = max(max(max(IMGSrawMean)));
+% cmin = min(min(min(IMGSrawMean)));
+% haxRPE.CLim = [cmin cmax];
+%-----------------------------------------
 % haxRPE.Title = text(0.5,0.5,sprintf('Preparing ROI Trace %.0f ',1));
 
 
+
+
+% haxRPE.Title = text(0.5,0.5,sprintf('Mean of Original Stack'));
+% phIM.CData = squeeze(mean(squeeze(mean(IMGSraw,4)),3));
+% pause(1)
+
+
+
+haxRPE.Title = text(0.5,0.5,sprintf('Mean of Current IMG Stack'));
 phIM.CData = squeeze(mean(squeeze(mean(IMG,4)),3));
 
 pause(1)
 
-phIM.CData = squeeze(mean(squeeze(mean(IMGSraw,4)),3));
 
-pause(1)
+
+
+IMGSrawMean = squeeze(mean(IMGSraw,4));
+%-----------------------------------------
+% phIM.CData = IMGraw;
+phIM = imagesc(IMGSrawMean(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
+cmax = max(max(max(IMGSrawMean)));
+cmin = min(min(min(IMGSrawMean)));
+cmax = cmax - abs(cmax/5);
+cmin = cmin + abs(cmin/5);
+haxRPE.CLim = [cmin cmax];
+%-----------------------------------------
+
+phIM = imagesc(IMGSrawMean(:,:,1),'Parent',haxRPE);
+
+for nn = 1:size(IMGSrawMean,3)
+    
+    phIM.CData = IMGSrawMean(:,:,nn);
+    haxRPE.Title = text(0.5,0.5,sprintf('Mean of Original Stack  FRAME(%.0f) ',nn));
+    pause(.04)
+    
+end
+
+
+
+
+
+
+
+
+
+
 
 
 % GET FRAME FOR CS_ONSET CS_MIDWAY US_ONSET US_MIDWAY
@@ -1070,30 +1122,7 @@ end
 TreatmentGroup = GRINstruct.csus(fid);
 
 
-for nn = 1:size(GRINstruct.tf,2)
-    whitenoisenoshock(nn) = strcmp(TreatmentGroup{nn},'white noise no shock');
-    whitenoiseshock(nn) = strcmp(TreatmentGroup{nn},'white noise shock');
-    tonesucrose(nn) = strcmp(TreatmentGroup{nn},'tone sucrose');
-    tonenosucrose(nn) = strcmp(TreatmentGroup{nn},'tone no sucrose');
-    whitenoisesucrose(nn) = strcmp(TreatmentGroup{nn},'white noise sucrose');
-    whitenoisenosucrose(nn) = strcmp(TreatmentGroup{nn},'white noise no sucrose');
-end
 
-
-
-BaselineFrames = [];
-Baseline = [];
-Baseline_meanAcrossTrials = {};
-Baseline_mean = [];
-BaselineMeanPerTrial = [];
-Baseline_TrialsMean = [];
-
-for nn = 1:size(GRINstruct.tf,2)
-
-    IMGSdf(:,:,:,nn) = squeeze(mean(IMG(:,:,:,GRINstruct.tf(:,nn)),4));
-    % IMGSdf is the same as IMGSraw but for dF/F instead of raw: [220   220   100  3]
-        
-end
 
 
 for nn = 1:size(GRINstruct.tf,2)
@@ -1104,148 +1133,144 @@ end
 RPEf = find(RFac);
 RPEc = find(RCof);
 
+
+
+
+
+
+haxRPE.Title = text(0.5,0.5,sprintf('Making stack of: [%s] - [%s] ',...
+    TreatmentGroup{RPEf},TreatmentGroup{RPEc}));
+
+
+for nn = 1:size(GRINstruct.tf,2)
+
+    IMGSdf(:,:,:,nn) = squeeze(mean(IMG(:,:,:,GRINstruct.tf(:,nn)),4));
+        
+end
+
+
+% THE SIZE OF IMGSraw and IMGSdf is now ( nYpixels , nXpixels , nFRAMES , nGroups )
+% NOTE THIS DOES *NOT* MEAN ( nYpixels , nXpixels , nFRAMES , *nTRIALS* )
+%
+% dfDiff  = IMG(factor)    -   IMG(cofactor)
+% rawDiff = IMGraw(factor) -   IMGraw(cofactor)
+
+
+
 rawDiff = IMGSraw(:,:,:,RPEf) - IMGSraw(:,:,:,RPEc);
 dfDiff = IMGSdf(:,:,:,RPEf) - IMGSdf(:,:,:,RPEc);
     
 
 
-% if (any(tonesucrose) && any(tonenosucrose)) || (any(whitenoisesucrose) && any(whitenoisenosucrose))
-%     
-%     if (any(tonesucrose) && any(tonenosucrose))
-%         IDtonenosucrose = find(tonenosucrose);
-%         IDtonesucrose = find(tonesucrose);
-%     end
-%     if (any(whitenoisesucrose) && any(whitenoisenosucrose))
-%         IDtonenosucrose = find(whitenoisenosucrose);
-%         IDtonesucrose = find(whitenoisesucrose);
-%     end
-%     
-%     
-%     rawDiff = IMGSraw(:,:,:,IDtonenosucrose) - IMGSraw(:,:,:,IDtonesucrose);
-%     dfDiff = IMGSdf(:,:,:,IDtonenosucrose) - IMGSdf(:,:,:,IDtonesucrose);
-%     
-% end
+
+
+
+
+
 
 
 %-----------------------------------------
-% phIM.CData = IMGraw;
-% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
-% cmax = max(max(max(IMGSrawMean)));
-% cmin = min(min(min(IMGSrawMean)));
-% haxRPE.CLim = [cmin cmax];
-%-----------------------------------------
-
-
-IMGSrawMean = squeeze(mean(IMGSraw,4));
-%-----------------------------------------
-% phIM.CData = IMGraw;
-phIM = imagesc(IMGSrawMean(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
-cmax = max(max(max(IMGSrawMean)));
-cmin = min(min(min(IMGSrawMean)));
-cmax = cmax - abs(cmax/5);
-cmin = cmin + abs(cmin/5);
-haxRPE.CLim = [cmin cmax];
-%-----------------------------------------
-haxRPE.Title = text(0.5,0.5,'Stack average across all groups');
-phIM = imagesc(IMGSrawMean(:,:,1),'Parent',haxRPE);
-for nn = 1:size(IMGSrawMean,3)    
-    phIM.CData = IMGSrawMean(:,:,nn);
-    tx = sprintf('Mean across all groups IMG(:,:,%.0f,mean) ',nn);
-    haxRPE.Title = text(0.5,0.5,tx);
-    pause(.04)
-end
-
-
 phIM = imagesc(rawDiff(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
-%-----------------------------------------
-% phIM.CData = IMGraw;
-% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
 cmax = max(max(max(rawDiff)));
 cmin = min(min(min(rawDiff)));
 cmax = cmax - abs(cmax/1.5);
 cmin = cmin + abs(cmin/1.5);
 haxRPE.CLim = [cmin cmax];
-%-----------------------------------------
-for nn = 1:size(rawDiff,3)    
+%----
+for nn = 1:size(rawDiff,3)
+    
     phIM.CData = rawDiff(:,:,nn);
-    tx = sprintf('RPE factor - cofactor IMGdiff(:,:,%.0f,mean) ',nn);
-    haxRPE.Title = text(0.5,0.5,tx);
+    
+    haxRPE.Title = text(0.5,0.5,sprintf('[%s] - [%s]    rawDiff(%.0f)',...
+    TreatmentGroup{RPEf},TreatmentGroup{RPEc}, nn));
+    
     pause(.04)
 end
-
-phIM = imagesc(dfDiff(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
 %-----------------------------------------
-% phIM.CData = IMGraw;
-% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
+
+
+
+
+
+%-----------------------------------------
+phIM = imagesc(dfDiff(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
 cmax = max(max(max(dfDiff)));
 cmin = min(min(min(dfDiff)));
 cmax = cmax - abs(cmax/1.5);
 cmin = cmin + abs(cmin/1.5);
 haxRPE.CLim = [cmin cmax];
-%-----------------------------------------
-for nn = 1:size(dfDiff,3)    
+%----
+for nn = 1:size(dfDiff,3)
+    
     phIM.CData = dfDiff(:,:,nn);
-    tx = sprintf('RPE factor - cofactor IMGdeltaF(:,:,%.0f,mean) ',nn);
-    haxRPE.Title = text(0.5,0.5,tx);
+        
+    haxRPE.Title = text(0.5,0.5,sprintf('[%s] - [%s]    dfDiff(%.0f)',...
+    TreatmentGroup{RPEf},TreatmentGroup{RPEc}, nn));
+    
     pause(.04)
+     
+end
+%-----------------------------------------
+
+
+
+
+
+%% GET Z-SCORE DATA FOR RAW AND DF STACKS
+
+
+clear USFHa USFH_Zscore USFHzcrit USFHzout USFH
+% haxRPE.Title = text(0.5,0.5,sprintf('Preparing ROI Trace %.0f ',1));
+
+
+USFHa = reshape(rawDiff(:,:,Fcsoff:Fusmid),numel(rawDiff(:,:,Fcsoff:Fusmid)),[],1);
+
+USFH_Zscore = zscore(USFHa);
+USFHzcrit   = min(USFHa(USFH_Zscore>zcrit));
+USFHzout    = min(USFHa(USFH_Zscore>zout));
+
+if isempty(USFHzout); 
+    USFHzout = max(USFHa); 
 end
 
-%%
-
-haxRPE.Title = text(0.5,0.5,sprintf('Preparing ROI Trace %.0f ',1));
-
-Mask = GRINkern(.5, 9, .14, .1, 1);
-
-
-
-clear USFHa USFH_Zscore USFHzcrit USFHzout USFHz ZrawDiff
-
 USFH = mean(rawDiff(:,:,Fcsoff:Fusmid),3);
-IMGc = convn( USFH, Mask,'same');
-% IMGc = USFH;
+ZrawDiff = convn( USFH, GRINkern(.5, 9, BlurVal, .1, 1),'same');
+ZrawDiff(ZrawDiff<USFHzcrit | ZrawDiff>USFHzout) = 0;
 
-rda = reshape(rawDiff(:,:,Fcsoff:Fusmid),size(rawDiff,1),[],1);
 
-USFHa = rda(:);
+
+
+clear USFHa USFH_Zscore USFHzcrit USFHzout USFH
+
+USFHa = reshape(dfDiff(:,:,Fcsoff:Fusmid),numel(dfDiff(:,:,Fcsoff:Fusmid)),[],1);
+
 USFH_Zscore = zscore(USFHa);
-USFHzcrit = min(USFHa(USFH_Zscore>5));
-USFHzout = min(USFHa(USFH_Zscore>9));
-USFHz = IMGc; if isempty(USFHzout); USFHzout = max(USFHa); end;
-USFHz(USFHz<USFHzcrit | USFHz>USFHzout) = 0;
-ZrawDiff = USFHz;
+USFHzcrit   = min(USFHa(USFH_Zscore>zcrit));
+USFHzout    = min(USFHa(USFH_Zscore>zout));
 
-
-
-clear USFHa USFH_Zscore USFHzcrit USFHzout USFHz ZdfDiff
+if isempty(USFHzout); 
+    USFHzout = max(USFHa); 
+end
 
 USFH = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
-IMGc = convn( USFH, Mask,'same');
-% IMGc = USFH;
+ZdfDiff = convn( USFH, GRINkern(.5, 9, BlurVal, .1, 1),'same');
+ZdfDiff(ZdfDiff<USFHzcrit | ZdfDiff>USFHzout) = 0;
 
-rda = reshape(dfDiff(:,:,Fcsoff:Fusmid),size(rawDiff,1),[],1);
 
-USFHa = rda(:);
-USFH_Zscore = zscore(USFHa);
-USFHzcrit = min(USFHa(USFH_Zscore>5));
-USFHzout = min(USFHa(USFH_Zscore>9));
-USFHz = IMGc; if isempty(USFHzout); USFHzout = max(USFHa); end;
-USFHz(USFHz<USFHzcrit | USFHz>USFHzout) = 0;
-ZdfDiff = USFHz;
 
-ZrawD = ZrawDiff > 0;
 
-ZdfD = ZdfDiff > 0;
+
+
+
+%% DETERMINE CONTINGUOUS PIXEL REGIONS WITH HIGH Z-SCORES
 
 
 colorlist = [.99 .00 .00; .00 .99 .00; .99 .88 .88; .11 .77 .77;
              .77 .77 .11; .77 .11 .77; .00 .00 .99; .22 .33 .44];
 
-
-% BW = im2bw(ZdfD.*1.0, graythresh(ZdfD.*1.0));
 BW = im2bw(ZdfDiff, graythresh(ZdfDiff));
 
-BWc = convn( BW, Mask,'same');
-BWc = convn( BWc, Mask,'same');
+BWc = convn( BW, GRINkern(.5, 9, BlurVal, .1, 1) ,'same');
 
 BW = im2bw(BWc, graythresh(BWc));
 
@@ -1253,46 +1278,30 @@ BW_filled = imfill(BW,'holes');
 
 
 %-----------------------------------------
-% phIM.CData = IMGraw;
-% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
 cmax = max(max(max(BW_filled))).*1.0;
 cmin = min(min(min(BW_filled))).*1.0;
 cmax = cmax - abs(cmax/5);
 cmin = cmin + abs(cmin/5);
 haxRPE.CLim = [cmin cmax];
-%-----------------------------------------
+
 phIM = imagesc(BW_filled,'Parent',haxRPE,'CDataMapping','scaled');
 pause(1)
+%-----------------------------------------
 
-
-
-
-
-
-
-% hax3 = axes('Position',[.001 .001 .1 .1],'Color','none'); 
-% hax1.XLim = [1 size(dfDiff,1)];
-% hax1.YLim = [1 size(dfDiff,1)];
-% axis off; hold on;
-on = ones(size(dfDiff,1)); on(1) = 0;
-off = zeros(size(dfDiff,1)); off(1) = 1;
 
 %-----------------------------------------
-% phIM.CData = IMGraw;
-% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
 cmax = max(max(max(dfDiff)));
 cmin = min(min(min(dfDiff)));
 cmax = cmax - abs(cmax/1.2);
 cmin = cmin + abs(cmin/1.2);
 haxRPE.CLim = [cmin cmax];
-%-----------------------------------------
+
 phIM = imagesc(dfDiff(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
 pause(1)
+%-----------------------------------------
 
-haxRPE.Title = text(0.5,0.5,sprintf('Finding greatest difference dF pixels %.0f ',0));
 
 [B,L] = bwboundaries(BW,'noholes');
-
 
 clear TooSmall
 for mm = 1:size(B,1)
@@ -1306,59 +1315,60 @@ B(TooSmall) = [];
 RPEROI = B;
 RPEMASK = BW_filled;
 
-haxRPE.Title = text(0.5,0.5,sprintf('Found pixels - plotting boundary %.0f ',0));
+haxRPE.Title = text(0.5,0.5,sprintf('Found %.0f ROIs that past tests',length(B)));
 
 for k = 1:length(B)
     boundary = B{k};
     plot(boundary(:,2), boundary(:,1),'Parent',haxRPE, 'Color', colorlist(1,:) , 'LineWidth', 2)
+    pause(.04)
 end
 
-% axes(hax3)
-% ph3 = imagesc(off,'Parent',haxRPE);
+
+
+phIM.CData = dfDiff(:,:,1);
+haxRPE.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',0,'BASELINE'));
+pause(.5)
 
 for m = 1:size(rawDiff,3)
+    
     phIM.CData = dfDiff(:,:,m);
     
-    %if m == Fcsoff
-    %    haxRPE.CData = on;
-    %end
+    if m == Fcson
+    haxRPE.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',Fcson,'CS ON'));
+    elseif m == Fcsoff
+    haxRPE.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',Fcsoff,'CS OFF'));
+    % elseif m == Fcsoff
+    % haxRPE.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',0,'US ON'));
+    % elseif m == Fusend
+    % haxRPE.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',0,'US OFF'));
+    end
     
-    pause(.07)
+    pause(.04)
 end
 
 
 
 
 %-----------------------------------------
-% phIM.CData = IMGraw;
-% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
 cmax = max(max(max(mean(dfDiff(:,:,Fcsoff:Fusmid),3))));
 cmin = min(min(min(mean(dfDiff(:,:,Fcsoff:Fusmid),3))));
 cmax = cmax - abs(cmax/2);
 cmin = cmin + abs(cmin/2);
 haxRPE.CLim = [cmin cmax];
-%-----------------------------------------
-% phIM = imagesc(mean(dfDiff(:,:,Fcsoff:Fusmid),3),'Parent',haxRPE);
-% haxRPE.CData = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
-
-haxRPE.Title = text(0.5,0.5,sprintf('Displaying mean difference after %.0f frame',Fcsoff));
 
 phIM.CData = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
 
-%%
+haxRPE.Title = text(0.5,0.5,...
+    sprintf('Displaying mean difference after %.0f frame',Fcsoff));
+%-----------------------------------------
 
 
 
-% IMGSraw(:,:,:,IDtonenosucrose)
-% IMGSraw(:,:,:,IDtonesucrose)
-% IMGSdf(:,:,:,IDtonenosucrose)
-% IMGSdf(:,:,:,IDtonesucrose)
-% 
-% size(IMGSdf)
-% size(IMGSdf(:,:,nn,IDtonenosucrose))
 
 
 
+
+%% GET DATA FOR RPE LINE PLOTS
 
 
 for v = 1:size(dfDiff,3)
@@ -1382,28 +1392,42 @@ for v = 1:size(dfDiff,3)
 end
 
 
-%-----------------------------------------
-% phIM.CData = IMGraw;
-% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
-cmax = max(max(max([RPEfacDat; RPEcofDat])));
-cmin = min(min(min([RPEfacDat; RPEcofDat])));
-cmax = cmax - abs(cmax/5);
-cmin = cmin + abs(cmin/5);
-% haxRPE.CLim = [cmin cmax];
-%-----------------------------------------
+
+
+%% PLOT RPE LINE PLOTS IN MAIN AXES
 
 delete(findobj(GhaxGRIN.Children))
-% delete(findobj(GhaxGRIN, 'DisplayName', htable.ColumnName{column}))
+
+haxRPE.Title = text(0.5,0.5,sprintf('Found %.0f RPE ROIs',length(RPEROI)));
+GhaxGRIN.ColorOrderIndex = 1;
 
 phMainData = plot([RPEfacDat; RPEcofDat]','Parent',GhaxGRIN, 'LineWidth',2);
-% 'Color', colorz{column},
-legend(GhaxGRIN,{TreatmentGroup{RPEf},TreatmentGroup{RPEc}})
 
-if cmax > .1
+
+
+GhaxGRIN.ColorOrderIndex = 1; 
+hmkrs = plot(GhaxGRIN, [RPEfacDat; RPEcofDat]', 'LineStyle', 'none',...
+                    'Marker', '.','MarkerSize',45);
+                
+
+leg1 = legend(hmkrs,{TreatmentGroup{RPEf},TreatmentGroup{RPEc}});
+set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
+set(hmkrs,'Visible','off','HandleVisibility', 'off')                
+
+
+if cmax > .1;
     GhaxGRIN.YLim = [0 cmax];
 else
     GhaxGRIN.YLim = [0 .1];
 end
+
+
+
+
+
+
+%% PREPARE RPE DATA FOR OUTPUT TO MAT FILE
 
 RPEinfo.RPEf = RPEf;
 RPEinfo.RPEc = RPEc;
@@ -1414,7 +1438,6 @@ RPEinfo.Fcsoff = Fcsoff;
 RPEinfo.Fusmid = Fusmid;
 RPEinfo.Fusend = Fusend;
 
-haxRPE.Title = text(0.5,0.5,sprintf('Found %.0f RPE ROIs',length(RPEROI)));
 
 %%
 end
