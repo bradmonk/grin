@@ -164,12 +164,11 @@ haxRPE = axes('Parent', IMpanel, ...
     haxRPE.XLim = [0 IMsz(2)];
     hold on
     % 'NextPlot', 'replacechildren',
-
+    
+    
 phIM = imagesc(IMGSraw(:,:,1,1) , 'Parent',haxRPE);
 
-
-
-
+haxRPE.Title = text(0.5,0.5,'IMG Stack');
 
 
 %----------------------------------------------------
@@ -425,48 +424,48 @@ updateROIH = uicontrol('Parent', IMGpanelH, 'Units', 'normalized', ...
     'Callback', @updateROI);
 
 
-bg = uibuttongroup('Parent', IMGpanelH,'Visible','off','Units', 'normalized',...
+RObg = uibuttongroup('Parent', IMGpanelH,'Visible','off','Units', 'normalized',...
                   'Position',[0.31 0.86 0.60 0.13],...
                   'SelectionChangedFcn',@bselection);
               
 % Create three radio buttons in the button group.
 if size(CSUSvals,1) > 0
-CSUSr1 = uicontrol(bg,'Style','radiobutton','Units', 'normalized',...
+CSUSr1 = uicontrol(RObg,'Style','radiobutton','Units', 'normalized',...
                   'String',CSUSvals(1),...
                   'Position',[.01 .52 .32 .45],...
                   'BackgroundColor',colorord(1,:),...
                   'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 1
-CSUSr2 = uicontrol(bg,'Style','radiobutton','Units', 'normalized',...
+CSUSr2 = uicontrol(RObg,'Style','radiobutton','Units', 'normalized',...
                   'String',CSUSvals(2),...
                   'Position',[.34 .52 .32 .45],...
                   'BackgroundColor',colorord(2,:),...
                   'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 2
-CSUSr3 = uicontrol(bg,'Style','radiobutton','Units', 'normalized',...
+CSUSr3 = uicontrol(RObg,'Style','radiobutton','Units', 'normalized',...
                   'String',CSUSvals(3),...
                   'Position',[.67 .52 .32 .45],...
                   'BackgroundColor',colorord(3,:),...
                   'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 3
-CSUSr4 = uicontrol(bg,'Style','radiobutton','Units', 'normalized',...
+CSUSr4 = uicontrol(RObg,'Style','radiobutton','Units', 'normalized',...
                   'String',CSUSvals(4),...
                   'Position',[.01 .01 .32 .45],...
                   'BackgroundColor',colorord(4,:),...
                   'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 4              
-CSUSr5 = uicontrol(bg,'Style','radiobutton','Units', 'normalized',...
+CSUSr5 = uicontrol(RObg,'Style','radiobutton','Units', 'normalized',...
                   'String',CSUSvals(5),...
                   'Position',[.34 .01 .32 .45],...
                   'BackgroundColor',colorord(5,:),...
                   'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 5
-CSUSr6 = uicontrol(bg,'Style','radiobutton','Units', 'normalized',...
+CSUSr6 = uicontrol(RObg,'Style','radiobutton','Units', 'normalized',...
                   'String',CSUSvals(6),...
                   'Position',[.67 .01 .32 .45],...
                   'BackgroundColor',colorord(6,:),...
@@ -474,7 +473,7 @@ CSUSr6 = uicontrol(bg,'Style','radiobutton','Units', 'normalized',...
 end              
  
 % Make the uibuttongroup visible after creating child objects. 
-bg.Visible = 'on';
+RObg.Visible = 'on';
 
 
 
@@ -735,6 +734,7 @@ end
 %----------------------------------------------------
 %        UPDATE GRAPH CALLBACK
 %----------------------------------------------------
+%{
 function GupdateGraph(boxidselecth, eventdata)
 
     return
@@ -769,7 +769,7 @@ function GupdateGraph(boxidselecth, eventdata)
 
      
 end
-
+%}
 
 
 
@@ -1041,6 +1041,8 @@ function findRPEcallback(hObject, eventdata)
 tabgp.SelectedTab = tabgp.Children(4);
 pause(1)
 
+% haxRPE.Title = text(0.5,0.5,sprintf('Preparing ROI Trace %.0f ',1));
+
 
 phIM.CData = squeeze(mean(squeeze(mean(IMG,4)),3));
 
@@ -1144,12 +1146,14 @@ cmax = cmax - abs(cmax/5);
 cmin = cmin + abs(cmin/5);
 haxRPE.CLim = [cmin cmax];
 %-----------------------------------------
+haxRPE.Title = text(0.5,0.5,'Stack average across all groups');
 phIM = imagesc(IMGSrawMean(:,:,1),'Parent',haxRPE);
 for nn = 1:size(IMGSrawMean,3)    
     phIM.CData = IMGSrawMean(:,:,nn);
-    pause(.05)
+    tx = sprintf('Mean across all groups IMG(:,:,%.0f,mean) ',nn);
+    haxRPE.Title = text(0.5,0.5,tx);
+    pause(.04)
 end
-
 
 
 phIM = imagesc(rawDiff(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
@@ -1164,7 +1168,9 @@ haxRPE.CLim = [cmin cmax];
 %-----------------------------------------
 for nn = 1:size(rawDiff,3)    
     phIM.CData = rawDiff(:,:,nn);
-    pause(.05)
+    tx = sprintf('RPE factor - cofactor IMGdiff(:,:,%.0f,mean) ',nn);
+    haxRPE.Title = text(0.5,0.5,tx);
+    pause(.04)
 end
 
 phIM = imagesc(dfDiff(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
@@ -1179,10 +1185,14 @@ haxRPE.CLim = [cmin cmax];
 %-----------------------------------------
 for nn = 1:size(dfDiff,3)    
     phIM.CData = dfDiff(:,:,nn);
-    pause(.05)
+    tx = sprintf('RPE factor - cofactor IMGdeltaF(:,:,%.0f,mean) ',nn);
+    haxRPE.Title = text(0.5,0.5,tx);
+    pause(.04)
 end
 
 %%
+
+haxRPE.Title = text(0.5,0.5,sprintf('Preparing ROI Trace %.0f ',1));
 
 Mask = GRINkern(.5, 9, .14, .1, 1);
 
@@ -1279,7 +1289,7 @@ haxRPE.CLim = [cmin cmax];
 phIM = imagesc(dfDiff(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
 pause(1)
 
-
+haxRPE.Title = text(0.5,0.5,sprintf('Finding greatest difference dF pixels %.0f ',0));
 
 [B,L] = bwboundaries(BW,'noholes');
 
@@ -1295,6 +1305,8 @@ end
 B(TooSmall) = [];
 RPEROI = B;
 RPEMASK = BW_filled;
+
+haxRPE.Title = text(0.5,0.5,sprintf('Found pixels - plotting boundary %.0f ',0));
 
 for k = 1:length(B)
     boundary = B{k};
@@ -1328,6 +1340,8 @@ haxRPE.CLim = [cmin cmax];
 %-----------------------------------------
 % phIM = imagesc(mean(dfDiff(:,:,Fcsoff:Fusmid),3),'Parent',haxRPE);
 % haxRPE.CData = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
+
+haxRPE.Title = text(0.5,0.5,sprintf('Displaying mean difference after %.0f frame',Fcsoff));
 
 phIM.CData = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
 
@@ -1399,6 +1413,8 @@ RPEinfo.Fcsmid = Fcsmid;
 RPEinfo.Fcsoff = Fcsoff;
 RPEinfo.Fusmid = Fusmid;
 RPEinfo.Fusend = Fusend;
+
+haxRPE.Title = text(0.5,0.5,sprintf('Found %.0f RPE ROIs',length(RPEROI)));
 
 %%
 end

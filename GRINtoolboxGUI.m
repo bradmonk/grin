@@ -956,7 +956,8 @@ pause(.02);
         XLSdata.sizeIMG = size(IMG);
 
         
-smoothimgH.FontWeight = 'normal';        
+smoothimgH.FontWeight = 'normal';
+pause(.02);
 enableButtons        
 disp('Image smoothing completed!')
 end
@@ -1025,7 +1026,8 @@ pause(.02);
         XLSdata.sizeIMG = size(IMG);
         
         
-cropimgH.FontWeight = 'normal';        
+cropimgH.FontWeight = 'normal';
+pause(.02);
 enableButtons        
 disp('Crop Images completed!')
 end
@@ -1114,7 +1116,8 @@ pause(.02);
         XLSdata.sizeIMG = size(IMG);
         
         
-imgblocksH.FontWeight = 'normal';        
+imgblocksH.FontWeight = 'normal';
+pause(.02);
 enableButtons
 disp('Block-Segment Images completed!')        
 end
@@ -1215,7 +1218,8 @@ pause(.02);
         XLSdata.sizeIMG = size(IMG);
 
         
-reshapeDataH.FontWeight = 'normal';        
+reshapeDataH.FontWeight = 'normal';
+pause(.02);
 enableButtons
 disp('Reshape stack by trial completed!')
 end
@@ -1314,7 +1318,8 @@ pause(.02);
         XLSdata.CSoffsetFrame = CSoffsetFrame;
         
         
-alignCSFramesH.FontWeight = 'normal';        
+alignCSFramesH.FontWeight = 'normal';
+pause(.02);
 enableButtons
 disp('Align frames by CS onset completed!')
 end
@@ -1374,7 +1379,8 @@ pause(.02);
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
 
-dFoverFH.FontWeight = 'normal';        
+dFoverFH.FontWeight = 'normal';
+pause(.02);
 enableButtons        
 disp('dF/F computation completed!')
 end
@@ -1437,7 +1443,8 @@ pause(.02);
         % phGRIN = imagesc(muIMGS(:,:,1,1) , 'Parent', haxGRIN);
 
         
-timepointMeansH.FontWeight = 'normal';         
+timepointMeansH.FontWeight = 'normal';
+pause(.02);
 enableButtons        
 disp('Compute same-timepoint means completed!')
 end
