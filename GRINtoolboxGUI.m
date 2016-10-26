@@ -1522,19 +1522,25 @@ function findRPEROI(hObject, eventdata)
     
     disp('Opening RPE ROI finder GUI')
     
-    mainguih.HandleVisibility = 'off';
-    close all;
-    set(mainguih, 'Visible', 'Off');
+    % mainguih.HandleVisibility = 'off';
+    % close all;
+    % set(mainguih, 'Visible', 'Off');
     
     graphguih = RPEfinderGUI(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, IMGSraw, muIMGS, LICK);
-    waitfor(graphguih)
     
-    close all;
-    mainguih.HandleVisibility = 'on';
-    set(mainguih, 'Visible', 'On');
+    
+    
+%     waitfor(graphguih)
+%     mainguih.HandleVisibility = 'off';
+%     close all;
+%     mainguih.HandleVisibility = 'on';
+    
+%     close all;
+%     mainguih.HandleVisibility = 'on';
+%     set(mainguih, 'Visible', 'On');
     
 enableButtons
-disp('Compute ROI statistics completed!')
+disp('Compute ROI statistics!')
 end
 
 

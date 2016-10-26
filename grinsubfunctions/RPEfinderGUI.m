@@ -42,8 +42,6 @@ tv7 = [];
 tv8 = [];
 tv9 = [];
 
-
-
 %----------------------------------------------------
 %%     ESTABLISH GLOBALS
 %----------------------------------------------------
@@ -53,7 +51,14 @@ global slideValYA slideValYB slideValXA slideValXB slideValIM
 global GupdateGraphH Gcheckbox1H Gcheckbox2H Gcheckbox3H Gcheckbox4H
 global Gcheckbox5H Gcheckbox6H Gcheckbox7H
 global CSUSvals IMGt ROIs LICKs LhaxGRIN 
-global IM colorord
+global IM IMsz colorord haxRPE IMpanel phIM
+global tabgp btabs dtabs itabs gtabs
+global RPEROI RPEfac RPEcof RPEf RPEc dfDiff RPEfacDat RPEcofDat RPEDATA
+global RPEgroups IMGSdf RPEinfo RPEMASK RPEMASKNEW
+global RPEDATANEW RPEROINEW RPEfacDatNEW RPEcofDatNEW RPEinfoNEW
+
+RPEDATA = {};
+RPEinfo.file = GRINstruct.file(1:end-4);
 
 slideValYA = 0.15;
 slideValYB = -0.15;
@@ -61,6 +66,8 @@ slideValXA = 100;
 slideValXB = 0;
 slideValIM = size(IMG,1);
 CSUSvals = unique(GRINstruct.csus);
+RPEfac = '1';
+RPEcof = '1';
 
 % MATLAB Default Color Order
 colorord = [0.0000    0.4470    0.7410
@@ -72,7 +79,7 @@ colorord = [0.0000    0.4470    0.7410
             0.6350    0.0780    0.1840];
 
 IM = squeeze(IMGSraw(:,:,:,1));
-
+IMsz = size(IM);
 
 %----------------------------------------------------
 %%     CREATE GRINplotGUI FIGURE WINDOW
@@ -131,70 +138,167 @@ GimgsliderXBH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','sl
 %----------------------------------------------------
 
 tabgp = uitabgroup(graphguih,'Position',[0.61 0.02 0.38 0.95]);
-btabs = uitab(tabgp,'Title','Graphics Options');
-dtabs = uitab(tabgp,'Title','Data View');
-itabs = uitab(tabgp,'Title','Image View');
+btabs = uitab(tabgp,'Title','Options');
+dtabs = uitab(tabgp,'Title','Data');
+itabs = uitab(tabgp,'Title','ROI');
+gtabs = uitab(tabgp,'Title','Image');
+
+
+
+
 
 
 
 %----------------------------------------------------
-%%     GRAPHICS OPTIONS PANEL
+%%     IMAGE TAB
 %----------------------------------------------------
 
+IMpanel = uipanel('Parent', gtabs,'Title','Image Previews','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],'Position', [0.01 0.01 0.98 0.98]);
+
+
+haxRPE = axes('Parent', IMpanel, ...
+    'Position', [0.01 0.01 0.98 0.85], 'Color','none','XLimMode', 'manual','YLimMode', 'manual',...
+    'YDir','reverse','XColor','none','YColor','none','XTick',[],'YTick',[]); 
+    haxRPE.YLim = [0 IMsz(1)];
+    haxRPE.XLim = [0 IMsz(2)];
+    hold on
+    % 'NextPlot', 'replacechildren',
+
+phIM = imagesc(IMGSraw(:,:,1,1) , 'Parent',haxRPE);
+
+
+
+
+
+
+%----------------------------------------------------
+%%     OPTIONS TAB
+%----------------------------------------------------
+
+
+
+%-----------------------------------
+%    FIND RPE PANEL
+%-----------------------------------
 GIPpanelH = uipanel('Parent', btabs,'Title','Image Processing','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
-    'Position', [0.02 0.25 0.45 0.73]); % 'Visible', 'Off',
+    'Position', [0.02 0.02 0.45 0.95]); % 'Visible', 'Off',
 
 findRPEcallbackH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
-    'Position', [.05 0.88 .90 .10], 'FontSize', 13, 'String', 'FIND RPE',...
+    'Position', [.05 0.90 .90 .09], 'FontSize', 13, 'String', 'FIND RPE',...
     'Callback', @findRPEcallback, 'Enable','on');
 
-% plotLickDataH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
-%     'Position', [.05 0.88 .90 .10], 'FontSize', 13, 'String', 'Plot Lick Data',...
-%     'Callback', @plotLickData, 'Enable','on');
 
-chva = 1;
+
+buttongroup1 = uibuttongroup('Parent', GIPpanelH,'Title','RPE FACTOR',...
+                  'Units', 'normalized','Position',[.01 0.45 .98 .40],...
+                  'SelectionChangedFcn',@buttongroup1selection);
+              
+bva = 1;
 
 if size(CSUSvals,1) > 0
-Gcheckbox1H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.71 .90 .05] ,'String',CSUSvals(1), 'Value',1,'Callback',{@plot_callback,1});
+    fac1 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.86 .90 .10],......
+        'String',CSUSvals(1),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 1
-Gcheckbox2H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.61 .90 .05] ,'String',CSUSvals(2), 'Value',chva,'Callback',{@plot_callback,2});
+    fac2 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.72 .90 .10],......
+        'String',CSUSvals(2),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 2
-Gcheckbox3H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.51 .90 .05] ,'String',CSUSvals(3), 'Value',chva,'Callback',{@plot_callback,3});
+    fac3 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.58 .90 .10],......
+        'String',CSUSvals(3),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 3
-Gcheckbox4H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.41 .90 .05] ,'String',CSUSvals(4), 'Value',chva,'Callback',{@plot_callback,4});
+    fac4 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.44 .90 .10],......
+        'String',CSUSvals(4),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 4 
-Gcheckbox5H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.31 .90 .05] ,'String',CSUSvals(5), 'Value',chva,'Callback',{@plot_callback,5});
+    fac5 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.30 .90 .10],......
+        'String',CSUSvals(5),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 5
-Gcheckbox6H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.21 .90 .05] ,'String',CSUSvals(6), 'Value',chva,'Callback',{@plot_callback,6});
+    fac6 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.16 .90 .10],......
+        'String',CSUSvals(6),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 6
-Gcheckbox7H = uicontrol('Parent', GIPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.11 .90 .05] ,'String',CSUSvals(7), 'Value',chva,'Callback',{@plot_callback,7});
+    fac7 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.02 .90 .10],......
+        'String',CSUSvals(7),'HandleVisibility','off');
 end
 
 
 
-% GCSUSpopupH = uicontrol('Parent', GIPpanelH,'Style', 'popup',...
-%     'Units', 'normalized', 'String', {'CS','US'},...
-%     'Position', [.05 .02 0.9 0.05],...
-%     'Callback', @GCSUSpopup);
+
+
+buttongroup2 = uibuttongroup('Parent', GIPpanelH,'Title','RPE COFACTOR',...
+                  'Units', 'normalized','Position',[.01 0.01 .98 .40],...
+                  'SelectionChangedFcn',@buttongroup2selection);
+              
+bva = 1;
+
+if size(CSUSvals,1) > 0
+    cofac1 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.86 .90 .10],......
+        'String',CSUSvals(1),'HandleVisibility','off');
+end
+if size(CSUSvals,1) > 1
+    cofac2 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.72 .90 .10],......
+        'String',CSUSvals(2),'HandleVisibility','off');
+end
+if size(CSUSvals,1) > 2
+    cofac3 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.58 .90 .10],......
+        'String',CSUSvals(3),'HandleVisibility','off');
+end
+if size(CSUSvals,1) > 3
+    cofac4 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.44 .90 .10],......
+        'String',CSUSvals(4),'HandleVisibility','off');
+end
+if size(CSUSvals,1) > 4 
+    cofac5 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.30 .90 .10],......
+        'String',CSUSvals(5),'HandleVisibility','off');
+end
+if size(CSUSvals,1) > 5
+    cofac6 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.16 .90 .10],......
+        'String',CSUSvals(6),'HandleVisibility','off');
+end
+if size(CSUSvals,1) > 6
+    cofac7 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.02 .90 .10],......
+        'String',CSUSvals(7),'HandleVisibility','off');
+end
+
+
+RPEfac = CSUSvals(1);
+RPEcof = CSUSvals(2);
+
+
+
+
+
+
+
+
+function buttongroup1selection(source,callbackdata)
+    display('------------------');
+    display(['Previous RPE factor: ' callbackdata.OldValue.String]);
+    display(['Current RPE factor: ' callbackdata.NewValue.String]);
+    display('------------------');
+
+    RPEfac = callbackdata.NewValue.String;
+end
+
+
+function buttongroup2selection(source,callbackdata)
+    display('------------------');
+    display(['Previous RPE cofactor: ' callbackdata.OldValue.String]);
+    display(['Current RPE cofactor: ' callbackdata.NewValue.String]);
+    display('------------------');
+
+    RPEcof = callbackdata.NewValue.String;
+end
 
           
-%----------------------------------------------------
+%-----------------------------------
 %    CUSTOM FUNCTIONS PANEL
-%----------------------------------------------------
+%-----------------------------------
 GcustomfunpanelH = uipanel('Parent', btabs,'Title','Custom Code & Data Exploration','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
     'Position', [0.50 0.64 0.45 0.34]); % 'Visible', 'Off',
@@ -219,51 +323,69 @@ GrunCustomDH = uicontrol('Parent', GcustomfunpanelH, 'Units', 'normalized', ...
 
 
 
-%----------------------------------------------------
-%    DATA EXPLORATION & API PANEL
-%----------------------------------------------------
-GexplorepanelH = uipanel('Parent', btabs,'Title','Data Exploration & API','FontSize',10,...
+%-----------------------------------
+%    PLOT DISPLAY CHECKLIST PANEL
+%-----------------------------------
+DisplaypanelH = uipanel('Parent', btabs,'Title','Display on Line Graph','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
     'Position', [0.50 0.25 0.45 0.34]); % 'Visible', 'Off',
-              
-GopenImageJH = uicontrol('Parent', GexplorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Open stack in ImageJ ',...
-    'Callback', @GopenImageJ, 'Enable','off');
-
-GexploreAH = uicontrol('Parent', GexplorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', 'Explore Data A',...
-    'Callback', @GexploreA, 'Enable','off');
-
-GexploreBH = uicontrol('Parent', GexplorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Explore Data B',...
-    'Callback', @GexploreB, 'Enable','off');
-
-GresetwsH = uicontrol('Parent', GexplorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Reset Toolbox',...
-    'Callback', @Gresetws);
 
 
 
-%----------------------------------------------------
-%    SAVE AND EXPORT DATA
-%----------------------------------------------------
+chva = 1;
+
+if size(CSUSvals,1) > 0
+Gcheckbox1H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.86 .90 .10] ,'String',CSUSvals(1), 'Value',1,'Callback',{@plot_callback,1});
+end
+if size(CSUSvals,1) > 1
+Gcheckbox2H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.72 .90 .10] ,'String',CSUSvals(2), 'Value',chva,'Callback',{@plot_callback,2});
+end
+if size(CSUSvals,1) > 2
+Gcheckbox3H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.58 .90 .10] ,'String',CSUSvals(3), 'Value',chva,'Callback',{@plot_callback,3});
+end
+if size(CSUSvals,1) > 3
+Gcheckbox4H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.44 .90 .10] ,'String',CSUSvals(4), 'Value',chva,'Callback',{@plot_callback,4});
+end
+if size(CSUSvals,1) > 4 
+Gcheckbox5H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.30 .90 .10] ,'String',CSUSvals(5), 'Value',chva,'Callback',{@plot_callback,5});
+end
+if size(CSUSvals,1) > 5
+Gcheckbox6H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.16 .90 .10] ,'String',CSUSvals(6), 'Value',chva,'Callback',{@plot_callback,6});
+end
+if size(CSUSvals,1) > 6
+Gcheckbox7H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.02 .90 .10] ,'String',CSUSvals(7), 'Value',chva,'Callback',{@plot_callback,7});
+end
+
+
+
+
+
+%-----------------------------------
+%    SAVE AND EXPORT PANEL
+%-----------------------------------
 GexportpanelH = uipanel('Parent', btabs,'Title','I/O','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
     'Position', [0.50 0.02 0.45 0.20]); % 'Visible', 'Off',
               
 GexportvarsH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.65 0.95 0.28], 'FontSize', 13, 'String', 'Export Vars to Workspace ',...
-    'Callback', @Gexportvars, 'Enable','off');
+    'Position', [0.03 0.65 0.95 0.28], 'FontSize', 13, 'String', 'Export ROIs to Workspace ',...
+    'Callback', @exportROIs);
+
 
 GsavedatasetH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.34 0.95 0.28], 'FontSize', 13, 'String', 'Save Dataset',...
-    'Callback', @Gsavedataset, 'Enable','off');
+    'Position', [0.03 0.34 0.95 0.28], 'FontSize', 13, 'String', 'Save ROIs to .mat',...
+    'Callback', @saveROIs);
 
 GloadmatdataH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.03 0.95 0.28], 'FontSize', 13, 'String', 'Load .mat Dataset',...
-    'Callback', @Gloadmatdata, 'Enable','off');
-
-
+    'Position', [0.03 0.03 0.95 0.28], 'FontSize', 13, 'String', 'Load ROIs from .mat',...
+    'Callback', {@loadROIs,RPEDATA});
 
 
 
@@ -372,14 +494,6 @@ AXsliderH = uicontrol('Parent', IMGpanelH, 'Units', 'normalized','Style','slider
 	'Max',size(IMG,1)*2,'Min',size(IMG,1)/2,'Value',size(IMG,1),...
     'SliderStep',[1 1]./(size(IMG,1)),...
 	'Position', [0.93 0.02 0.05 0.80], 'Callback', @AXslider);
-
-
-
-
-
-
-
-
 
 
 
@@ -528,17 +642,26 @@ end
 
 
 
+% tabgp.SelectedTab = tabgp.Children(1);
 
+tabgp.SelectedTab = tabgp.Children(2);
+pause(.2)
 
+tabgp.SelectedTab = tabgp.Children(3);
+pause(.2)
 
+tabgp.SelectedTab = tabgp.Children(4);
+pause(.2)
 
-
-
+tabgp.SelectedTab = tabgp.Children(1);
+pause(.2)
 
 
 %------------------------------------------------------------------------------
 %%        GUI HELPER FUNCTIONS
 %------------------------------------------------------------------------------
+
+
 
 
 
@@ -562,9 +685,6 @@ function GimgsliderXB(hObject, eventdata)
 slideValXB = GimgsliderXBH.Value;
 GhaxGRIN.XLim = [slideValXB slideValXA];
 end
-
-
-
 
 function bselection(source,callbackdata)
    display(['Previous: ' callbackdata.OldValue.String]);
@@ -917,18 +1037,18 @@ end
 %------------------------------------------------------------------------------
 function findRPEcallback(hObject, eventdata)
 
+    
+tabgp.SelectedTab = tabgp.Children(4);
+pause(1)
 
-fh0=figure('Units','normalized','OuterPosition',[.02 .1 .85 .6],'Color','w','MenuBar','none');
 
-subplot(1,2,1);
-imagesc(squeeze(mean(squeeze(mean(IMG,4)),3)))
-axis image;  pause(.1)
-axis normal; pause(.1)
+phIM.CData = squeeze(mean(squeeze(mean(IMG,4)),3));
 
-subplot(1,2,2);
-imagesc(squeeze(mean(squeeze(mean(IMGSraw,4)),3)))
-axis image;  pause(.1)
-axis normal; pause(.1)
+pause(1)
+
+phIM.CData = squeeze(mean(squeeze(mean(IMGSraw,4)),3));
+
+pause(1)
 
 
 % GET FRAME FOR CS_ONSET CS_MIDWAY US_ONSET US_MIDWAY
@@ -973,70 +1093,98 @@ for nn = 1:size(GRINstruct.tf,2)
         
 end
 
-% if any(whitenoisenoshock) && any(whitenoiseshock)
-% 
-%     IDwhitenoisenoshock = find(whitenoisenoshock);
-%     IDwhitenoiseshock = find(whitenoiseshock);
-%         
-%     SignalDiff = IMGSraw(:,:,:,IDwhitenoisenoshock) - IMGSraw(:,:,:,IDwhitenoiseshock);
-% 
+
+for nn = 1:size(GRINstruct.tf,2)
+    RFac(nn) = strcmp(TreatmentGroup{nn},RPEfac);
+    RCof(nn) = strcmp(TreatmentGroup{nn},RPEcof);
+end
+
+RPEf = find(RFac);
+RPEc = find(RCof);
+
+rawDiff = IMGSraw(:,:,:,RPEf) - IMGSraw(:,:,:,RPEc);
+dfDiff = IMGSdf(:,:,:,RPEf) - IMGSdf(:,:,:,RPEc);
+    
+
+
+% if (any(tonesucrose) && any(tonenosucrose)) || (any(whitenoisesucrose) && any(whitenoisenosucrose))
+%     
+%     if (any(tonesucrose) && any(tonenosucrose))
+%         IDtonenosucrose = find(tonenosucrose);
+%         IDtonesucrose = find(tonesucrose);
+%     end
+%     if (any(whitenoisesucrose) && any(whitenoisenosucrose))
+%         IDtonenosucrose = find(whitenoisenosucrose);
+%         IDtonesucrose = find(whitenoisesucrose);
+%     end
+%     
+%     
+%     rawDiff = IMGSraw(:,:,:,IDtonenosucrose) - IMGSraw(:,:,:,IDtonesucrose);
+%     dfDiff = IMGSdf(:,:,:,IDtonenosucrose) - IMGSdf(:,:,:,IDtonesucrose);
+%     
 % end
 
 
-if (any(tonesucrose) && any(tonenosucrose)) || (any(whitenoisesucrose) && any(whitenoisenosucrose))
-    
-    if (any(tonesucrose) && any(tonenosucrose))
-        IDtonenosucrose = find(tonenosucrose);
-        IDtonesucrose = find(tonesucrose);
-    end
-    if (any(whitenoisesucrose) && any(whitenoisenosucrose))
-        IDtonenosucrose = find(whitenoisenosucrose);
-        IDtonesucrose = find(whitenoisesucrose);
-    end
-    
-    
-    rawDiff = IMGSraw(:,:,:,IDtonenosucrose) - IMGSraw(:,:,:,IDtonesucrose);
-    
-    dfDiff = IMGSdf(:,:,:,IDtonenosucrose) - IMGSdf(:,:,:,IDtonesucrose);
-    
-    
-    % rawDiff = IMGSraw(:,:,:,IDtonesucrose) - IMGSraw(:,:,:,IDtonenosucrose);
-    
-    % dfDiff = IMGSdf(:,:,:,IDtonesucrose) - IMGSdf(:,:,:,IDtonenosucrose);
-    
-end
+%-----------------------------------------
+% phIM.CData = IMGraw;
+% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
+% cmax = max(max(max(IMGSrawMean)));
+% cmin = min(min(min(IMGSrawMean)));
+% haxRPE.CLim = [cmin cmax];
+%-----------------------------------------
 
-
-
-fh1=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],'Color','w','MenuBar','none');
-hax1 = axes('Position',[.001 .001 .999 .999],'Color','none'); 
-title(['Examining X. (ID: ', GRINstruct.file ')'])
-hold on;
-
-axes(hax1)
-ph1 = imagesc(IMGraw,'Parent',hax1,'CDataMapping','scaled');
-axis image;  pause(.1)
-axis normal; pause(.1)
 
 IMGSrawMean = squeeze(mean(IMGSraw,4));
+%-----------------------------------------
+% phIM.CData = IMGraw;
+phIM = imagesc(IMGSrawMean(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
+cmax = max(max(max(IMGSrawMean)));
+cmin = min(min(min(IMGSrawMean)));
+cmax = cmax - abs(cmax/5);
+cmin = cmin + abs(cmin/5);
+haxRPE.CLim = [cmin cmax];
+%-----------------------------------------
+phIM = imagesc(IMGSrawMean(:,:,1),'Parent',haxRPE);
 for nn = 1:size(IMGSrawMean,3)    
-    ph1.CData = IMGSrawMean(:,:,nn);
+    phIM.CData = IMGSrawMean(:,:,nn);
     pause(.05)
 end
 
+
+
+phIM = imagesc(rawDiff(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
+%-----------------------------------------
+% phIM.CData = IMGraw;
+% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
+cmax = max(max(max(rawDiff)));
+cmin = min(min(min(rawDiff)));
+cmax = cmax - abs(cmax/1.5);
+cmin = cmin + abs(cmin/1.5);
+haxRPE.CLim = [cmin cmax];
+%-----------------------------------------
 for nn = 1:size(rawDiff,3)    
-    ph1.CData = rawDiff(:,:,nn);
+    phIM.CData = rawDiff(:,:,nn);
     pause(.05)
 end
 
+phIM = imagesc(dfDiff(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
+%-----------------------------------------
+% phIM.CData = IMGraw;
+% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
+cmax = max(max(max(dfDiff)));
+cmin = min(min(min(dfDiff)));
+cmax = cmax - abs(cmax/1.5);
+cmin = cmin + abs(cmin/1.5);
+haxRPE.CLim = [cmin cmax];
+%-----------------------------------------
 for nn = 1:size(dfDiff,3)    
-    ph1.CData = dfDiff(:,:,nn);
+    phIM.CData = dfDiff(:,:,nn);
     pause(.05)
 end
 
+%%
 
-
-Mask = GRINkernel(.8, 9, .14, .1, 1);
+Mask = GRINkern(.5, 9, .14, .1, 1);
 
 
 
@@ -1074,58 +1222,9 @@ USFHz = IMGc; if isempty(USFHzout); USFHzout = max(USFHa); end;
 USFHz(USFHz<USFHzcrit | USFHz>USFHzout) = 0;
 ZdfDiff = USFHz;
 
-
-% clear USFHa USFH_Zscore USFHzcrit USFHzout USFHz ZrawDiff
-% 
-% USFH = mean(rawDiff(:,:,Fcsoff:Fusmid),3);
-% IMGc = convn( USFH, Mask,'same');
-% 
-% USFHa = IMGc(:);
-% USFH_Zscore = zscore(USFHa);
-% USFHzcrit = min(USFHa(USFH_Zscore>1));
-% USFHzout = min(USFHa(USFH_Zscore>4));
-% USFHz = IMGc; if isempty(USFHzout); USFHzout = max(USFHa); end;
-% USFHz(USFHz<USFHzcrit | USFHz>USFHzout) = 0;
-% ZrawDiff = USFHz;
-
-
-% clear USFHa USFH_Zscore USFHzcrit USFHzout USFHz ZdfDiff
-% 
-% USFH = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
-% IMGc = convn( USFH, Mask,'same');
-% 
-% USFHa = IMGc(:);
-% USFH_Zscore = zscore(USFHa);
-% USFHzcrit = min(USFHa(USFH_Zscore>1));
-% USFHzout = min(USFHa(USFH_Zscore>4));
-% USFHz = IMGc; if isempty(USFHzout); USFHzout = max(USFHa); end;
-% USFHz(USFHz<USFHzcrit | USFHz>USFHzout) = 0;
-% ZdfDiff = USFHz;
-
-
 ZrawD = ZrawDiff > 0;
 
 ZdfD = ZdfDiff > 0;
-
-
-
-
-fh0=figure('Units','normalized','OuterPosition',[.02 .1 .85 .6],'Color','w','MenuBar','none');
-
-subplot(1,2,1)
-imagesc(ZrawD)
-axis image;  pause(.1)
-axis normal; pause(.1)
-
-subplot(1,2,2)
-imagesc(ZdfD)
-axis image;  pause(.1)
-axis normal; pause(.1)
-
-
-
-
-
 
 
 colorlist = [.99 .00 .00; .00 .99 .00; .99 .88 .88; .11 .77 .77;
@@ -1143,48 +1242,42 @@ BW = im2bw(BWc, graythresh(BWc));
 BW_filled = imfill(BW,'holes');
 
 
-
-fh55=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],'Color','w','MenuBar','none');
-subplot(2,2,1)
-imagesc(ZdfDiff)
-subplot(2,2,2)
-imagesc(BW)
-subplot(2,2,3)
-imagesc(BW)
-subplot(2,2,4)
-imagesc(BW_filled)
-
-pause(2)
-
+%-----------------------------------------
+% phIM.CData = IMGraw;
+% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
+cmax = max(max(max(BW_filled))).*1.0;
+cmin = min(min(min(BW_filled))).*1.0;
+cmax = cmax - abs(cmax/5);
+cmin = cmin + abs(cmin/5);
+haxRPE.CLim = [cmin cmax];
+%-----------------------------------------
+phIM = imagesc(BW_filled,'Parent',haxRPE,'CDataMapping','scaled');
+pause(1)
 
 
 
 
 
-fh11=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],'Color','w','MenuBar','none');
-% title(['Examining X. (ID: ', GRINstruct.file ')'])
 
-hax1 = axes('Position',[.001 .001 .999 .999],'Color','none'); 
-hax1.XLim = [1 size(dfDiff,1)];
-hax1.YLim = [1 size(dfDiff,1)];
-hold on;
 
-hax2 = axes('Position',[.001 .001 .999 .999],'Color','none'); 
-hax2.XLim = [1 size(dfDiff,1)];
-hax2.YLim = [1 size(dfDiff,1)];
-hold on;
-
-hax3 = axes('Position',[.001 .001 .1 .1],'Color','none'); 
-hax1.XLim = [1 size(dfDiff,1)];
-hax1.YLim = [1 size(dfDiff,1)];
-axis off; hold on;
+% hax3 = axes('Position',[.001 .001 .1 .1],'Color','none'); 
+% hax1.XLim = [1 size(dfDiff,1)];
+% hax1.YLim = [1 size(dfDiff,1)];
+% axis off; hold on;
 on = ones(size(dfDiff,1)); on(1) = 0;
 off = zeros(size(dfDiff,1)); off(1) = 1;
 
-axes(hax1)
-ph1 = imagesc(dfDiff(:,:,1),'Parent',hax1,'CDataMapping','scaled');
-
-
+%-----------------------------------------
+% phIM.CData = IMGraw;
+% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
+cmax = max(max(max(dfDiff)));
+cmin = min(min(min(dfDiff)));
+cmax = cmax - abs(cmax/1.2);
+cmin = cmin + abs(cmin/1.2);
+haxRPE.CLim = [cmin cmax];
+%-----------------------------------------
+phIM = imagesc(dfDiff(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
+pause(1)
 
 
 
@@ -1200,27 +1293,43 @@ end
 
 
 B(TooSmall) = [];
-axes(hax2)
+RPEROI = B;
+RPEMASK = BW_filled;
+
 for k = 1:length(B)
     boundary = B{k};
-    plot(boundary(:,2), boundary(:,1), 'Color', colorlist(1,:) , 'LineWidth', 2)
+    plot(boundary(:,2), boundary(:,1),'Parent',haxRPE, 'Color', colorlist(1,:) , 'LineWidth', 2)
 end
 
-axes(hax3)
-ph3 = imagesc(off,'Parent',hax3);
+% axes(hax3)
+% ph3 = imagesc(off,'Parent',haxRPE);
 
-for nn = 1:size(rawDiff,3)
-    ph1.CData = dfDiff(:,:,nn);
+for m = 1:size(rawDiff,3)
+    phIM.CData = dfDiff(:,:,m);
     
-    if nn == Fcsoff
-        ph3.CData = on;
-    end
+    %if m == Fcsoff
+    %    haxRPE.CData = on;
+    %end
     
     pause(.07)
 end
 
-ph1.CData = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
 
+
+
+%-----------------------------------------
+% phIM.CData = IMGraw;
+% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
+cmax = max(max(max(mean(dfDiff(:,:,Fcsoff:Fusmid),3))));
+cmin = min(min(min(mean(dfDiff(:,:,Fcsoff:Fusmid),3))));
+cmax = cmax - abs(cmax/2);
+cmin = cmin + abs(cmin/2);
+haxRPE.CLim = [cmin cmax];
+%-----------------------------------------
+% phIM = imagesc(mean(dfDiff(:,:,Fcsoff:Fusmid),3),'Parent',haxRPE);
+% haxRPE.CData = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
+
+phIM.CData = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
 
 %%
 
@@ -1235,66 +1344,250 @@ ph1.CData = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
 % size(IMGSdf(:,:,nn,IDtonenosucrose))
 
 
+
+
+
+for v = 1:size(dfDiff,3)
+
+    dfRPE(:,:,v) = IMGSdf(:,:,v,RPEf) .* BW_filled;
+    % dfRPE(:,:,nn) = dfDiff(:,:,nn) .* BW_filled;
+    dRPE = dfRPE(:,:,v);
+    dRPE = dRPE(:);
+    RPEfacDat(v) = mean(dRPE(dRPE>0));
+
+end
+
+for v = 1:size(dfDiff,3)
+
+    dfRPE(:,:,v) = IMGSdf(:,:,v,RPEc) .* BW_filled;
+    % dfRPE(:,:,v) = dfDiff(:,:,v) .* BW_filled;
+    dRPE = dfRPE(:,:,v);
+    dRPE = dRPE(:);
+    RPEcofDat(v) = mean(dRPE(dRPE>0));
+
+end
+
+
+%-----------------------------------------
+% phIM.CData = IMGraw;
+% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
+cmax = max(max(max([RPEfacDat; RPEcofDat])));
+cmin = min(min(min([RPEfacDat; RPEcofDat])));
+cmax = cmax - abs(cmax/5);
+cmin = cmin + abs(cmin/5);
+% haxRPE.CLim = [cmin cmax];
+%-----------------------------------------
+
+delete(findobj(GhaxGRIN.Children))
+% delete(findobj(GhaxGRIN, 'DisplayName', htable.ColumnName{column}))
+
+phMainData = plot([RPEfacDat; RPEcofDat]','Parent',GhaxGRIN, 'LineWidth',2);
+% 'Color', colorz{column},
+legend(GhaxGRIN,{TreatmentGroup{RPEf},TreatmentGroup{RPEc}})
+
+if cmax > .1
+    GhaxGRIN.YLim = [0 cmax];
+else
+    GhaxGRIN.YLim = [0 .1];
+end
+
+RPEinfo.RPEf = RPEf;
+RPEinfo.RPEc = RPEc;
+RPEinfo.TreatmentGroup = TreatmentGroup;
+RPEinfo.Fcson  = Fcson;
+RPEinfo.Fcsmid = Fcsmid;
+RPEinfo.Fcsoff = Fcsoff;
+RPEinfo.Fusmid = Fusmid;
+RPEinfo.Fusend = Fusend;
+
+%%
+end
+
+
+
+
+
+
+%-----------------------------------------------
+%        MASK KERNEL FUNCTION FOR FIND RPE
+%-----------------------------------------------
+function Mask = GRINkern(varargin)
+
+
+    if nargin < 1
+    
+        GNpk  = 2.5;	% HIGHT OF PEAK
+        GNnum = 11;     % SIZE OF MASK
+        GNsd = 0.18;	% STDEV OF SLOPE
+        GNres = 0.1;    % RESOLUTION
+        doMASKfig = 0;
+
+    elseif nargin == 1
+        v1 = varargin{1};
+        
+        GNpk  = v1;     % HIGHT OF PEAK
+        GNnum = 11;     % SIZE OF MASK
+        GNsd = 0.18;	% STDEV OF SLOPE
+        GNres = 0.1;    % RESOLUTION
+        doMASKfig = 0;
+
+    elseif nargin == 2
+        [v1, v2] = deal(varargin{:});
+
+        GNpk  = v1; 	% HIGHT OF PEAK
+        GNnum = v2;     % SIZE OF MASK
+        GNsd = 0.18;	% STDEV OF SLOPE
+        GNres = 0.1;    % RESOLUTION
+        doMASKfig = 0;
+
+    elseif nargin == 3
+        [v1, v2, v3] = deal(varargin{:});
+
+        GNpk  = v1; 	% HIGHT OF PEAK
+        GNnum = v2;     % SIZE OF MASK
+        GNsd = v3;      % STDEV OF SLOPE
+        GNres = 0.1;    % RESOLUTION
+        doMASKfig = 0;
+
+    elseif nargin == 4
+        [v1, v2, v3, v4] = deal(varargin{:});
+
+        GNpk  = v1; 	% HIGHT OF PEAK
+        GNnum = v2;     % SIZE OF MASK
+        GNsd = v3;      % STDEV OF SLOPE
+        GNres = v4;     % RESOLUTION
+        doMASKfig = 0;
+        
+    elseif nargin == 5
+        [v1, v2, v3, v4, v5] = deal(varargin{:});
+
+        GNpk  = v1; 	% HIGHT OF PEAK
+        GNnum = v2;     % SIZE OF MASK
+        GNsd = v3;      % STDEV OF SLOPE
+        GNres = v4;     % RESOLUTION
+        doMASKfig = v5;
+
+    else
+        warning('Too many inputs')
+    end
+
+%% -- MASK SETUP
+GNx0 = 0;       % x-axis peak locations
+GNy0 = 0;   	% y-axis peak locations
+GNspr = ((GNnum-1)*GNres)/2;
+
+a = .5/GNsd^2;
+c = .5/GNsd^2;
+
+[X, Y] = meshgrid((-GNspr):(GNres):(GNspr), (-GNspr):(GNres):(GNspr));
+Z = GNpk*exp( - (a*(X-GNx0).^2 + c*(Y-GNy0).^2)) ;
+
+Mask=Z;
+
+disp('SMOOTHING KERNEL PARAMETERS:')
+fprintf('  SIZE OF MASK:   % s x % s \n', num2str(GNnum), num2str(GNnum));
+fprintf('  STDEV OF SLOPE: % s \n', num2str(GNsd));
+fprintf('  HIGHT OF PEAK:  % s \n', num2str(GNpk));
+fprintf('  RESOLUTION:     % s \n\n', num2str(GNres));
+
+end
+
+
+
+
+
+
+
+
+%------------------------------------------------------------------------------
+%        FIND RPE FUNCTION
+%------------------------------------------------------------------------------
+function plotRPEloaded(RPEDATANEW, RPEMASKNEW, RPEROINEW, RPEfacDatNEW, RPEcofDatNEW, RPEinfoNEW)
+
+
+tabgp.SelectedTab = tabgp.Children(4);
+pause(1)
+    
+colorlist = [.99 .00 .00; .00 .99 .00; .99 .88 .88; .11 .77 .77;
+         .77 .77 .11; .77 .11 .77; .00 .00 .99; .22 .33 .44];    
+     
+     
+RPEf = RPEinfoNEW.RPEf;
+RPEc = RPEinfoNEW.RPEc;
+TreatmentGroup = RPEinfoNEW.TreatmentGroup;
+Fcson  = RPEinfoNEW.Fcson;
+Fcsmid = RPEinfoNEW.Fcsmid;
+Fcsoff = RPEinfoNEW.Fcsoff;
+Fusmid = RPEinfoNEW.Fusmid;
+Fusend = RPEinfoNEW.Fusend;     
+    
+
+for k = 1:length(RPEROINEW)
+    boundary = RPEROINEW{k};
+    plot(boundary(:,2), boundary(:,1),'Parent',haxRPE, 'Color', colorlist(2,:) , 'LineWidth', 2)
+end
+
+
+for m = 1:size(dfDiff,3)
+    phIM.CData = dfDiff(:,:,m);
+    %if m == Fcsoff; haxRPE.CData = on; end
+    pause(.07)
+end
+
+
+
+%-----------------------------------------
+% phIM.CData = IMGraw;
+% phIM = imagesc(IMGraw,'Parent',haxRPE,'CDataMapping','scaled');
+cmax = max(max(max(mean(dfDiff(:,:,Fcsoff:Fusmid),3))));
+cmin = min(min(min(mean(dfDiff(:,:,Fcsoff:Fusmid),3))));
+cmax = cmax - abs(cmax/2);
+cmin = cmin + abs(cmin/2);
+haxRPE.CLim = [cmin cmax];
+%-----------------------------------------
+
+phIM.CData = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
+
 for nn = 1:size(dfDiff,3)
 
-    dfRPE(:,:,nn) = IMGSdf(:,:,nn,IDtonenosucrose) .* BW_filled;
-    % dfRPE(:,:,nn) = dfDiff(:,:,nn) .* BW_filled;
+    dfRPE(:,:,nn) = IMGSdf(:,:,nn,RPEf) .* RPEMASKNEW;
+%     dfRPE(:,:,nn) = IMGSdf(:,:,nn,RPEf) .* BW_filled;
     dRPE = dfRPE(:,:,nn);
     dRPE = dRPE(:);
-    tnsRPE(nn) = mean(dRPE(dRPE>0));
+    RPEfacDatNEW(nn) = mean(dRPE(dRPE>0));
 
 end
 
 for nn = 1:size(dfDiff,3)
 
-    dfRPE(:,:,nn) = IMGSdf(:,:,nn,IDtonesucrose) .* BW_filled;
-    % dfRPE(:,:,nn) = dfDiff(:,:,nn) .* BW_filled;
+    dfRPE(:,:,nn) = IMGSdf(:,:,nn,RPEc) .* RPEMASKNEW;
+%     dfRPE(:,:,nn) = IMGSdf(:,:,nn,RPEc) .* BW_filled;
     dRPE = dfRPE(:,:,nn);
     dRPE = dRPE(:);
-    tsRPE(nn) = mean(dRPE(dRPE>0));
+    RPEcofDatNEW(nn) = mean(dRPE(dRPE>0));
 
 end
 
 
-figure
-plot([tnsRPE; tsRPE]')
-legend({'tone no sucrose','tone sucrose'})
 
+cmax = max(max(max([RPEfacDatNEW; RPEcofDatNEW])));
+cmin = min(min(min([RPEfacDatNEW; RPEcofDatNEW])));
+cmax = cmax - abs(cmax/5);
+cmin = cmin + abs(cmin/5);
 
-% fh1=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],'Color','w','MenuBar','none');
-% % title(['Examining X. (ID: ', GRINstruct.file ')'])
-% 
-% hax1 = axes('Position',[.001 .001 .999 .999],'Color','none'); 
-% hax1.XLim = [1 size(dfRPE,1)];
-% hax1.YLim = [1 size(dfRPE,1)];
-% hold on;
-% 
-% axes(hax1)
-% ph1 = imagesc(dfRPE(:,:,1),'Parent',hax1,'CDataMapping','scaled');
-% 
-% for nn = 1:size(rawDiff,3)
-%     ph1.CData = dfRPE(:,:,nn);
-%     pause(.1)
-% end
+delete(findobj(GhaxGRIN.Children))
 
+RPEgroups = {TreatmentGroup{RPEf},TreatmentGroup{RPEc}};
 
-% for nn = 1:size(GRINstruct.tf,2)
-% 
-% annotation(fh1,'textbox',...
-% 'Position',legpos{nn},...
-% 'Color',colorlist(nn,:),...
-% 'FontWeight','bold',...
-% 'String',TreatmentGroup(nn),...
-% 'FontSize',14,...
-% 'FitBoxToText','on',...
-% 'EdgeColor',colorlist(nn,:),...
-% 'FaceAlpha',.7,...
-% 'Margin',3,...
-% 'LineWidth',2,...
-% 'VerticalAlignment','bottom',...
-% 'BackgroundColor',[1 1 1]);
-% 
-% end
+phMainData = plot([RPEfacDatNEW; RPEcofDatNEW]','Parent',GhaxGRIN, 'LineWidth',2);
+legend(GhaxGRIN,{TreatmentGroup{RPEf},TreatmentGroup{RPEc}})
+
+if cmax > .1
+    GhaxGRIN.YLim = [0 cmax];
+else
+    GhaxGRIN.YLim = [0 .1];
+end
+
 
 %%
 end
@@ -1308,6 +1601,62 @@ end
 
 
 
+%%
+%------------------------------------------------------------------------------
+%        DATA IO SAVE LOAD
+%------------------------------------------------------------------------------
+
+
+function exportROIs(varargin)
+    
+    checkLabels = {'Save RPEROI to variable named:' ...
+                   'Save RPEMASK to variable named:' ...
+                   'Save RPEfacDat to variable named:' ...
+                   'Save RPEcofDat to variable named:' ...
+                   'Save RPEinfo to variable named:'}; 
+    varNames = {'RPEROI','RPEMASK','RPEfacDat','RPEcofDat','RPEinfo'}; 
+    items = {RPEROI,RPEMASK,RPEfacDat,RPEcofDat,RPEinfo};
+    export2wsdlg(checkLabels,varNames,items,...
+                 'Save Variables to Workspace');
+    
+end
+
+
+function saveROIs(varargin)
+    
+    % [file,path] = uiputfile('*.mat','Save ROIs As');
+    
+    RPEinfo.RPEgroups = RPEgroups;
+    
+    uisave({'RPEROI','RPEMASK','RPEfacDat','RPEcofDat','RPEinfo'},[RPEinfo.file 'RPEDATA']);
+    
+end
+
+function RPEDATA = loadROIs(hObject, eventdata, RPEDATA)
+    
+    [filename, pathname, filterindex] = uigetfile( ...
+        {'*.mat','MAT-files (*.mat)'}, ...
+        'Pick a file', ...
+        'MultiSelect', 'on');
+
+    % uiopen('.mat')
+    
+    
+    
+    RPEDATA = load([pathname,filename]);
+    
+    [RPEROINEW] = deal(RPEDATA.RPEROI);
+    [RPEMASKNEW] = deal(RPEDATA.RPEMASK);
+    [RPEfacDatNEW] = deal(RPEDATA.RPEfacDat);
+    [RPEcofDatNEW] = deal(RPEDATA.RPEcofDat);
+    [RPEinfoNEW] = deal(RPEDATA.RPEinfo);
+    
+    
+    plotRPEloaded(RPEDATANEW, RPEMASKNEW, RPEROINEW, RPEfacDatNEW, RPEcofDatNEW, RPEinfoNEW)
+    
+%     RPEDATA = {RPEROI , RPEfacDat , RPEcofDat};
+    
+end
 
 
 
@@ -1321,28 +1670,5 @@ end
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+%%
 end
