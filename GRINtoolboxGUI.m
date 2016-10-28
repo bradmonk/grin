@@ -93,7 +93,19 @@ global IMGraw IMGSraw IM
 
 global frame_period framesUncomp CS_type US_type delaytoCS CS_length compressFrms
 global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial 
-global total_frames CS_lengthFrames
+global total_frames CS_lengthFrames IMhist
+
+IMhist.smoothed   = 0;
+IMhist.cropped    = 0;
+IMhist.tiled      = 0;
+IMhist.reshaped   = 0;
+IMhist.aligned    = 0;
+IMhist.normalized = 0;
+IMhist.rawIM      = [];
+IMhist.minIM      = [];
+IMhist.maxIM      = [];
+IMhist.aveIM      = [];
+
 
 
 global cropAmount IMGfactors blockSize previewNframes customFunOrder 
@@ -417,8 +429,12 @@ exportvarsH = uicontrol('Parent', exportpanelH, 'Units', 'normalized', ...
     'Callback', @exportvars);
 
 savedatasetH = uicontrol('Parent', exportpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.34 0.95 0.28], 'FontSize', 13, 'String', 'Save Dataset',...
+    'Position', [0.03 0.34 0.46 0.28], 'FontSize', 11, 'String', 'Save Data',...
     'Callback', @savedataset);
+
+compnsaveH = uicontrol('Parent', exportpanelH, 'Units', 'normalized', ...
+    'Position', [0.52 0.34 0.46 0.28], 'FontSize', 11, 'String', 'Compress Save',...
+    'Callback', @compnsave);
 
 loadmatdataH = uicontrol('Parent', exportpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.03 0.95 0.28], 'FontSize', 13, 'String', 'Load .mat Dataset',...
@@ -956,6 +972,8 @@ pause(.02);
         XLSdata.sizeIMG = size(IMG);
 
         
+        
+IMhist.smoothed = 1;        
 smoothimgH.FontWeight = 'normal';
 pause(.02);
 enableButtons        
@@ -1026,6 +1044,8 @@ pause(.02);
         XLSdata.sizeIMG = size(IMG);
         
         
+        
+IMhist.cropped = 1;
 cropimgH.FontWeight = 'normal';
 pause(.02);
 enableButtons        
@@ -1115,7 +1135,9 @@ pause(.02);
         XLSdata.blockSize = blockSize;
         XLSdata.sizeIMG = size(IMG);
         
+
         
+IMhist.tiled = 1;
 imgblocksH.FontWeight = 'normal';
 pause(.02);
 enableButtons
@@ -1217,7 +1239,7 @@ pause(.02);
         
         XLSdata.sizeIMG = size(IMG);
 
-        
+IMhist.reshaped = 1;
 reshapeDataH.FontWeight = 'normal';
 pause(.02);
 enableButtons
@@ -1252,7 +1274,7 @@ disableButtons; pause(.02);
         
         XLSdata.sizeIMG = size(IMG);
 
-
+IMhist.reshaped = 0;
 enableButtons
 disp('Undo reshape (make 3D) completed!')
 end
@@ -1316,8 +1338,9 @@ pause(.02);
 
         XLSdata.CSonsetFrame = CSonsetFrame;
         XLSdata.CSoffsetFrame = CSoffsetFrame;
-        
-        
+
+
+IMhist.aligned = 1;
 alignCSFramesH.FontWeight = 'normal';
 pause(.02);
 enableButtons
@@ -1379,6 +1402,9 @@ pause(.02);
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
 
+        
+
+IMhist.normalized = 1;
 dFoverFH.FontWeight = 'normal';
 pause(.02);
 enableButtons        
@@ -1428,10 +1454,19 @@ pause(.02);
         fprintf('\n muIMGS matrix is now size: % s \n\n', num2str(size(muIMGS)));
 
         previewIMGSTACK(muIMGS)
+        
+        
+        mIm = squeeze(mean(squeeze(mean(muIMGS,4)),3));
+        
         axes(haxGRIN)
-        phGRIN = imagesc(muIMGS(:,:,1) , 'Parent', haxGRIN);
+        phGRIN = imagesc(mIm,'Parent',haxGRIN,'CDataMapping','scaled');
+        cmax = max(max(max(max(mIm))));
+        cmin = min(min(min(min(mIm))));
+        cmax = cmax - abs(cmax/3);
+        cmin = cmin + abs(cmin/3);
+        haxGRIN.CLim = [cmin cmax];
 
-        phGRIN.CData = squeeze(mean(squeeze(mean(muIMGS,4)),3));
+        % phGRIN.CData = squeeze(mean(squeeze(mean(muIMGS,4)),3));
 
     
         
@@ -2557,10 +2592,14 @@ disableButtons; pause(.02);
         [IMGcMin, IMGcMinInd] = min(IMG(:));    
         % [I,J,tmp1] = ind2sub(size(IMG),cb1)
         % IMG(I,J,tmp1)
-
+        
         axes(haxGRIN)
-        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
-
+        phGRIN = imagesc(IMGi(:,:,1),'Parent',haxGRIN,'CDataMapping','scaled');
+        cmax = max(max(max(IMGi)));
+        cmin = min(min(min(IMGi)));
+        cmax = cmax - abs(cmax/3);
+        cmin = cmin + abs(cmin/3);
+        haxGRIN.CLim = [cmin cmax];
 
         for nn = 1:previewStacknum
 
@@ -2613,8 +2652,12 @@ disableButtons; pause(.02);
         % IMG(I,J,tmp1)
 
         axes(haxGRIN)
-        phGRIN = imagesc(IMGSTACK(:,:,1) , 'Parent', haxGRIN);
-
+        phGRIN = imagesc(IMGi(:,:,1),'Parent',haxGRIN,'CDataMapping','scaled');
+        cmax = max(max(max(IMGi)));
+        cmin = min(min(min(IMGi)));
+        cmax = cmax - abs(cmax/3);
+        cmin = cmin + abs(cmin/3);
+        haxGRIN.CLim = [cmin cmax];
 
         for nn = 1:previewStacknum
 
@@ -2825,20 +2868,188 @@ end
 
 
 %----------------------------------------------------
+%        COMPRESS AND SAVE
+%----------------------------------------------------
+function compnsave(hObject, eventdata)
+
+    if size(IMG,3) < 1
+        disp('No data to save')
+        return
+    end
+
+    comchoice = questdlg('Save compressed dataset?', ...
+        'Compress IMG Stack', ...
+        'Single','uint16','Nevermind','Single');
+
+    switch comchoice
+        case 'Single'
+            disp('DETERMING OPTIMAL DATA COMPRESSION METHOD...')
+            doCompress = 1;
+        case 'uint16'
+            disp('DETERMING OPTIMAL DATA COMPRESSION METHOD...')
+            doCompress = 2;            
+        case 'Nevermind'
+            disp('RETURNING TO GUI')
+            doCompress = 0;
+            return
+    end 
+
+    
+    
+    
+    
+    
+    if doCompress == 1
+    
+        IM = IMG;
+        IMhist.rawIM = IMG(:,:,1,1);
+        IMhist.minIM = min(min(min(min(IMG))));
+        IMhist.maxIM = max(max(max(max(IMG))));
+        IMhist.aveIM = mean(mean(mean(mean(IMG))));
+
+        
+        IMG = im2single( IMG  );
+        IMGSraw = im2single( IMGSraw  );
+        muIMGS  = im2single( muIMGS  );
+
+        [filen,pathn] = uiputfile([GRINstruct.file(1:end-4),'.mat'],'Save Vars to Workspace');
+        if isequal(filen,0) || isequal(pathn,0)
+           disp('Data Save Cancelled'); return
+        end; disp('Saving data to .mat file, please wait...')
+
+        disableButtons; pause(.02);
+
+        save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable','XLSdata',...
+                                   'muIMGS','IMGSraw','LICK','IMhist','-v7.3')
+
+        disp('Dataset saved!')
+
+        IMG = IM;
+        IM = [];
+
+        IMGSraw = double(IMGSraw);
+        muIMGS  = double(muIMGS);
+
+    
+    end
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    if doCompress == 2
+        IM = IMG;
+        IMhist.rawIM = IMG(:,:,1,1);
+        IMhist.minIM = min(min(min(min(IMG))));
+        IMhist.maxIM = max(max(max(max(IMG))));
+        IMhist.aveIM = mean(mean(mean(mean(IMG))));
+
+
+        if IMhist.minIM < 0
+            IMG = im2uint16(  IMG +  abs(IMhist.minIM)   );
+            % IM = im2single( IMG  );
+        else
+            IMG = im2uint16(  IMG -  abs(IMhist.minIM)   );
+        end
+
+
+        IMGSraw = im2single( IMGSraw  );
+        muIMGS  = im2single( muIMGS  );
+
+
+        [filen,pathn] = uiputfile([GRINstruct.file(1:end-4),'.mat'],'Save Vars to Workspace');
+        if isequal(filen,0) || isequal(pathn,0)
+           disp('Data Save Cancelled'); return
+        end; disp('Saving data to .mat file, please wait...')
+
+        disableButtons; pause(.02);
+
+        save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable','XLSdata',...
+                                   'muIMGS','IMGSraw','LICK','IMhist','-v7.3')
+
+        disp('Dataset saved!')
+
+        IMG = IM;
+        IM = [];
+
+        IMGSraw = double(IMGSraw);
+        muIMGS  = double(muIMGS);
+    end
+            
+enableButtons        
+end
+
+
+
+
+%----------------------------------------------------
 %        LOAD .mat DATA
 %----------------------------------------------------
 function loadmatdata(hObject, eventdata)
 % disableButtons; pause(.02);
 
+
     [filename, pathname] = uigetfile( ...
-    {'*.mat',...
-   '*.mat','MAT-files (*.mat)'}, ...
+    {'*.mat'}, ...
    'Select a .mat datafile');
     
-    load([pathname, filename])
+    IMG = [];
+    IMGSraw = [];
+    muIMGS = [];
 
+disp('Loading data from .mat file, please wait...')
+disableButtons; pause(.02);    
 
-disp('Dataset loaded!')
+    LODIN = load([pathname, filename]);
+    
+    
+    [IMG] = deal(LODIN.IMG);
+    [GRINstruct] = deal(LODIN.GRINstruct);
+    [GRINtable] = deal(LODIN.GRINtable);
+    [XLSdata] = deal(LODIN.XLSdata);
+    [muIMGS] = deal(LODIN.muIMGS);
+    [IMGSraw] = deal(LODIN.IMGSraw);
+    [LICK] = deal(LODIN.LICK);
+    [IMhist] = deal(LODIN.IMhist);
+    
+    
+    if isa(IMG, 'single')
+
+        disp('loading single precision dataset...')
+        IM = IMG;
+        IMG = double(IM);
+        
+    else
+        
+        disp('loading uint16-compressed dataset...')
+        IM = IMG;
+        IMG = double(IM);
+        lintrans = @(x,a,b,c,d) (c.*(1-(x-a)./(b-a)) + d.*((x-a)./(b-a)));
+        IMG = lintrans(IMG,min(min(min(min(IMG)))),max(max(max(max(IMG)))),IMhist.minIM,IMhist.maxIM);
+        
+    end
+    
+    LODIN = [];
+    IM = [];
+    
+    previewStack
+
+    clc;
+    disp('Dataset loaded with the following history...')
+    disp(IMhist)
+    disp('Experimental parameters...')
+    disp(XLSdata.CSUSvals)
+    disp('Image stack sizes...')
+    disp(['size(IMG) :  ' num2str(size(IMG))])
+    disp(['size(muIMGS) :  ' num2str(size(muIMGS))])
+    disp(['size(IMGSraw) :  ' num2str(size(IMGSraw))])
+
+disp('Dataset fully loaded, GRIN Toolbox is Ready!')
 enableButtons        
 end
 
