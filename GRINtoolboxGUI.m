@@ -90,6 +90,7 @@ global IMG GRINstruct GRINtable XLSdata LICK
 global xlsN xlsT xlsR
 global lickN %lickT lickR
 global IMGraw IMGSraw IM
+global memes conboxH
 
 global frame_period framesUncomp CS_type US_type delaytoCS CS_length compressFrms
 global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial 
@@ -145,11 +146,11 @@ toggrid = 0;
 
 global confile confilefullpath
 confile = 'gcconsole.txt';
-diary(confile)
+% diary(confile)
 disp('GRIN CONSOLE LOGGING ON.')
-diary off
+% diary off
 confilefullpath = which(confile,'-all');
-delete(confile)
+% delete(confile)
 
 
 % -----------------------------------------------------------------
@@ -181,15 +182,15 @@ delete(confile)
 %########################################################################
 
 % mainguih.CurrentCharacter = '+';
-mainguih = figure('Units', 'normalized','Position', [.05 .1 .85 .65], 'BusyAction',...
-    'cancel', 'Name', 'mainguih', 'Tag', 'mainguih','Visible', 'Off'); 
+mainguih = figure('Units', 'normalized','Position', [.05 .10 .90 .75], 'BusyAction',...
+    'cancel', 'Name', 'GRIN TOOLBOX', 'Tag', 'mainguih','Visible', 'Off'); 
      % 'KeyPressFcn', {@keypresszoom,1}, 'CloseRequestFcn',{@mainGUIclosereq}
      % intimagewhtb = uitoolbar(mainguih);
 
 
 % -------- MAIN FIGURE WINDOW --------
 haxGRIN = axes('Parent', mainguih, 'NextPlot', 'replacechildren',...
-    'Position', [0.01 0.02 0.40 0.85], 'PlotBoxAspectRatio', [1 1 1], ...
+    'Position', [0.01 0.01 0.40 0.85], 'PlotBoxAspectRatio', [1 1 1], ...
     'XColor','none','YColor','none','YDir','reverse'); 
     % ,'XDir','reverse',...
     
@@ -203,7 +204,35 @@ importimgstackH = uicontrol('Parent', mainguih, 'Units', 'normalized', ...
 
 imgsliderH = uicontrol('Parent', mainguih, 'Units', 'normalized','Style','slider',...
 	'Max',100,'Min',1,'Value',1,'SliderStep',[0.01 0.10],...
-	'Position', [0.01 0.86 0.40 0.03], 'Callback', @imgslider);
+	'Position', [0.01 0.86 0.40 0.02], 'Callback', @imgslider);
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%           MEMO CONSOLE GUI WINDOW
+%----------------------------------------------------
+
+memopanelH = uipanel('Parent', mainguih,'Title','Memo Log ','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],...
+    'Position', [0.43 0.76 0.35 0.23]); % 'Visible', 'Off',
+
+
+memes = {' ',' ',' ', ' ',' ',' ',' ', ...
+         'Welcome to the GRIN TOOLBOX', 'GUI is loading...'};
+
+conboxH = uicontrol('Parent',memopanelH,'Style','listbox','Units','normalized',...
+        'Max',9,'Min',0,'Value',9,'FontSize', 13,'FontName', 'FixedWidth',...
+        'String',memes,'FontWeight', 'bold',...
+        'Position',[.02 .02 .96 .96]);  
+    
+
+% memocon(['Factor set to: ' callbackdata.NewValue.String])
+
 
 
 
@@ -215,96 +244,128 @@ imgsliderH = uicontrol('Parent', mainguih, 'Units', 'normalized','Style','slider
 %----------------------------------------------------
 IPpanelH = uipanel('Title','Image Processing','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
-    'Position', [0.43 0.25 0.35 0.73]); % 'Visible', 'Off',
+    'Position', [0.43 0.22 0.35 0.53]); % 'Visible', 'Off',
 
 
 
 runallIPH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.86 0.95 0.10], 'FontSize', 13, 'String', 'Run All Selected Processes',...
+    'Position', [0.03 0.88 0.95 0.12], 'FontSize', 13, 'String', 'Run All Selected Processes',...
     'Callback', @runallIP, 'Enable','off'); 
 
+HposCheck.A  = [.02  .76  .05  .05];
+HposCheck.B  = [.02  .64  .05  .05];
+HposCheck.C  = [.02  .52  .05  .05];
+HposCheck.D  = [.02  .40  .05  .05];
+HposCheck.E  = [.02  .28  .05  .05];
+HposCheck.F  = [.02  .16  .05  .05];
+HposCheck.G  = [.02  .04  .05  .05];
+
+HposButton.A = [.08  .73  .60  .11];
+HposButton.B = [.08  .61  .60  .11];
+HposButton.C = [.08  .49  .60  .11];
+HposButton.D = [.08  .37  .60  .11];
+HposButton.E = [.08  .25  .60  .11];
+HposButton.F = [.08  .13  .60  .11];
+HposButton.G = [.08  .01  .60  .11];
+
+HposTxt.A    = [.71  .83  .27  .04];
+HposTxt.B    = [.71  .70  .27  .04];
+HposTxt.C    = [.71  .57  .27  .04];
+HposTxt.D    = [.71  .44  .27  .04];
+HposTxt.E    = [.71  .34  .27  .04];
+HposTxt.F    = [.71  .21  .27  .04];
+HposTxt.G    = [.71  .07  .27  .04];
+
+HposEdit.A   = [.71  .76  .27  .07];
+HposEdit.B   = [.70  .63  .28  .07];
+HposEdit.C   = [.71  .50  .27  .07];
+HposEdit.D   = [.71  .39  .27  .08];
+HposEdit.E   = [.71  .27  .27  .07];
+HposEdit.F   = [.70  .14  .28  .07];
+HposEdit.G   = [.70  .01  .27  .08];
+
 checkbox1H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.02 0.71 .05 .05] ,'String','', 'Value',1);
+    'Position', HposCheck.A ,'String','', 'Value',1);
 checkbox2H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.02 0.61 .05 .05] ,'String','', 'Value',1);
+    'Position', HposCheck.B ,'String','', 'Value',1);
 checkbox3H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.02 0.51 .05 .05] ,'String','', 'Value',1);
+    'Position', HposCheck.C ,'String','', 'Value',1);
 checkbox4H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.02 0.41 .05 .05] ,'String','', 'Value',1);
+    'Position', HposCheck.D ,'String','', 'Value',1);
 checkbox5H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.02 0.31 .05 .05] ,'String','', 'Value',1);
+    'Position', HposCheck.E ,'String','', 'Value',1);
 checkbox6H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.02 0.21 .05 .05] ,'String','', 'Value',1);
+    'Position', HposCheck.F ,'String','', 'Value',1);
 checkbox7H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.02 0.11 .05 .05] ,'String','', 'Value',1);
+    'Position', HposCheck.G ,'String','', 'Value',1);
 
 
 smoothimgH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.08 0.70 0.60 0.08], 'FontSize', 13, 'String', 'Smooth Images',...
+    'Position', HposButton.A, 'FontSize', 12, 'String', 'Smooth Images',...
     'Callback', @smoothimg, 'Enable','off'); 
 smoothimgtxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.76 0.27 0.03], 'FontSize', 11,'String', 'Smooth Amount (std)');
+    'Position', HposTxt.A, 'FontSize', 10,'String', 'Smooth Amount (std)');
 smoothimgnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.71 0.71 0.27 0.05], 'FontSize', 13); 
+    'Position', HposEdit.A, 'FontSize', 11); 
 
 
 
 cropimgH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.08 0.60 0.60 0.08], 'FontSize', 13, 'String', 'Crop Images',...
+    'Position', HposButton.B, 'FontSize', 12, 'String', 'Crop Images',...
     'Callback', @cropimg, 'Enable','off'); 
 cropimgtxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.66 0.27 0.03], 'FontSize', 11,'String', 'Crop Amount (pxl)');
+    'Position', HposTxt.B, 'FontSize', 10,'String', 'Crop Amount (pxl)');
 cropimgnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.71 0.61 0.27 0.05], 'FontSize', 13); 
+    'Position', HposEdit.B, 'FontSize', 11); 
 
 
 
 imgblocksH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.08 0.50 0.60 0.08], 'FontSize', 13, 'String', 'Tile Images',...
+    'Position', HposButton.C, 'FontSize', 12, 'String', 'Tile Images',...
     'Callback', @imgblocks, 'Enable','off'); 
 imgblockstxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.56 0.27 0.03], 'FontSize', 10,'String', 'Tile Size (pxl)');
+    'Position', HposTxt.C, 'FontSize', 10,'String', 'Tile Size (pxl)');
 imgblockspopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
     'Units', 'normalized', 'String', {'20','2','1'},...
-    'Position', [0.70 0.505 0.28 0.05],...
+    'Position', HposEdit.C,...
     'Callback', @imgblockspopup);
 
 
 reshapeDataH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.08 0.40 0.60 0.08], 'FontSize', 13, 'String', 'Reshape stack by trial (4D) ',...
+    'Position', HposButton.D, 'FontSize', 12, 'String', 'Reshape stack by trial (4D) ',...
     'Callback', @reshapeData, 'Enable','off'); 
 unshapeDataH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.71 0.41 0.27 0.06], 'FontSize', 10, 'String', 'Undo reshape (3D) ',...
+    'Position', HposEdit.D, 'FontSize', 10, 'String', 'Undo reshape (3D) ',...
     'Callback', @unshapeData, 'Enable','off'); 
 
 
 
 alignCSFramesH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.08 0.30 0.60 0.08], 'FontSize', 13, 'String', 'Align frames by CS onset',...
+    'Position', HposButton.E, 'FontSize', 12, 'String', 'Align frames by CS onset',...
     'Callback', @alignCSframes, 'Enable','off');
 alignCSFramestxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.36 0.27 0.03], 'FontSize', 11,'String', 'Delay to CS onset (s)');
+    'Position', HposTxt.E, 'FontSize', 10,'String', 'Delay to CS onset (s)');
 alignCSFramesnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.71 0.31 0.27 0.05], 'FontSize', 13); 
+    'Position', HposEdit.E, 'FontSize', 11); 
 
 
 
 dFoverFH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.08 0.20 0.60 0.08], 'FontSize', 13, 'String', 'Compute dF / F',...
+    'Position', HposButton.F, 'FontSize', 12, 'String', 'Compute dF / F',...
     'Callback', @dFoverF, 'Enable','off'); 
 dFoverFtxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.71 0.26 0.27 0.03], 'FontSize', 11,'String', 'Baseline time (s)');
+    'Position', HposTxt.F, 'FontSize', 10,'String', 'Baseline time (s)');
 dFoverFnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.71 0.21 0.27 0.05], 'FontSize', 13);
+    'Position', HposEdit.F, 'FontSize', 11);
 
 
 
 timepointMeansH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', [0.08 0.10 0.60 0.08], 'FontSize', 13, 'String', 'Compute trial means ',...
+    'Position', HposButton.G, 'FontSize', 12, 'String', 'Compute trial means ',...
     'Callback', @timepointMeans, 'Enable','off');              
 CSUSpopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
     'Units', 'normalized', 'String', {'CS','US'},...
-    'Position', [0.70 0.105 0.28 0.05],...
+    'Position', HposEdit.G,...
     'Callback', @CSUSpopup, 'Enable','off');
 
 
@@ -315,7 +376,7 @@ CSUSpopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
 %----------------------------------------------------
 graphspanelH = uipanel('Title','Graphs and Figures','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
-    'Position', [0.43 0.02 0.35 0.20]); % 'Visible', 'Off',
+    'Position', [0.43 0.01 0.35 0.20]); % 'Visible', 'Off',
               
 
 
@@ -324,18 +385,13 @@ plotTileStatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.66 0.31 0.28], 'FontSize', 12, 'String', 'Plot Tile Data',...
     'Callback', @plotTileStats, 'Enable','off'); 
 
-
-
-getROIstatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.34 0.31 0.28], 'FontSize', 12, 'String', 'Find RPE ROIs',...
-    'Callback', @findRPEROI, 'Enable','off');
-
+plotGUIH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.34 0.31 0.28], 'FontSize', 12, 'String', 'Open Plot GUI',...
+    'Callback', @plotGUI, 'Enable','off');
 
 plotGroupMeansH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.03 0.31 0.28], 'FontSize', 12, 'String', 'Plot Group Means',...
     'Callback', @plotGroupMeans, 'Enable','off');
-
-
 
 viewGridOverlayH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
     'Position', [0.35 0.66 0.31 0.28], 'FontSize', 12, 'String', 'View Grid Overlay',...
@@ -344,7 +400,6 @@ viewGridOverlayH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
 viewTrialTimingsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
     'Position', [0.35 0.34 0.31 0.28], 'FontSize', 12, 'String', 'View Trial Timings',...
     'Callback', @viewTrialTimings, 'Enable','off');
-
 
 previewStackH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
     'Position', [0.35 0.03 0.38 0.28], 'FontSize', 12, 'String', 'Preview Image Stack',...
@@ -357,11 +412,9 @@ previewStacknumH = uicontrol('Parent', graphspanelH, 'Style', 'Edit', 'Units', '
 %     'Position', [.62 0.12 .14 .14] ,'String','Postprocessing Previews', 'Value',1);
 
 
-plotGUIH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
-    'Position', [0.67 0.45 0.31 0.50], 'FontSize', 12, 'String', 'Open Plot GUI',...
-    'Callback', @plotGUI, 'Enable','off');
-
-
+getROIstatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
+    'Position', [0.67 0.45 0.31 0.50], 'FontSize', 12, 'String', 'ROI TOOLBOX',...
+    'Callback', @openROITOOLBOX, 'Enable','off');
 
 
 
@@ -422,7 +475,7 @@ resetwsH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
 %----------------------------------------------------
 exportpanelH = uipanel('Title','I/O','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
-    'Position', [0.80 0.02 0.18 0.20]); % 'Visible', 'Off',
+    'Position', [0.80 0.01 0.18 0.20]); % 'Visible', 'Off',
               
 exportvarsH = uicontrol('Parent', exportpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.65 0.95 0.28], 'FontSize', 13, 'String', 'Export Vars to Workspace ',...
@@ -449,7 +502,7 @@ pause(.1)
 
 grinlenstoolbox()
 
-
+% memocon('Ready!')
 
 
 
@@ -496,7 +549,7 @@ function grinlenstoolbox(hObject, eventdata)
     phGRIN = imagesc(imgLogo , 'Parent', haxGRIN);
         pause(.1)
 
-disp('Ready!')
+memocon('Ready to Import Image Stack!')
 end
 
 
@@ -505,8 +558,8 @@ end
 %        IMPORT IMAGE STACK MAIN FUNCTION
 %----------------------------------------------------
 function importimgstack(hObject, eventdata)
-diary on
-disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
+% diary on
+memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
 
   %------------------- IMPORT DATA DIALOGUES --------------------
@@ -516,7 +569,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     % PATH TO IMAGE STACK WAS ALREADY SET MANUALLY ABOVE
     if numel(imgfilename) > 1
         
-        disp('image stack path was set manually')
+        memocon('image stack path was set manually')
             
     % PATH TO IMAGE STACK WAS NOT SET - GET IT NOW    
     else
@@ -549,7 +602,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
                            'Yes','No (import manually)','Yes');
         switch choice
             case 'Yes'
-                % disp([choice ' importing xls data...'])
+                % memocon([choice ' importing xls data...'])
                 xlsfilename = xlsFiles.name;
                 xlspathname = imgpathname;
                 xlsfullpath = [xlspathname xlsfilename];
@@ -582,9 +635,9 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
     % NOTHING MATCHED - ALLOW MANUAL SELECTION    
     else
-        disp(' ');
-        disp('No matching xls files were found in the same dir as the tif stack');
-        disp('Manually select the Excel datasheet of imaging parameters');
+        memocon(' ');
+        memocon('No matching xls files were found in the same dir as the tif stack');
+        memocon('Manually select the Excel datasheet of imaging parameters');
         [xlsfilename, xlspathname] = uigetfile({'*.xls*'},...
                 'Select Excel file associated with the TIF stack', imgpathname);
         xlsfullpath = [xlspathname xlsfilename];
@@ -629,7 +682,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     % PATH TO LICK.XLS DATA WAS ALREADY SET MANUALLY ABOVE
     if numel(lickfilename) > 1
         
-        disp('xls data path was set manually')
+        memocon('xls data path was set manually')
         
     % PATH TO LICK.XLS DATA WAS NOT SET MANUALLY - GET IT NOW
     else
@@ -680,9 +733,9 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
         % NOTHING MATCHED - ALLOW MANUAL SELECTION    
         else
-            disp(' ');
-            disp('No matching licking files were found tif stack dir');
-            disp('Manually select the Excel licking datasheet');
+            memocon(' ');
+            memocon('No matching licking files were found tif stack dir');
+            memocon('Manually select the Excel licking datasheet');
             [lickfilename, lickpathname] = uigetfile({'*.xls*'},...
                     'Select Excel file of licking data', imgpathname);
             lickfullpath = [lickpathname lickfilename];
@@ -701,12 +754,13 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
   
   
   
-  
+    memocon(sprintf('GRIN DATASET: % s ', imgfilename));
     fprintf('\n\n GRIN DATASET: % s \n\n', imgfilename);
     pause(.1)
     
     
     % ------------- IMG STACK IMPORT CODE -----------
+    memocon(sprintf('Importing tif stack from: % s', [imgpathname , imgfilename]));
     fprintf('\n Importing tif stack from...\n % s \n', [imgpathname , imgfilename]);
 
     FileTif=[imgpathname , imgfilename];
@@ -734,7 +788,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     
     end
     
-    disp('Image stack sucessfully imported!') 
+    memocon('Image stack sucessfully imported!') 
     
     axes(haxGRIN)
     colormap(haxGRIN,parula)
@@ -769,6 +823,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
               
     % ------------- XLS IMPORT CODE -----------
+    memocon(sprintf('Importing xls info from: % s', [xlspathname , xlsfilename]));
     fprintf('\n Importing xls info from...\n % s \n', [xlspathname , xlsfilename]);
 
     [xlsN,xlsT,xlsR] = xlsread([xlspathname , xlsfilename]);
@@ -777,7 +832,8 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
         xlsN(1,:) = [];
     end
 
-    disp(' '); disp('Preview of raw xls import...')
+    disp(' '); 
+    disp('Preview of raw xls import...')
     disp(xlsR(1:5,1:7))
 
     frame_period    = xlsN(1,1);
@@ -797,7 +853,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     CS_lengthFrames = round(CS_length .* framesPerSec); % CS length in frames
 
     
-    disp('XLS data successfully imported and processed!')
+    memocon('XLS data successfully imported and processed!')
     
     fprintf('\n\n In this dataset there are...')
     fprintf('\n    total trials: %10.1f  ', total_trials)
@@ -878,7 +934,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
         LICK = reshape(lickN,floor(size(lickN,1) / framesPerTrial),...
                        [], size(lickN,2));
 
-
+        memocon('Lick data imported and reshaped')
         fprintf('\n\n Lick data imported and reshaped to size:\n   size(LICK) % s \n\n', ...
                  num2str(size(LICK)));
         % LICK = squeeze(sum(LICK,1));
@@ -896,6 +952,7 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
      
      
      % VISUALIZE AND ANNOTATE
+     memocon(sprintf('Imported stack size: % s ', num2str(size(IMG))));
      fprintf('\n\n Imported stack size: % s ', num2str(size(IMG)));
      
   IMG = IMG(:,:,1:total_frames);
@@ -905,8 +962,8 @@ disp('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
      update_IMGfactors()
     
 enableButtons
-disp('Image stack and xls data import completed!')
-diary(confile)
+memocon('Image stack and xls data import completed!')
+% diary(confile)
 diary off
 end
 
@@ -931,7 +988,7 @@ pause(.02);
 
 
     % PERFORM IMAGE SMOOTHING
-    disp(' '); disp('PERFORMING IMAGE SMOOTHING')
+    memocon(' '); memocon('PERFORMING IMAGE SMOOTHING')
 
     
     smoothSD = str2num(smoothimgnumH.String);
@@ -977,7 +1034,7 @@ IMhist.smoothed = 1;
 smoothimgH.FontWeight = 'normal';
 pause(.02);
 enableButtons        
-disp('Image smoothing completed!')
+memocon('Image smoothing completed!')
 end
 
 
@@ -994,7 +1051,7 @@ cropimgH.FontWeight = 'bold';
 pause(.02);
 
     % TRIM EDGES FROM IMAGE
-    disp(' '); disp('TRIMMING EDGES FROM IMAGE')
+    memocon(' '); memocon('TRIMMING EDGES FROM IMAGE')
     
     
     cropAmount = str2num(cropimgnumH.String);
@@ -1007,7 +1064,11 @@ pause(.02);
         sp2 = sprintf('\n Imported image was size: %6.0f %8.0f %8.0f  \n', size(IMG));
         sp3 = sprintf('\n Trimmed image is size: %8.0f %8.0f %8.0f  \n', size(IMGt));
         disp([sp1 sp2 sp3])
-        
+        st1 = {'rows(y)';'cols(x)';'frames'};
+        sp1 = sprintf('% 32.10s % s % s', st1{1:3});
+        sp2 = sprintf('Imported image size: %6.0f %8.0f %8.0f', size(IMG));
+        sp3 = sprintf('Trimmed image size: %8.0f %8.0f %8.0f', size(IMGt));
+        disp([sp1 sp2 sp3])        
         
         % fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
         % fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGt)));
@@ -1049,7 +1110,7 @@ IMhist.cropped = 1;
 cropimgH.FontWeight = 'normal';
 pause(.02);
 enableButtons        
-disp('Crop Images completed!')
+memocon('Crop Images completed!')
 end
 
 
@@ -1067,12 +1128,13 @@ pause(.02);
 
 
     % CREATE IMAGES TILES PER ROBERT'S SPEC
-    disp('SEGMENTING IMGAGES INTO TILES')
+    memocon('SEGMENTING IMGAGES INTO TILES')
 
     
         update_IMGfactors()
     blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
         fprintf('\n\n Tile Size: % s \n\n', num2str(blockSize));
+        memocon(sprintf('Tile Size: % s ', num2str(blockSize)));
 
     IMGb = zeros(size(IMG));
     sz = size(IMG,3);
@@ -1118,8 +1180,12 @@ pause(.02);
     
         % close(hwb)
         % VISUALIZE AND ANNOTATE
+        
         fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
         fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGb)));
+        memocon(sprintf('IMG matrix previous size: % s ', num2str(size(IMG))));
+        memocon(sprintf('IMG matrix current size: % s ', num2str(size(IMGb))));
+        
         % GRINcompare(IMG, IMGb, previewNframes)
         mainguih.HandleVisibility = 'off';
         close all;
@@ -1141,7 +1207,7 @@ IMhist.tiled = 1;
 imgblocksH.FontWeight = 'normal';
 pause(.02);
 enableButtons
-disp('Block-Segment Images completed!')        
+memocon('Block-Segment Images completed!')        
 end
 
 
@@ -1156,6 +1222,7 @@ function imgblockspopup(hObject, eventdata)
     blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
     
     fprintf('\n\n New tile size: % s \n\n', num2str(blockSize));
+    memocon(sprintf('New tile size: % s ', num2str(blockSize)));
     
     % imgblockspopupH.String
     % imgblockspopupH.Value
@@ -1222,7 +1289,7 @@ pause(.02);
 
 
     % RESHAPE IMAGE STACK INTO SIZE: YPIXELS by XPIXELS in NFRAMES per NTRIALS
-    disp(' '); disp('RESHAPING DATASET (ADDINING DIM FOR TRIALS)'); 
+    memocon(' '); memocon('Reshaping dataset to 4D');
     
     IMGr = reshape(IMG,size(IMG,1),size(IMG,2),framesPerTrial,[]);
         
@@ -1230,6 +1297,8 @@ pause(.02);
         % VISUALIZE AND ANNOTATE
         fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
         fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGr)));
+        memocon(sprintf('IMG matrix previous size: % s ', num2str(size(IMG))));
+        memocon(sprintf('IMG matrix current size: % s ', num2str(size(IMGr))));
     
     IMG = IMGr;
         
@@ -1243,7 +1312,7 @@ IMhist.reshaped = 1;
 reshapeDataH.FontWeight = 'normal';
 pause(.02);
 enableButtons
-disp('Reshape stack by trial completed!')
+memocon('Reshape stack by trial completed!')
 end
 
 
@@ -1258,7 +1327,7 @@ function unshapeData(hObject, eventdata)
 disableButtons; pause(.02);
 
     % RESHAPE IMAGE STACK INTO SIZE: YPIXELS by XPIXELS in NTOTALFRAMES
-    disp(' '); disp('UNDOING DATASET RESHAPE (REMOVING TRIALS DIM)'); 
+    memocon(' '); memocon('Converting back to 3D stack'); 
     
     IMGr = reshape(IMG,size(IMG,1),size(IMG,2),[]);
         
@@ -1276,7 +1345,7 @@ disableButtons; pause(.02);
 
 IMhist.reshaped = 0;
 enableButtons
-disp('Undo reshape (make 3D) completed!')
+memocon('Undo reshape completed!')
 end
 
 
@@ -1296,6 +1365,8 @@ pause(.02);
     % MAKE DELAY TO CS EQUAL TO t SECONDS FOR ALL TRIALS
     fprintf('\n\n MAKING CS DELAY EQUAL TO [ % s  ]SECONDS FOR ALL TRIALS'...
         , alignCSFramesnumH.String);
+    memocon(sprintf('Setting CS delay to %s seconds for all trials',...
+        alignCSFramesnumH.String));
 
     % Make all CS onsets this many seconds from trial start
     CSonsetDelay = str2num(alignCSFramesnumH.String);
@@ -1344,7 +1415,7 @@ IMhist.aligned = 1;
 alignCSFramesH.FontWeight = 'normal';
 pause(.02);
 enableButtons
-disp('Align frames by CS onset completed!')
+memocon('Align frames by CS onset completed!')
 end
 
 
@@ -1362,7 +1433,7 @@ pause(.02);
 
 
     % COMPUTE dF/F FOR ALL FRAMES
-    disp(' '); disp('COMPUTING dF/F FOR ALL FRAMES')
+    memocon(' '); memocon('Computing dF/F for all frames...')
     
     
     
@@ -1408,7 +1479,7 @@ IMhist.normalized = 1;
 dFoverFH.FontWeight = 'normal';
 pause(.02);
 enableButtons        
-disp('dF/F computation completed!')
+memocon('dF/F computation completed!')
 end
 
 
@@ -1423,7 +1494,7 @@ disableButtons;
 timepointMeansH.FontWeight = 'bold';
 pause(.02);
     
-    disp(' '); disp('COMPUTING TRIAL MEANS (AVERAGING SAME-TIMEPOINTS ACROSS TRIALS)'); 
+    memocon(' '); memocon('Computing trial means...'); 
     
     % AVERAGE ACROSS SAME TIMEPOINTS
     nCSUS = size(GRINstruct.tf,2);
@@ -1481,7 +1552,7 @@ pause(.02);
 timepointMeansH.FontWeight = 'normal';
 pause(.02);
 enableButtons        
-disp('Compute same-timepoint means completed!')
+memocon('Compute same-timepoint means completed!')
 end
 
 
@@ -1526,10 +1597,10 @@ conon
     
     XLSdata.sizeIMG = size(IMG);
 
-    disp('disp(''XLSdata'') >>')
+    disp('memocon(''XLSdata'') >>')
     disp(XLSdata)
-    
-disp('PROCESSING COMPLETED - ALL SELECTED FUNCTIONS FINISHED RUNNING!')
+
+memocon('ALL PROCESSING COMPLETED!')
 conoff
 enableButtons        
 end
@@ -1548,7 +1619,7 @@ end
 %----------------------------------------------------
 %        GET ROI STATISTICS
 %----------------------------------------------------
-function findRPEROI(hObject, eventdata)
+function openROITOOLBOX(hObject, eventdata)
 % disableButtons; pause(.02);
 
 
@@ -1562,13 +1633,13 @@ function findRPEROI(hObject, eventdata)
         
     end
     
-    disp('Opening RPE ROI finder GUI')
+    memocon('Opening ROI TOOLBOX')
     
     % mainguih.HandleVisibility = 'off';
     % close all;
     % set(mainguih, 'Visible', 'Off');
     
-    graphguih = RPEfinderGUI(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, IMGSraw, muIMGS, LICK);
+    graphguih = ROITOOLBOXGUI(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, IMGSraw, muIMGS, LICK);
     
     
     
@@ -1582,7 +1653,7 @@ function findRPEROI(hObject, eventdata)
 %     set(mainguih, 'Visible', 'On');
     
 enableButtons
-disp('Compute ROI statistics!')
+% memocon('Compute ROI statistics!')
 end
 
 
@@ -1615,14 +1686,14 @@ disableButtons; pause(.02);
 
     
     % PREVIEW AN ROI FOR A SINGLE CSUS AVERAGED OVER TRIALS
-    disp(' '); disp('GETTING ROI STATISTICS'); 
+    memocon(' '); memocon('GETTING ROI STATISTICS'); 
 
     fh1=figure('Units','normalized','OuterPosition',[.40 .22 .59 .75],'Color','w');
     hax1 = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[]);
 
     ih1 = imagesc(muIMGS(:,:,1,1));
 
-    disp('Use mouse to trace around a region of interest on the figure.')
+    memocon('Use mouse to trace around a region of interest on the figure.')
     hROI = imfreehand(hax1);   
     ROIpos = hROI.getPosition;
     ROIarea = polyarea(ROIpos(:,1),ROIpos(:,2));
@@ -1660,7 +1731,7 @@ disableButtons; pause(.02);
     
     
 enableButtons
-disp('Compute ROI statistics completed!')
+memocon('Compute ROI statistics completed!')
 end
 
 
@@ -1683,7 +1754,7 @@ function plotTileStats(hObject, eventdata)
         
     end
 
-    disp(' '); disp('PLOTTING TILE STATS DATA (PLEASE WAIT)...'); 
+    memocon(' '); memocon('PLOTTING TILE STATS DATA (PLEASE WAIT)...'); 
     
     
     blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
@@ -1699,7 +1770,7 @@ function plotTileStats(hObject, eventdata)
 
     fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
     
-    set(fh10,'ButtonDownFcn',@(~,~)disp('figure'),...
+    set(fh10,'ButtonDownFcn',@(~,~)memocon('figure'),...
    'HitTest','off')
     
     
@@ -1829,7 +1900,7 @@ function plotTileStats(hObject, eventdata)
         
         
 enableButtons
-disp('PLOTTING TILE STATS DATA COMPLETED!')
+memocon('PLOTTING TILE STATS DATA COMPLETED!')
 end
 
 
@@ -2018,7 +2089,7 @@ hFig.Visible = 'off';
 
 
 enableButtons
-disp('GRID OVERLAY HAS BEEN GENERATED.')
+memocon('GRID OVERLAY HAS BEEN GENERATED.')
 end
 
 
@@ -2118,7 +2189,7 @@ function toggleGridOverlay(hObject, eventdata)
 
 
 enableButtons
-disp('GRID OVERLAY HAS BEEN GENERATED.')
+memocon('GRID OVERLAY HAS BEEN GENERATED.')
 end
 
 
@@ -2143,7 +2214,7 @@ function plotGroupMeans(hObject, eventdata)
         
     end
 
-    disp(' '); disp('PLOTTING GROUP MEANS (PLEASE WAIT)...'); 
+    memocon(' '); memocon('PLOTTING GROUP MEANS (PLEASE WAIT)...'); 
         
     fh1=figure('Units','normalized','OuterPosition',[.08 .08 .8 .8],'Color','w');
     hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
@@ -2248,7 +2319,7 @@ function plotGroupMeans(hObject, eventdata)
     
         
 enableButtons
-disp('PLOTTING GROUP MEANS COMPLETED!')
+memocon('PLOTTING GROUP MEANS COMPLETED!')
 end
 
 
@@ -2356,16 +2427,16 @@ function mainGUIclosereq(src,callbackdata)
       case 'Yes',
          clc
          initialVars = who;
-         disp('Clearing globals...')
-         disp(initialVars)
+         memocon('Clearing globals...')
+         memocon(initialVars)
          clearvars -global
          % clearvars IMG;
-         disp('Global variables cleared from memory.')
-         disp('GRIN toolbox closed.')
+         memocon('Global variables cleared from memory.')
+         memocon('GRIN toolbox closed.')
          delete(gcf)
       case 'No'
       delete(gcf)
-      disp('GRIN toolbox closed.')
+      memocon('GRIN toolbox closed.')
    end
 end
 
@@ -2411,7 +2482,7 @@ function motioncorrection(hObject, eventdata)
                                 'BestMatchNeighborhoodOutputPort', true);
 
 
-    % Create object to display the original video and the stabilized video.
+    % Create object to memoconlay the original video and the stabilized video.
     hVideoOut = vision.VideoPlayer('Name', 'Video Stabilization');
     hVideoOut.Position(1) = round(0.4*hVideoOut.Position(1));
     hVideoOut.Position(2) = round(1.5*(hVideoOut.Position(2)));
@@ -2430,7 +2501,7 @@ function motioncorrection(hObject, eventdata)
 
     pos.template_orig = [pos1(1) pos1(2)]; % [x y] upper left corner
     pos.template_size = [pos1(3:4)];    % [width height]
-    pos.search_border = [10 10];        % max horizontal and vertical displacement
+    pos.search_border = [10 10];        % max horizontal and vertical memoconlacement
 
     pos.template_center = floor((pos.template_size-1)/2);
     pos.template_center_pos = (pos.template_orig + pos.template_center - 1);
@@ -2483,7 +2554,7 @@ function motioncorrection(hObject, eventdata)
 
         Target = Stabilized(TargetRowIndices, TargetColIndices);
 
-        % Add black border for display
+        % Add black border for memoconlay
         Stabilized(:, BorderCols) = minmin;
         Stabilized(BorderRows, :) = minmin;
 
@@ -2493,7 +2564,7 @@ function motioncorrection(hObject, eventdata)
         % Draw rectangles on input to show target and search region
         input = insertShape(input, 'Rectangle', [TargetRect; SearchRegionRect],...
                             'Color', 'white');
-        % Display the offset (displacement) values on the input image
+        % Display the offset (memoconlacement) values on the input image
         txt = sprintf('(%+05.1f,%+05.1f)', Offset);
         input = insertText(input(:,:,1),[191 215],txt,'FontSize',16, ...
                         'TextColor', 'white', 'BoxOpacity', 0);
@@ -2520,9 +2591,9 @@ function stimselection(source,callbackdata)
     % strcmp(stimtypeh.SelectedObject.String,'CSxUS')
     stimtype = stimtypeh.SelectedObject.String;
     
-    display(['Previous Stim: ' callbackdata.OldValue.String]);
-    display(['Current Stim: ' callbackdata.NewValue.String]);
-    display('------------------');
+    memoconlay(['Previous Stim: ' callbackdata.OldValue.String]);
+    memoconlay(['Current Stim: ' callbackdata.NewValue.String]);
+    memoconlay('------------------');
     
     
     % % RADIO BUTTON GROUP FOR TIMEPOINT MEANS
@@ -2576,7 +2647,7 @@ end
 function previewStack(hObject, eventdata)
 disableButtons; pause(.02);
 
-    % disp('PREVIEWING IMAGE STACK')
+    % memocon('PREVIEWING IMAGE STACK')
     
     totframes = size(IMG,3);
     
@@ -2621,20 +2692,20 @@ disableButtons; pause(.02);
     
     else
         
-       disp('Not enough images in 3rd dim to preview that many frames') 
+       memocon('Not enough images in 3rd dim to preview that many frames') 
         
     end
 
         
 enableButtons        
-% disp('Preview completed!')
+% memocon('Preview completed!')
 end
 
 
 function previewIMGSTACK(IMGSTACK)
 disableButtons; pause(.02);
 
-    % disp('PREVIEWING IMAGE STACK')
+    % memocon('PREVIEWING IMAGE STACK')
     
     totframes = size(IMGSTACK,3);
     
@@ -2679,13 +2750,13 @@ disableButtons; pause(.02);
     
     else
         
-       disp('Not enough images in 3rd dim to preview that many frames') 
+       memocon('Not enough images in 3rd dim to preview that many frames') 
         
     end
 
         
 enableButtons        
-% disp('Preview completed!')
+% memocon('Preview completed!')
 end
 
 
@@ -2698,36 +2769,36 @@ end
 function runCustomA(hObject, eventdata)
 % disableButtons; pause(.02);
 
-    disp('RUNNING CUSTOM FUNCTION A!')
+    memocon('RUNNING CUSTOM FUNCTION A!')
 
     [varargin] = grincustomA(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, muIMGS, LICK);
 
 enableButtons        
-disp('Run custom function completed!')
+memocon('Run custom function completed!')
 end
 
 function runCustomB(hObject, eventdata)
 % disableButtons; pause(.02);
 
-    disp('RUNNING CUSTOM FUNCTION B!')
+    memocon('RUNNING CUSTOM FUNCTION B!')
 
     [varargin] = grincustomB(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, muIMGS, LICK);
 
     
 enableButtons        
-disp('Run custom function completed!')
+memocon('Run custom function completed!')
 end
 
 function runCustomC(hObject, eventdata)
 % disableButtons; pause(.02);
 
-    disp('RUNNING CUSTOM FUNCTION C!')
+    memocon('RUNNING CUSTOM FUNCTION C!')
 
     [varargin] = grincustomC(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, muIMGS, LICK);
 
     
 enableButtons        
-disp('Run custom function completed!')
+memocon('Run custom function completed!')
 end
 
 function runCustomD(hObject, eventdata)
@@ -2737,7 +2808,7 @@ function runCustomD(hObject, eventdata)
     close all;
     mainguih.HandleVisibility = 'on';
         
-    disp('RUNNING CUSTOM FUNCTION D!')
+    memocon('RUNNING CUSTOM FUNCTION D!')
 
     % grincustomD(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, IMGSraw, muIMGS, LICK);
     
@@ -2746,7 +2817,7 @@ function runCustomD(hObject, eventdata)
     
     
 enableButtons        
-disp('Run custom function completed!')
+memocon('Run custom function completed!')
 end
 
 
@@ -2771,9 +2842,9 @@ function exportvars(hObject, eventdata)
         export2wsdlg(checkLabels,varNames,items,...
                      'Save Variables to Workspace');
 
-        disp('Main VARS exported to base workspace')
+        memocon('Main VARS exported to base workspace')
     else
-        disp('no variables available to export')
+        memocon('no variables available to export')
     end
     
 enableButtons        
@@ -2791,58 +2862,26 @@ function savedataset(hObject, eventdata)
     if size(IMG,3) > 1
         
         
-%         IMGmax = max(max(max(max(IMG))));
-%         IMGmin = min(min(min(min(IMG))));
-%         
-%         if (IMGmax < 1) && (IMGmin > -1)
-%             
-%                 spfq = sprintf([...
-%                 'The data in the variable "IMG" can be compressed \n'...
-%                 'saving a significant amount of space. \n'...
-%                 'The data currently ranges from 1 to -1 and is \n'...
-%                 'of class double precision. This compression will \n'...
-%                 'multiply IMG by 10,000 and convert class to int16 \n'...
-%                 'which allows integer values of +/- 32767. This program  \n'...
-%                 'will uncompress the var IMG when of class int16 when \n'...
-%                 'loaded from a .mat file by dividing IMG by 10,000 so \n'...
-%                 'overall there are 4 significant digets after the decimal. \n'...
-%                 'THIS FILE WILL BE ~20x SMALLER. \n'...
-%                 'Do you wish to compress this data? \n'...
-%                 ]);
-%             
-%             
-%             comchoice = questdlg(spfq, ...
-%                 'Compress IMG Stack', ...
-%                 'Yes','No','Yes');
-%             
-%             switch comchoice
-%                 case 'Yes'
-%                     disp('SAVING COMPRESSED DATA')
-%                     IMG = int16(IMG.*10000);
-%                 case 'No'
-%                     disp('SAVING DATA WITHOUT COMPRESSION')
-%             end        
-%         
-%         end
+
         
         
         
         [filen,pathn] = uiputfile([GRINstruct.file(1:end-4),'.mat'],'Save Vars to Workspace');
             
         if isequal(filen,0) || isequal(pathn,0)
-           disp('User selected Cancel')
+           memocon('User selected Cancel')
         else
-           disp(['User selected ',fullfile(pathn,filen)])
+           memocon(['User selected ',fullfile(pathn,filen)])
         end
         
         % IMGint16 = uint16(IMG);
         % IMG = single(IMG);
                 
-        disp('Saving data to .mat file, please wait...')
+        memocon('Saving data to .mat file, please wait...')
         save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable','XLSdata',...
             'LICK','IMGraw','muIMGS','IMGSraw','-v7.3')
         % save(fullfile(pathn,filen),'IMGint16','GRINstruct','GRINtable','-v7.3')
-        disp('Dataset saved!')
+        memocon('Dataset saved!')
         
         % whos('-file','newstruct.mat')
         % m = matfile(filename,'Writable',isWritable)
@@ -2850,15 +2889,15 @@ function savedataset(hObject, eventdata)
         
 %         switch comchoice
 %             case 'Yes'
-%                 disp('YOU ARE NOW USING COMPRESSED IMG DATA')
-%                 disp('IF YOU WANT TO WORK WITH UNCOMPRESSED DATA, RELAUNCH TOOLBOX')
+%                 memocon('YOU ARE NOW USING COMPRESSED IMG DATA')
+%                 memocon('IF YOU WANT TO WORK WITH UNCOMPRESSED DATA, RELAUNCH TOOLBOX')
 %                 IMG = int16(IMG./10000);
 %             case 'No'
-%                 disp('CONTINUE USING UNCOMPRESSED IMG DATA')
+%                 memocon('CONTINUE USING UNCOMPRESSED IMG DATA')
 %         end        
 
     else
-        disp('No data to save')
+        memocon('No data to save')
     end
     
 enableButtons        
@@ -2873,7 +2912,7 @@ end
 function compnsave(hObject, eventdata)
 
     if size(IMG,3) < 1
-        disp('No data to save')
+        memocon('No data to save')
         return
     end
 
@@ -2883,13 +2922,13 @@ function compnsave(hObject, eventdata)
 
     switch comchoice
         case 'Single'
-            disp('DETERMING OPTIMAL DATA COMPRESSION METHOD...')
+            memocon('DETERMING OPTIMAL DATA COMPRESSION METHOD...')
             doCompress = 1;
         case 'uint16'
-            disp('DETERMING OPTIMAL DATA COMPRESSION METHOD...')
+            memocon('DETERMING OPTIMAL DATA COMPRESSION METHOD...')
             doCompress = 2;            
         case 'Nevermind'
-            disp('RETURNING TO GUI')
+            memocon('RETURNING TO GUI')
             doCompress = 0;
             return
     end 
@@ -2914,15 +2953,15 @@ function compnsave(hObject, eventdata)
 
         [filen,pathn] = uiputfile([GRINstruct.file(1:end-4),'.mat'],'Save Vars to Workspace');
         if isequal(filen,0) || isequal(pathn,0)
-           disp('Data Save Cancelled'); return
-        end; disp('Saving data to .mat file, please wait...')
+           memocon('Data Save Cancelled'); return
+        end; memocon('Saving data to .mat file, please wait...')
 
         disableButtons; pause(.02);
 
         save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable','XLSdata',...
                                    'muIMGS','IMGSraw','LICK','IMhist','-v7.3')
 
-        disp('Dataset saved!')
+        memocon('Dataset saved!')
 
         IMG = IM;
         IM = [];
@@ -2964,15 +3003,15 @@ function compnsave(hObject, eventdata)
 
         [filen,pathn] = uiputfile([GRINstruct.file(1:end-4),'.mat'],'Save Vars to Workspace');
         if isequal(filen,0) || isequal(pathn,0)
-           disp('Data Save Cancelled'); return
-        end; disp('Saving data to .mat file, please wait...')
+           memocon('Data Save Cancelled'); return
+        end; memocon('Saving data to .mat file, please wait...')
 
         disableButtons; pause(.02);
 
         save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable','XLSdata',...
                                    'muIMGS','IMGSraw','LICK','IMhist','-v7.3')
 
-        disp('Dataset saved!')
+        memocon('Dataset saved!')
 
         IMG = IM;
         IM = [];
@@ -3002,7 +3041,7 @@ function loadmatdata(hObject, eventdata)
     IMGSraw = [];
     muIMGS = [];
 
-disp('Loading data from .mat file, please wait...')
+memocon('Loading data from .mat file, please wait...')
 disableButtons; pause(.02);    
 
     LODIN = load([pathname, filename]);
@@ -3020,13 +3059,13 @@ disableButtons; pause(.02);
     
     if isa(IMG, 'single')
 
-        disp('loading single precision dataset...')
+        memocon('loading single precision dataset...')
         IM = IMG;
         IMG = double(IM);
         
     else
         
-        disp('loading uint16-compressed dataset...')
+        memocon('loading uint16-compressed dataset...')
         IM = IMG;
         IMG = double(IM);
         lintrans = @(x,a,b,c,d) (c.*(1-(x-a)./(b-a)) + d.*((x-a)./(b-a)));
@@ -3040,16 +3079,16 @@ disableButtons; pause(.02);
     previewStack
 
     clc;
-    disp('Dataset loaded with the following history...')
-    disp(IMhist)
-    disp('Experimental parameters...')
-    disp(XLSdata.CSUSvals)
-    disp('Image stack sizes...')
-    disp(['size(IMG) :  ' num2str(size(IMG))])
-    disp(['size(muIMGS) :  ' num2str(size(muIMGS))])
-    disp(['size(IMGSraw) :  ' num2str(size(IMGSraw))])
+    memocon('Dataset loaded with the following history...')
+    memocon(IMhist)
+    memocon('Experimental parameters...')
+    memocon(XLSdata.CSUSvals)
+    memocon('Image stack sizes...')
+    memocon(['size(IMG) :  ' num2str(size(IMG))])
+    memocon(['size(muIMGS) :  ' num2str(size(muIMGS))])
+    memocon(['size(IMGSraw) :  ' num2str(size(IMGSraw))])
 
-disp('Dataset fully loaded, GRIN Toolbox is Ready!')
+memocon('Dataset fully loaded, GRIN Toolbox is Ready!')
 enableButtons        
 end
 
@@ -3064,7 +3103,7 @@ function openImageJ(hObject, eventdata)
 % disableButtons; pause(.02);
 
 
-    disp('LAUNCHING ImageJ (FIJI) using MIJ!')
+    memocon('LAUNCHING ImageJ (FIJI) using MIJ!')
     
     matfiji(IMG(:,:,1:100), GRINstruct, XLSdata, LICK)
         
@@ -3074,7 +3113,7 @@ function openImageJ(hObject, eventdata)
 % GRINtoolboxGUI
 return
 enableButtons        
-disp('ImageJ (FIJI) processes completed!')
+memocon('ImageJ (FIJI) processes completed!')
 end
 
 
@@ -3093,7 +3132,7 @@ disableButtons; pause(.02);
                    
             switch choice
                 case 'Yes'
-                     disp('CREATING CONTOUR SLICE (please wait)...')
+                     memocon('CREATING CONTOUR SLICE (please wait)...')
                 case 'No'
                     return
             end
@@ -3119,7 +3158,7 @@ disableButtons; pause(.02);
 
     
 enableButtons        
-disp('3D VIEW FUNCTION COMPLETED!')
+memocon('3D VIEW FUNCTION COMPLETED!')
 end
 
 
@@ -3157,7 +3196,7 @@ function visualexplorer(hObject, eventdata)
     end
     
     
-    disp('CREATING SUBVOLUME FROM IMAGE STACK...')
+    memocon('CREATING SUBVOLUME FROM IMAGE STACK...')
 
     
     
@@ -3188,7 +3227,7 @@ end
 
     
 enableButtons        
-disp('SUBVOLUME CREATION COMPLETED (USE MOUSE TO ROTATE IMAGE)!')
+memocon('SUBVOLUME CREATION COMPLETED (USE MOUSE TO ROTATE IMAGE)!')
 end
 
 
@@ -3209,12 +3248,12 @@ function resetws(hObject, eventdata)
     % Handle response
     switch choice
         case 'reset toolbox'
-            disp(' Resetting GRIN Lens Toolbox...')
+            memocon(' Resetting GRIN Lens Toolbox...')
             pause(1)
             GRINtoolboxGUI()
             return
         case 'abort reset'
-            disp(' Continuing without reset...')
+            memocon(' Continuing without reset...')
     end
     
     
@@ -3242,13 +3281,13 @@ function imgslider(hObject, eventdata)
         phGRIN = imagesc(IMG(:,:,slideVal) , 'Parent', haxGRIN);
                   pause(.05)
 
-        disp(['image' num2str(slideVal)])
+        memocon(['image' num2str(slideVal)])
 
     else
 
-        disp('There must be at least 100 images in the stack')
-        disp('(per trial) to use the slider; currently there are')
-        disp(size(IMG,3))
+        memocon('There must be at least 100 images in the stack')
+        memocon('(per trial) to use the slider; currently there are')
+        memocon(size(IMG,3))
 
     end
 
@@ -3262,11 +3301,11 @@ end
 %        CONSOLE DIARY ON / OFF / OPEN
 %----------------------------------------------------
 function conon
-    diary on
+    % diary on
 end
 function conoff
-    diary(confile)
-    diary off
+    % diary(confile)
+    % diary off
     
     % UNCOMMENT TO OPEN DIARY WHEN DONE IMAGE PROCESSING
     % web(confilefullpath{1})
@@ -3280,7 +3319,7 @@ end
 function CSUSpopup(hObject, eventdata)
 
     if numel(GRINtable) > 0 
-        disp('reminder of CS/US combos...')
+        memocon('reminder of CS/US combos...')
         GRINtable(1:7,1:2)
         % GRINstruct
     end
@@ -3351,6 +3390,36 @@ function disableButtons()
 
 end
 
+
+
+
+%----------------------------------------------------
+%        MEMO LOG UPDATE
+%----------------------------------------------------
+function memocon(spf)
+    
+    if iscellstr(spf)
+        spf = [spf{:}];
+    end
+    
+    if iscell(spf)
+        keyboard
+        spf = [spf{:}];
+    end
+    
+    if ~ischar(spf)
+        keyboard
+        spf = [spf{:}];
+    end
+    
+    
+
+    memes(1:end-1) = memes(2:end);
+    memes{end} = spf;
+    conboxH.String = memes;
+    pause(.02)
+
+end
 
 
 

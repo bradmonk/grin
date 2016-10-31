@@ -1,4 +1,4 @@
-function [graphguih] = RPEfinderGUI(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, IMGSraw, muIMGS, LICK)
+function [RPEguih] = RPEfinderGUI(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, IMGSraw, muIMGS, LICK)
 %% RPEfinderGUI.m
 % function [] = RPEfinderGUI(IMG, GRINstruct, XLSdata, LICK, IMGSraw, varargin)
 
@@ -59,7 +59,8 @@ global RPEROI RPEfac RPEcof RPEf RPEc dfDiff rawDiff RPEfacDat RPEcofDat RPEDATA
 global RPEgroups IMGSdf RPEinfo RPEMASK RPEMASKNEW
 global RPEDATANEW RPEROINEW RPEfacDatNEW RPEcofDatNEW RPEinfoNEW
 global BlurVal zcrit zout smoothimgnumH zcritnumH zoutnumH minROIsz
-
+global Sframe Eframe frameBG frameSE
+global memos memoboxH
 
 RPEDATA = {};
 RPEinfo.file = GRINstruct.file(1:end-4);
@@ -81,6 +82,17 @@ minROIsz = 15;
 RPEfac = CSUSvals(1);
 RPEcof = CSUSvals(1);
 
+% GET FRAME FOR CS_ONSET CS_MIDWAY US_ONSET US_MIDWAY
+Fcson   = XLSdata.CSonsetFrame;
+Fcsmid  = Fcson + round(XLSdata.CS_lengthFrames/2);
+Fcsoff  = XLSdata.CSoffsetFrame;
+Fusmid  = Fcsoff + round((XLSdata.framesPerTrial - Fcsoff)/2);
+Fusend  = XLSdata.framesPerTrial;
+
+Sframe = Fcsoff;
+Eframe = Fusend;
+
+
 
 
 
@@ -101,8 +113,8 @@ IMsz = size(IM);
 %----------------------------------------------------
 % close(graphguih)
 % mainguih.CurrentCharacter = '+';
-graphguih = figure('Units', 'normalized','Position', [.02 .1 .85 .65], 'BusyAction',...
-    'cancel', 'Name', 'graphguih', 'Tag', 'graphguih','MenuBar', 'none'); 
+RPEguih = figure('Units', 'normalized','Position', [.02 .1 .85 .80], 'BusyAction',...
+    'cancel', 'Name', ['RPE MODULE - FILE: ' RPEinfo.file(1:end-2)], 'Tag', 'RPE MODULE','MenuBar', 'none'); 
 
 
 %----------------------------------------------------
@@ -113,38 +125,92 @@ graphguih = figure('Units', 'normalized','Position', [.02 .1 .85 .65], 'BusyActi
 %     'Position', [0.05 0.08 0.55 0.85],'Color','none','XTick',[],'YTick',[],...
 %     'XColor','none','YColor','none'); hold on;
 
-GhaxGRIN = axes('Parent', graphguih, 'NextPlot', 'replacechildren',...
-    'Position', [0.05 0.08 0.55 0.85],...
+GhaxGRIN = axes('Parent', RPEguih, 'NextPlot', 'replacechildren',...
+    'Position', [0.05 0.08 0.55 0.65],...
     'XLimMode', 'manual','YLimMode', 'manual','Color','none');
     GhaxGRIN.YLim = [-.15 .15];
     GhaxGRIN.XLim = [1 100];
 
 
-GimgsliderYAH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','slider',...
+GimgsliderYAH = uicontrol('Parent', RPEguih, 'Units', 'normalized','Style','slider',...
 	'Max',1,'Min',0,'Value',.15,'SliderStep',[0.01 0.10],...
-	'Position', [-.01 0.62 0.03 0.30], 'Callback', @GimgsliderYA);
+	'Position', [-.01 0.42 0.03 0.25], 'Callback', @GimgsliderYA);
 
-GimgsliderYBH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','slider',...
+GimgsliderYBH = uicontrol('Parent', RPEguih, 'Units', 'normalized','Style','slider',...
 	'Max',0,'Min',-1,'Value',-.15,'SliderStep',[0.01 0.10],...
-	'Position', [-.01 0.08 0.03 0.30], 'Callback', @GimgsliderYB);
+	'Position', [-.01 0.04 0.03 0.25], 'Callback', @GimgsliderYB);
 
-GimgsliderXAH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','slider',...
+GimgsliderXAH = uicontrol('Parent', RPEguih, 'Units', 'normalized','Style','slider',...
 	'Max',200,'Min',0,'Value',100,'SliderStep',[0.01 0.10],...
 	'Position', [0.40 0.01 0.20 0.03], 'Callback', @GimgsliderXA);
 
-GimgsliderXBH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','slider',...
+GimgsliderXBH = uicontrol('Parent', RPEguih, 'Units', 'normalized','Style','slider',...
 	'Max',200,'Min',0,'Value',1,'SliderStep',[0.01 0.10],...
 	'Position', [0.05 0.01 0.20 0.03], 'Callback', @GimgsliderXB);
 
 
 
+%----------------------------------------------------
+%     DISPLAY LINES ON GRAPH CHECKBOXES
+%----------------------------------------------------
 
 
 
+DisplaypanelH = uipanel('Parent', RPEguih,'Title','Display on Line Graph','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],...
+    'Position', [0.01 0.75 0.13 0.24]); % 'Visible', 'Off',
+
+chva = 1;
+
+if size(CSUSvals,1) > 0
+Gcheckbox1H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.86 .90 .10] ,'String',CSUSvals(1), 'Value',1,'Callback',{@plot_callback,1});
+end
+if size(CSUSvals,1) > 1
+Gcheckbox2H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.72 .90 .10] ,'String',CSUSvals(2), 'Value',chva,'Callback',{@plot_callback,2});
+end
+if size(CSUSvals,1) > 2
+Gcheckbox3H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.58 .90 .10] ,'String',CSUSvals(3), 'Value',chva,'Callback',{@plot_callback,3});
+end
+if size(CSUSvals,1) > 3
+Gcheckbox4H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.44 .90 .10] ,'String',CSUSvals(4), 'Value',chva,'Callback',{@plot_callback,4});
+end
+if size(CSUSvals,1) > 4 
+Gcheckbox5H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.30 .90 .10] ,'String',CSUSvals(5), 'Value',chva,'Callback',{@plot_callback,5});
+end
+if size(CSUSvals,1) > 5
+Gcheckbox6H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.16 .90 .10] ,'String',CSUSvals(6), 'Value',chva,'Callback',{@plot_callback,6});
+end
+if size(CSUSvals,1) > 6
+Gcheckbox7H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.05 0.02 .90 .10] ,'String',CSUSvals(7), 'Value',chva,'Callback',{@plot_callback,7});
+end
 
 
 
+%----------------------------------------------------
+%           MEMO CONSOLE GUI WINDOW
+%----------------------------------------------------
 
+memopanelH = uipanel('Parent', RPEguih,'Title','Memo Log ','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],...
+    'Position', [0.15 0.75 0.40 0.24]); % 'Visible', 'Off',
+
+
+memos = {' ',' ',' ', ' ',' ',' ',' ',' ', ...
+         'Welcome to RPE Finder', 'GUI is loading...'};
+
+memoboxH = uicontrol('Parent',memopanelH,'Style','listbox','Units','normalized',...
+        'Max',10,'Min',0,'Value',10,'FontSize', 13,'FontName', 'FixedWidth',...
+        'String',memos,'FontWeight', 'bold',...
+        'Position',[.02 .02 .96 .96]);  
+    
+% memolog('Ready!')
 
 
 
@@ -152,7 +218,7 @@ GimgsliderXBH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','sl
 %%     RIGHT PANE FIGURE PANELS
 %----------------------------------------------------
 
-tabgp = uitabgroup(graphguih,'Position',[0.61 0.02 0.38 0.95]);
+tabgp = uitabgroup(RPEguih,'Position',[0.61 0.02 0.38 0.95]);
 btabs = uitab(tabgp,'Title','Options');
 dtabs = uitab(tabgp,'Title','Data');
 itabs = uitab(tabgp,'Title','ROI');
@@ -212,31 +278,31 @@ buttongroup1 = uibuttongroup('Parent', GIPpanelH,'Title','RPE FACTOR',...
 bva = 1;
 
 if size(CSUSvals,1) > 0
-    fac1 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.86 .90 .10],......
+    fac1 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.86 .90 .10],...
         'String',CSUSvals(1),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 1
-    fac2 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.72 .90 .10],......
+    fac2 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.72 .90 .10],...
         'String',CSUSvals(2),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 2
-    fac3 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.58 .90 .10],......
+    fac3 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.58 .90 .10],...
         'String',CSUSvals(3),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 3
-    fac4 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.44 .90 .10],......
+    fac4 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.44 .90 .10],...
         'String',CSUSvals(4),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 4 
-    fac5 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.30 .90 .10],......
+    fac5 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.30 .90 .10],...
         'String',CSUSvals(5),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 5
-    fac6 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.16 .90 .10],......
+    fac6 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.16 .90 .10],...
         'String',CSUSvals(6),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 6
-    fac7 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.02 .90 .10],......
+    fac7 = uicontrol(buttongroup1,'Style','radiobutton','Units', 'normalized','Position',[.05 0.02 .90 .10],...
         'String',CSUSvals(7),'HandleVisibility','off');
 end
 
@@ -251,45 +317,46 @@ buttongroup2 = uibuttongroup('Parent', GIPpanelH,'Title','RPE COFACTOR',...
 bva = 1;
 
 if size(CSUSvals,1) > 0
-    cofac1 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.86 .90 .10],......
+    cofac1 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.86 .90 .10],...
         'String',CSUSvals(1),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 1
-    cofac2 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.72 .90 .10],......
+    cofac2 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.72 .90 .10],...
         'String',CSUSvals(2),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 2
-    cofac3 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.58 .90 .10],......
+    cofac3 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.58 .90 .10],...
         'String',CSUSvals(3),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 3
-    cofac4 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.44 .90 .10],......
+    cofac4 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.44 .90 .10],...
         'String',CSUSvals(4),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 4 
-    cofac5 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.30 .90 .10],......
+    cofac5 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.30 .90 .10],...
         'String',CSUSvals(5),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 5
-    cofac6 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.16 .90 .10],......
+    cofac6 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.16 .90 .10],...
         'String',CSUSvals(6),'HandleVisibility','off');
 end
 if size(CSUSvals,1) > 6
-    cofac7 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.02 .90 .10],......
+    cofac7 = uicontrol(buttongroup2,'Style','radiobutton','Units', 'normalized','Position',[.05 0.02 .90 .10],...
         'String',CSUSvals(7),'HandleVisibility','off');
 end
 
 
 function buttongroup1selection(source,callbackdata)
-    display(['Previous RPE factor: ' callbackdata.OldValue.String]);
-    display(['Current RPE factor: ' callbackdata.NewValue.String]);
+    
+    % memolog(['Previous RPE factor: ' callbackdata.OldValue.String])
+    % memolog(['Current RPE factor: ' callbackdata.NewValue.String])
+    memolog(['Factor set to: ' callbackdata.NewValue.String])
     RPEfac = callbackdata.NewValue.String;
 end
 
 
 function buttongroup2selection(source,callbackdata)
-    display(['Previous RPE cofactor: ' callbackdata.OldValue.String]);
-    display(['Current RPE cofactor: ' callbackdata.NewValue.String]);
+    memolog(['Cofactor set to: ' callbackdata.NewValue.String])
     RPEcof = callbackdata.NewValue.String;
 end
 
@@ -302,32 +369,22 @@ ParamPanelH = uipanel('Parent', btabs,'Title','RPE Search Parameters','FontSize'
     'Position', [0.50 0.64 0.45 0.34]); % 'Visible', 'Off',
 
 
-% smoothimgH = uicontrol('Parent', ParamPanelH, 'Units', 'normalized', ...
-%     'Position', [0.01 0.70 0.60 0.08], 'FontSize', 10, 'String', 'ROI Smoothing',...
-%     'Callback', @smoothimg, 'Enable','off'); 
 smoothimgtxtH = uicontrol('Parent', ParamPanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.01 0.70 0.46 0.11], 'FontSize', 10,'String', 'Smooth amount: ');
+    'Position', [0.01 0.85 0.46 0.10], 'FontSize', 10,'String', 'Smooth amount: ');
 smoothimgnumH = uicontrol('Parent', ParamPanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.51 0.71 0.42 0.12], 'FontSize', 10,'Callback',@smoothimgnumHCallback);
+    'Position', [0.51 0.87 0.42 0.10], 'FontSize', 10,'Callback',@smoothimgnumHCallback);
 
 
-% zcritH = uicontrol('Parent', ParamPanelH, 'Units', 'normalized', ...
-%     'Position', [0.01 0.50 0.60 0.08], 'FontSize', 10, 'String', 'Z-score lower alpha',...
-%     'Callback', @smoothimg, 'Enable','off'); 
 zcrittxtH = uicontrol('Parent', ParamPanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.01 0.50 0.46 0.11], 'FontSize', 10,'String', 'Z-score min: ');
+    'Position', [0.01 0.70 0.46 0.10], 'FontSize', 10,'String', 'Z-score min: ');
 zcritnumH = uicontrol('Parent', ParamPanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.51 0.51 0.42 0.12], 'FontSize', 10,'Callback',@zcritnumHCallback);
+    'Position', [0.51 0.72 0.42 0.10], 'FontSize', 10,'Callback',@zcritnumHCallback);
 
 
-
-% zoutH = uicontrol('Parent', ParamPanelH, 'Units', 'normalized', ...
-%     'Position', [0.01 0.30 0.60 0.08], 'FontSize', 10, 'String', 'Update Z-score upper alpha',...
-%     'Callback', @smoothimg, 'Enable','off'); 
 zouttxtH = uicontrol('Parent', ParamPanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.01 0.30 0.46 0.11], 'FontSize', 10,'String', 'Z-score max: ');
+    'Position', [0.01 0.55 0.46 0.10], 'FontSize', 10,'String', 'Z-score max: ');
 zoutnumH = uicontrol('Parent', ParamPanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.51 0.31 0.42 0.12], 'FontSize', 10,'Callback',@zoutnumHCallback);
+    'Position', [0.51 0.57 0.42 0.10], 'FontSize', 10,'Callback',@zoutnumHCallback);
 
 
 smoothimgnumH.String    = num2str(BlurVal);
@@ -337,45 +394,93 @@ zoutnumH.String         = num2str(zout);
 
 
 
+
+
+
+
 %-----------------------------------
 %    PLOT DISPLAY CHECKLIST PANEL
 %-----------------------------------
-DisplaypanelH = uipanel('Parent', btabs,'Title','Display on Line Graph','FontSize',10,...
+TimePanelH = uipanel('Parent', btabs,'Title','Timing Parameters','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
     'Position', [0.50 0.25 0.45 0.34]); % 'Visible', 'Off',
 
+frameinfoH = uicontrol('Parent', TimePanelH, 'Units', 'normalized', ...
+    'Position', [.01 0.80 .98 .18], 'FontSize', 13, 'String', 'Frame Timing Info',...
+    'Callback', @frameinfocallback, 'Enable','on');
 
 
-chva = 1;
+custFrameTimingH = uicontrol('Parent', TimePanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', [.01 0.15 .98 .12], 'FontSize', 11,'String', 'Start Frame     -     End Frame');
+SframeH = uicontrol('Parent', TimePanelH, 'Style', 'Edit', 'Units', 'normalized', ...
+    'Position', [.01 0.01 .48 .13], 'FontSize', 10,'Callback',@custFrameTiming);
+EframeH = uicontrol('Parent', TimePanelH, 'Style', 'Edit', 'Units', 'normalized', ...
+    'Position', [.51 0.01 .48 .13], 'FontSize', 10,'Callback',@custFrameTiming);
 
-if size(CSUSvals,1) > 0
-Gcheckbox1H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.86 .90 .10] ,'String',CSUSvals(1), 'Value',1,'Callback',{@plot_callback,1});
+SframeH.String = num2str(Sframe);
+EframeH.String = num2str(Eframe);
+
+
+frameBG = uibuttongroup('Parent', TimePanelH,'Title','Comparison Frame Range',...
+                  'Units', 'normalized','Position',[.01 0.30 .98 .48],...
+                  'SelectionChangedFcn',@frameBGfun);
+              
+    framerange1 = uicontrol(frameBG,'Style','radiobutton','Units', 'normalized',...
+        'Position',[.01 0.70 .48 .20],'String','Baseline','HandleVisibility','off');
+
+
+    framerange2 = uicontrol(frameBG,'Style','radiobutton','Units', 'normalized',...
+        'Position',[.01 0.39 .48 .20],'String','Custom','HandleVisibility','off');
+    
+    
+    framerange3 = uicontrol(frameBG,'Style','radiobutton','Units', 'normalized',...
+        'Position',[.51 0.70 .48 .20],'String','CS Frames','HandleVisibility','off');
+
+    framerange4 = uicontrol(frameBG,'Style','radiobutton','Units', 'normalized',...
+        'Position',[.51 0.39 .48 .20],'String','US Frames','HandleVisibility','off');
+
+function frameBGfun(source,callbackdata)
+    
+    frameSE = callbackdata.NewValue.String;
+    
+    
+    memolog(['RPE period updated to: ' callbackdata.NewValue.String])
+    
+    
+    if strcmp(frameSE,'Baseline')
+        SframeH.String = 1;
+        EframeH.String = Fcson-1;
+    end
+    if strcmp(frameSE,'CS Frames')
+        SframeH.String = Fcson;
+        EframeH.String = Fcsoff;
+    end
+    if strcmp(frameSE,'US Frames')
+        SframeH.String = Fcsoff+1;
+        EframeH.String = Fusend;
+    end
+    if strcmp(frameSE,'Custom')
+        SframeH.String = SframeH.String;
+        EframeH.String = EframeH.String;
+    end
+    
+    Sframe = str2num(SframeH.String);
+    Eframe = str2num(EframeH.String);
+    
+    memolog(['Frame range: ' SframeH.String ' - ' EframeH.String])
+    
 end
-if size(CSUSvals,1) > 1
-Gcheckbox2H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.72 .90 .10] ,'String',CSUSvals(2), 'Value',chva,'Callback',{@plot_callback,2});
-end
-if size(CSUSvals,1) > 2
-Gcheckbox3H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.58 .90 .10] ,'String',CSUSvals(3), 'Value',chva,'Callback',{@plot_callback,3});
-end
-if size(CSUSvals,1) > 3
-Gcheckbox4H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.44 .90 .10] ,'String',CSUSvals(4), 'Value',chva,'Callback',{@plot_callback,4});
-end
-if size(CSUSvals,1) > 4 
-Gcheckbox5H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.30 .90 .10] ,'String',CSUSvals(5), 'Value',chva,'Callback',{@plot_callback,5});
-end
-if size(CSUSvals,1) > 5
-Gcheckbox6H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.16 .90 .10] ,'String',CSUSvals(6), 'Value',chva,'Callback',{@plot_callback,6});
-end
-if size(CSUSvals,1) > 6
-Gcheckbox7H = uicontrol('Parent', DisplaypanelH,'Style','checkbox','Units','normalized',...
-    'Position', [.05 0.02 .90 .10] ,'String',CSUSvals(7), 'Value',chva,'Callback',{@plot_callback,7});
-end
+
+frameBG.SelectedObject = framerange4;
+
+
+
+
+
+
+
+
+
 
 
 
@@ -387,7 +492,7 @@ end
 GexportpanelH = uipanel('Parent', btabs,'Title','I/O','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
     'Position', [0.50 0.02 0.45 0.20]); % 'Visible', 'Off',
-              
+
 GexportvarsH = uicontrol('Parent', GexportpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.65 0.95 0.28], 'FontSize', 13, 'String', 'Export ROIs to Workspace ',...
     'Callback', @exportROIs);
@@ -670,6 +775,7 @@ pause(.2)
 tabgp.SelectedTab = tabgp.Children(1);
 pause(.2)
 
+memolog('Ready!')
 
 %------------------------------------------------------------------------------
 %%        GUI HELPER FUNCTIONS
@@ -725,8 +831,9 @@ function IMGslider(hObject, eventdata)
     hIMG = imagesc(IM(:,:,slideVal) , 'Parent', haxIMG);
               pause(.01)
 
+    
     % disp(['image: ' num2str(slideVal) ' (' num2str(IMGsliderH.Value) ')'])
-    disp(['image: ' num2str(slideVal) ' (' num2str(IMGsliderH.Value) ')'])
+    memolog(['image: ' num2str(slideVal) ' (' num2str(IMGsliderH.Value) ')'])
 
 end
 
@@ -740,7 +847,7 @@ function AXslider(hObject, eventdata)
     % haxIMG.XLim = [0 slideValIM];
     % haxIMG.YLim = [0 slideValIM];
     
-    disp(['XLim: ' num2str(haxIMG.XLim) ' YLim: ' num2str(haxIMG.YLim)])
+    memolog(['XLim: ' num2str(haxIMG.XLim) ' YLim: ' num2str(haxIMG.YLim)])
     
 end
 
@@ -861,8 +968,7 @@ function updateROI(hObject, eventdata)
     
     delete(GhaxGRIN.Children)
 
-    disp('UPDATING ROI...')
-    
+    memolog('UPDATING ROI...')
     
     
     hROI = imrect(haxIMG);
@@ -1037,7 +1143,104 @@ end
 
 
 
+%------------------------------------------------------------------------------
+%        FIND RPE FUNCTION
+%------------------------------------------------------------------------------
+function processDat(hObject, eventdata)
 
+tabgp.SelectedTab = tabgp.Children(4);
+pause(1)
+
+% %-----------------------------------------
+% % phIM.CData = IMGraw;
+% phIM = imagesc(IMGSrawMean(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
+% cmax = max(max(max(IMGSrawMean)));
+% cmin = min(min(min(IMGSrawMean)));
+% cmax = cmax - abs(cmax/5);
+% cmin = cmin + abs(cmin/5);
+% haxRPE.CLim = [cmin cmax];
+% 
+% phIM = imagesc(IMGSrawMean(:,:,1),'Parent',haxRPE);
+% for nn = 1:size(IMGSrawMean,3)
+%     phIM.CData = IMGSrawMean(:,:,nn);
+%     haxRPE.Title = text(0.5,0.5,sprintf('Mean of Original Stack  FRAME(%.0f) ',nn));
+%     pause(.04)
+% end
+% %-----------------------------------------
+
+
+% GET FRAME RANGE OF INTEREST
+Fcson   = XLSdata.CSonsetFrame;
+Fcsmid  = Fcson + round(XLSdata.CS_lengthFrames/2);
+Fcsoff  = XLSdata.CSoffsetFrame;
+Fusmid  = Fcsoff + round((XLSdata.framesPerTrial - Fcsoff)/2);
+Fusend  = XLSdata.framesPerTrial;
+
+TreatmentGroup = unique(GRINstruct.csus);
+
+for nn = 1:size(GRINstruct.tf,2)
+    RFac(nn) = strcmp(TreatmentGroup{nn},RPEfac);
+    RCof(nn) = strcmp(TreatmentGroup{nn},RPEcof);
+end
+
+RPEf = find(RFac);
+RPEc = find(RCof);
+
+
+
+
+
+
+haxRPE.Title = text(0.5,0.5,sprintf('Making stack of: [%s] - [%s] ',...
+    TreatmentGroup{RPEf},TreatmentGroup{RPEc}));
+
+
+for nn = 1:size(GRINstruct.tf,2)
+
+    IMGSdf(:,:,:,nn) = squeeze(mean(IMG(:,:,:,GRINstruct.tf(:,nn)),4));
+        
+end
+
+
+% THE SIZE OF IMGSraw and IMGSdf is now ( nYpixels , nXpixels , nFRAMES , nGroups )
+% NOTE THIS DOES *NOT* MEAN ( nYpixels , nXpixels , nFRAMES , *nTRIALS* )
+%
+% dfDiff  = IMG(factor)    -   IMG(cofactor)
+% rawDiff = IMGraw(factor) -   IMGraw(cofactor)
+
+
+
+rawDiff = IMGSraw(:,:,:,RPEf) - IMGSraw(:,:,:,RPEc);
+dfDiff = IMGSdf(:,:,:,RPEf) - IMGSdf(:,:,:,RPEc);
+    
+
+
+
+
+
+
+
+
+
+%-----------------------------------------
+phIM = imagesc(rawDiff(:,:,1),'Parent',haxRPE,'CDataMapping','scaled');
+cmax = max(max(max(rawDiff)));
+cmin = min(min(min(rawDiff)));
+cmax = cmax - abs(cmax/2.5);
+cmin = cmin + abs(cmin/2.5);
+haxRPE.CLim = [cmin cmax];
+%----
+for nn = 1:size(rawDiff,3)
+    
+    phIM.CData = rawDiff(:,:,nn);
+    
+    haxRPE.Title = text(0.5,0.5,sprintf('[%s] - [%s]    rawDiff(%.0f)',...
+    TreatmentGroup{RPEf},TreatmentGroup{RPEc}, nn));
+    
+    pause(.04)
+end
+%-----------------------------------------
+end
 
 
 
@@ -1123,7 +1326,8 @@ Fcsmid  = Fcson + round(XLSdata.CS_lengthFrames/2);
 Fcsoff  = XLSdata.CSoffsetFrame;
 Fusmid  = Fcsoff + round((XLSdata.framesPerTrial - Fcsoff)/2);
 Fusend  = XLSdata.framesPerTrial;
-
+Sframe = str2num(SframeH.String);
+Eframe = str2num(EframeH.String);
 
 
 % GET TREATMENT GROUP STRINGS
@@ -1233,7 +1437,7 @@ clear USFHa USFH_Zscore USFHzcrit USFHzout USFH
 % haxRPE.Title = text(0.5,0.5,sprintf('Preparing ROI Trace %.0f ',1));
 
 
-USFHa = reshape(rawDiff(:,:,Fcsoff:Fusmid),numel(rawDiff(:,:,Fcsoff:Fusmid)),[],1);
+USFHa = reshape(rawDiff(:,:,Sframe:Eframe),numel(rawDiff(:,:,Sframe:Eframe)),[],1);
 
 USFH_Zscore = zscore(USFHa);
 USFHzcrit   = min(USFHa(USFH_Zscore>zcrit));
@@ -1243,7 +1447,7 @@ if isempty(USFHzout);
     USFHzout = max(USFHa); 
 end
 
-USFH = mean(rawDiff(:,:,Fcsoff:Fusmid),3);
+USFH = mean(rawDiff(:,:,Sframe:Eframe),3);
 ZrawDiff = convn( USFH, GRINkern(.5, 9, BlurVal, .1, 1),'same');
 ZrawDiff(ZrawDiff<USFHzcrit | ZrawDiff>USFHzout) = 0;
 
@@ -1252,7 +1456,7 @@ ZrawDiff(ZrawDiff<USFHzcrit | ZrawDiff>USFHzout) = 0;
 
 clear USFHa USFH_Zscore USFHzcrit USFHzout USFH
 
-USFHa = reshape(dfDiff(:,:,Fcsoff:Fusmid),numel(dfDiff(:,:,Fcsoff:Fusmid)),[],1);
+USFHa = reshape(dfDiff(:,:,Sframe:Eframe),numel(dfDiff(:,:,Sframe:Eframe)),[],1);
 
 USFH_Zscore = zscore(USFHa);
 USFHzcrit   = min(USFHa(USFH_Zscore>zcrit));
@@ -1262,7 +1466,7 @@ if isempty(USFHzout);
     USFHzout = max(USFHa); 
 end
 
-USFH = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
+USFH = mean(dfDiff(:,:,Sframe:Eframe),3);
 ZdfDiff = convn( USFH, GRINkern(.5, 9, BlurVal, .1, 1),'same');
 ZdfDiff(ZdfDiff<USFHzcrit | ZdfDiff>USFHzout) = 0;
 
@@ -1360,16 +1564,16 @@ end
 
 
 %-----------------------------------------
-cmax = max(max(max(mean(dfDiff(:,:,Fcsoff:Fusmid),3))));
-cmin = min(min(min(mean(dfDiff(:,:,Fcsoff:Fusmid),3))));
+cmax = max(max(max(mean(dfDiff(:,:,Sframe:Eframe),3))));
+cmin = min(min(min(mean(dfDiff(:,:,Sframe:Eframe),3))));
 cmax = cmax - abs(cmax/2);
 cmin = cmin + abs(cmin/2);
 haxRPE.CLim = [cmin cmax];
 
-phIM.CData = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
+phIM.CData = mean(dfDiff(:,:,Sframe:Eframe),3);
 
 haxRPE.Title = text(0.5,0.5,...
-    sprintf('Displaying mean difference after %.0f frame',Fcsoff));
+    sprintf('Displaying mean difference between frames %.0f - %.0f',Sframe,Eframe));
 %-----------------------------------------
 
 
@@ -1453,6 +1657,8 @@ pause(.1)
 RPEinfo.RPEf = RPEf;
 RPEinfo.RPEc = RPEc;
 RPEinfo.TreatmentGroup = TreatmentGroup;
+RPEinfo.Sframe = Sframe;
+RPEinfo.Eframe = Eframe;
 RPEinfo.Fcson  = Fcson;
 RPEinfo.Fcsmid = Fcsmid;
 RPEinfo.Fcsoff = Fcsoff;
@@ -1544,11 +1750,19 @@ Z = GNpk*exp( - (a*(X-GNx0).^2 + c*(Y-GNy0).^2)) ;
 
 Mask=Z;
 
-disp('SMOOTHING KERNEL PARAMETERS:')
-fprintf('  SIZE OF MASK:   % s x % s \n', num2str(GNnum), num2str(GNnum));
-fprintf('  STDEV OF SLOPE: % s \n', num2str(GNsd));
-fprintf('  HIGHT OF PEAK:  % s \n', num2str(GNpk));
-fprintf('  RESOLUTION:     % s \n\n', num2str(GNres));
+spf1=sprintf('  SIZE OF MASK:   % s x % s \n', num2str(GNnum), num2str(GNnum));
+spf2=sprintf('  STDEV OF SLOPE: % s \n', num2str(GNsd));
+spf3=sprintf('  HIGHT OF PEAK:  % s \n', num2str(GNpk));
+spf4=sprintf('  RESOLUTION:     % s \n\n', num2str(GNres));
+
+
+memolog('SMOOTHING KERNEL PARAMETERS:')
+memolog(spf1)
+memolog(spf2)
+memolog(spf3)
+memolog(spf4)
+
+
 
 end
 
@@ -1572,6 +1786,8 @@ pause(1)
 RPEc = RPEinfoNEW.RPEf;
 RPEf = RPEinfoNEW.RPEc;
 TreatmentGroup = RPEinfoNEW.TreatmentGroup;
+Sframe = RPEinfoNEW.Sframe;
+Eframe = RPEinfoNEW.Eframe;
 Fcson  = RPEinfoNEW.Fcson;
 Fcsmid = RPEinfoNEW.Fcsmid;
 Fcsoff = RPEinfoNEW.Fcsoff;
@@ -1593,10 +1809,6 @@ for m = 1:size(dfDiff,3)
     haxRPE.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',Fcson,'CS ON'));
     elseif m == Fcsoff
     haxRPE.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',Fcsoff,'CS OFF'));
-    % elseif m == Fcsoff
-    % haxRPE.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',0,'US ON'));
-    % elseif m == Fusend
-    % haxRPE.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',0,'US OFF'));
     end
     
     pause(.04)
@@ -1605,16 +1817,16 @@ end
 
 
 %-----------------------------------------
-cmax = max(max(max(mean(dfDiff(:,:,Fcsoff:Fusmid),3))));
-cmin = min(min(min(mean(dfDiff(:,:,Fcsoff:Fusmid),3))));
+cmax = max(max(max(mean(dfDiff(:,:,Sframe:Eframe),3))));
+cmin = min(min(min(mean(dfDiff(:,:,Sframe:Eframe),3))));
 cmax = cmax - abs(cmax/2);
 cmin = cmin + abs(cmin/2);
 haxRPE.CLim = [cmin cmax];
 
-phIM.CData = mean(dfDiff(:,:,Fcsoff:Fusmid),3);
+phIM.CData = mean(dfDiff(:,:,Sframe:Eframe),3);
 
 haxRPE.Title = text(0.5,0.5,...
-    sprintf('Displaying mean difference after %.0f frame',Fcsoff));
+    sprintf('Displaying mean difference between frames %.0f - %.0f',Sframe,Eframe));
 %-----------------------------------------
 
 
@@ -1698,7 +1910,7 @@ leg1 = legend(hmkrs,{[TreatmentGroup{RPEf} ' [SOLID=LOADED]'],[TreatmentGroup{RP
 % end
 
 
-keyboard
+
 
 
 
@@ -2244,7 +2456,21 @@ end
 
 
 
+%----------------------------------------------------
+%        MEMO LOG UPDATE
+%----------------------------------------------------
+function memolog(spf)
+    
+    if iscellstr(spf)
+        spf = [spf{:}];
+    end
 
+    memos(1:end-1) = memos(2:end);
+    memos{end} = spf;
+    memoboxH.String = memos;
+    pause(.02)
+
+end
 
 
 
