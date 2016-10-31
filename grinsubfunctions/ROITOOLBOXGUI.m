@@ -58,9 +58,9 @@ global tabgp btabs dtabs itabs gtabs
 global ROIROI ROIfac ROIcof ROIf ROIc dfDiff rawDiff ROIfacDat ROIcofDat ROIDATA
 global ROIgroups IMGSdf ROIinfo ROIMASK ROIMASKNEW
 global ROIDATANEW ROIROINEW ROIfacDatNEW ROIcofDatNEW ROIinfoNEW
-global BlurVal zcrit zout smoothimgnumH zcritnumH zoutnumH
+global BlurVal zcrit zout smoothimgnumH TreatmentGroup
 global quantMinH minROIszH quantMin minROIsz
-global Sframe Eframe frameBG frameSE
+global Sframe Eframe frameBG frameSE IMGROI
 global memos memoboxH haxMINI racerline
 
 ROIDATA = {};
@@ -265,7 +265,6 @@ haxMINI = axes('Parent', IMpanel, 'NextPlot', 'replacechildren',...
 %----------------------------------------------------
 
 
-
 %-----------------------------------
 %    FIND ROI PANEL
 %-----------------------------------
@@ -395,16 +394,13 @@ minROIszH = uicontrol('Parent', ParamPanelH, 'Style', 'Edit', 'Units', 'normaliz
 
 
 
-% zcrittxtH = uicontrol('Parent', ParamPanelH, 'Style', 'Text', 'Units', 'normalized',...
-%     'Position', [0.01 0.70 0.46 0.10], 'FontSize', 10,'String', 'Z-score min: ');
-% zcritnumH = uicontrol('Parent', ParamPanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-%     'Position', [0.51 0.72 0.42 0.10], 'FontSize', 10,'Callback',@zcritnumHCallback);
-% 
-% 
-% zouttxtH = uicontrol('Parent', ParamPanelH, 'Style', 'Text', 'Units', 'normalized',...
-%     'Position', [0.01 0.55 0.46 0.10], 'FontSize', 10,'String', 'Z-score max: ');
-% zoutnumH = uicontrol('Parent', ParamPanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-%     'Position', [0.51 0.57 0.42 0.10], 'FontSize', 10,'Callback',@zoutnumHCallback);
+% BulkFindROIsH = uicontrol('Parent', ParamPanelH,'Style','checkbox','Units','normalized',...
+%     'Position', [0.01 0.35 0.46 0.10] ,'String','Bulk Find ROIs', 'Value',0,'Callback',{@BulkFindROIsCall,1});
+
+BulkFindROIsH = uicontrol('Parent', ParamPanelH, 'Units', 'normalized', ...
+    'Position', [0.05 0.35 0.90 0.14], 'FontSize', 12, 'String', 'BULK FIND ROIs',...
+    'Callback', @BulkFindROIs); % , 'Enable','on' 'BackgroundColor',[.95 .95 .95],...
+
 
 
 smoothimgnumH.String    = num2str(BlurVal);
@@ -1288,12 +1284,6 @@ function findHighActivity(ROIf,TreatGroup,IMGSdf,IMGSraw,Sframe,Eframe)
         
         DFmu = dfDiffmu - NONdfDiffmu;
         
-%         %for f = Sframe:Eframe
-%         for f = 1:size(dfDiff,3)
-%             dfFRAMES(:,:,f) = dfDiff(:,:,f) - NONdfDiffmu(:,:);
-%             % dfFRAMES(:,:,f) = (dfDiff(:,:,f) - NONdfDiffmu(:,:)) ./ NONdfDiffmu(:,:);
-%             %ff=ff+1;
-%         end
         
     elseif Eframe == XLSdata.framesPerTrial && Sframe ~= 1
         
@@ -1301,26 +1291,14 @@ function findHighActivity(ROIf,TreatGroup,IMGSdf,IMGSraw,Sframe,Eframe)
         NONdfDiffmu = mean(NONdfDiff,3);
         
         DFmu = dfDiffmu - NONdfDiffmu;
-        
-%         for f = Sframe:Eframe
-%             dfFRAMES(:,:,f) = dfDiff(:,:,f) - NONdfDiffmu(:,:);
-%             %dfFRAMES(:,:,f) = (dfDiff(:,:,f) - NONdfDiffmu(:,:)) ./ NONdfDiffmu(:,:);
-%             ff=ff+1;
-%         end
-        
+                
     elseif Eframe ~= XLSdata.framesPerTrial && Sframe == 1
         
         NONdfDiff = dfDiff(:,:,Eframe+1:end);
         NONdfDiffmu = mean(NONdfDiff,3);
         
         DFmu = dfDiffmu - NONdfDiffmu;
-        
-%         for f = Sframe:Eframe
-%             dfFRAMES(:,:,f) = dfDiff(:,:,f) - NONdfDiffmu(:,:);
-%             %dfFRAMES(:,:,f) = (dfDiff(:,:,f) - NONdfDiffmu(:,:)) ./ NONdfDiffmu(:,:);
-%             ff=ff+1;
-%         end
-        
+                
     else
         
         msgbox('The selected frame range is invalid!');
@@ -1328,46 +1306,11 @@ function findHighActivity(ROIf,TreatGroup,IMGSdf,IMGSraw,Sframe,Eframe)
         
     end
     
-    
-%     %-----------------------------------------
-%     phIM = imagesc(rawDiff(:,:,1),'Parent',haxROI,'CDataMapping','scaled');
-%     cmax = max(max(max(rawDiff)));
-%     cmin = min(min(min(rawDiff)));
-%     cmax = cmax - abs(cmax/2.5);
-%     cmin = cmin + abs(cmin/2.5);
-%     if cmin == cmax; msgbox('No ROIs found!'); return; end
-%     haxROI.CLim = [cmin cmax];
-%     %----
-%     for ff = 1:size(rawDiff,3)
-% 
-%         phIM.CData = rawDiff(:,:,ff);
-% 
-%         haxROI.Title = text(0.5,0.5,sprintf('Highest [%s] activity between %s - %s .   FRAME(%.0f)',...
-%         TreatGroup, num2str(Sframe), num2str(Eframe), ff));
-% 
-%         pause(.04)
-%     end
-%     %-----------------------------------------
-    
-    
-    
+
+        
     %% GET DATA ABOVE QUANTILE THRESHOLD FOR DF STACK
-clear USFHa USFH_Zscore USFHzcrit USFHzout USFH
+    clear USFHa USFH_Zscore USFHzcrit USFHzout USFH
 
-
-% FACTORdf   = dfFRAMES(:,:,Sframe:Eframe);
-% COFACTdf   = NONdfDiff;
-% USFHa = reshape(DFmu,numel(DFmu),[],1);    
-% % USFHa = reshape(dfDiff(:,:,Sframe:Eframe),numel(dfDiff(:,:,Sframe:Eframe)),[],1);
-% 
-%     qcrit = quantile(USFHa,quantMin);
-%     
-%     USFHqcrit   = min(USFHa(USFHa>qcrit));
-% 
-% USFH = mean(FACTORdf,3);
-% % USFH = mean(dfDiff(:,:,Sframe:Eframe),3);
-% ZdfDiff = convn( USFH, GRINkern(.5, 9, BlurVal, .1, 1),'same');
-% 
 %     lintrans = @(x,a,b,c,d) (c.*(1-(x-a)./(b-a)) + d.*((x-a)./(b-a)));
 %     ZdfDiff = lintrans(ZdfDiff,...
 %                         min(min(min(min(ZdfDiff)))),...
@@ -1405,9 +1348,6 @@ clear USFHa USFH_Zscore USFHzcrit USFHzout USFH
                  .77 .77 .11; .77 .11 .77; .00 .00 .99; .22 .33 .44];
 
     BW = im2bw(DFmuCon, graythresh(DFmuCon));
-
-    %BWc = convn( BW, GRINkern(.5, 9, BlurVal, .1, 1) ,'same');
-    %BW = im2bw(BWc, graythresh(BWc));
 
     BW_filled = imfill(BW,'holes');
         
@@ -1616,14 +1556,6 @@ end
 
 
 
-
-
-
-
-
-
-
-
 % GET FRAME FOR CS_ONSET CS_MIDWAY US_ONSET US_MIDWAY
 Fcson   = XLSdata.CSonsetFrame;
 Fcsmid  = Fcson + round(XLSdata.CS_lengthFrames/2);
@@ -1660,7 +1592,6 @@ end
 
 % THE SIZE OF IMGSraw and IMGSdf is now ( nYpixels , nXpixels , nFRAMES , nGroups )
 % NOTE THIS DOES *NOT* MEAN ( nYpixels , nXpixels , nFRAMES , *nTRIALS* )
-%
 % dfDiff  = IMG(factor)    -   IMG(cofactor)
 % rawDiff = IMGraw(factor) -   IMGraw(cofactor)
 
@@ -1745,44 +1676,6 @@ end
 
 %% GET DATA ABOVE QUANTILE THRESHOLD FOR DF STACK
 
-%{
-% clear USFHa USFH_Zscore USFHzcrit USFHzout USFH
-% % haxROI.Title = text(0.5,0.5,sprintf('Preparing ROI Trace %.0f ',1));
-% 
-% 
-% USFHa = reshape(rawDiff(:,:,Sframe:Eframe),numel(rawDiff(:,:,Sframe:Eframe)),[],1);
-% 
-% USFH_Zscore = zscore(USFHa);
-% USFHzcrit   = min(USFHa(USFH_Zscore>zcrit));
-% USFHzout    = min(USFHa(USFH_Zscore>zout));
-% 
-% if isempty(USFHzout); 
-%     USFHzout = max(USFHa); 
-% end
-% 
-% USFH = mean(rawDiff(:,:,Sframe:Eframe),3);
-% ZrawDiff = convn( USFH, GRINkern(.5, 9, BlurVal, .1, 1),'same');
-% ZrawDiff(ZrawDiff<USFHzcrit | ZrawDiff>USFHzout) = 0;
-% ----------------------------------------------------------
-% USFHa = reshape(dfDiff(:,:,Sframe:Eframe),numel(dfDiff(:,:,Sframe:Eframe)),[],1);
-% 
-%     qcrit = quantile(USFHa,quantMin);
-%     
-%     USFHqcrit   = min(USFHa(USFHa>qcrit));
-% 
-% USFH = mean(dfDiff(:,:,Sframe:Eframe),3);
-% ZdfDiff = convn( USFH, GRINkern(.5, 9, BlurVal, .1, 1),'same');
-% 
-%     lintrans = @(x,a,b,c,d) (c.*(1-(x-a)./(b-a)) + d.*((x-a)./(b-a)));
-%     ZdfDiff = lintrans(ZdfDiff,...
-%                         min(min(min(min(ZdfDiff)))),...
-%                         max(max(max(max(ZdfDiff)))),...
-%                         min(min(min(min(USFH)))),...
-%                         max(max(max(max(USFH)))));
-% 
-% ZdfDiff(ZdfDiff<USFHqcrit) = 0;
-%}
-
 clear USFHa USFH_Zscore USFHzcrit USFHzout USFH
 
 
@@ -1800,9 +1693,6 @@ colorlist = [.99 .00 .00; .00 .99 .00; .99 .88 .88; .11 .77 .77;
              .77 .77 .11; .77 .11 .77; .00 .00 .99; .22 .33 .44];
 
 BW = im2bw(DFmuCon, graythresh(DFmuCon));
-
-% BWc = convn( BW, GRINkern(.5, 9, BlurVal, .1, 1) ,'same');
-% BW = im2bw(BWc.*1.0, graythresh(BW.*1.0));
 
 BW_filled = imfill(BW,'holes');
 
@@ -1865,13 +1755,9 @@ for m = 1:size(dfDiff,3)
     phIM.CData = dfDiff(:,:,m);
     
     if m == Fcson
-    haxROI.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',Fcson,'CS ON'));
+        haxROI.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',Fcson,'CS ON'));
     elseif m == Fcsoff
-    haxROI.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',Fcsoff,'CS OFF'));
-    % elseif m == Fcsoff
-    % haxROI.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',0,'US ON'));
-    % elseif m == Fusend
-    % haxROI.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',0,'US OFF'));
+        haxROI.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',Fcsoff,'CS OFF'));
     end
     
     racerline.XData = [nn nn];
@@ -1949,25 +1835,6 @@ leg1 = legend(hmkrs,{TreatmentGroup{ROIf},TreatmentGroup{ROIc}});
     set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
     set(hmkrs,'Visible','off','HandleVisibility', 'off')                
 
-
-% if max(ROIfacDat) > .1;
-%     GhaxGRIN.YLim = [0 max(ROIfacDat)];
-% else
-%     GhaxGRIN.YLim = [0 .1];
-% end
-% pause(.1)
-
-% if max(ROIfacDat) > .1 && min(ROIfacDat) >= 0
-%     
-%     GhaxGRIN.YLim = [0 max(ROIfacDat)];
-%     
-% elseif max(ROIfacDat) > .1 && min(ROIfacDat) < 0
-%     
-%     GhaxGRIN.YLim = [min(ROIfacDat) max(ROIfacDat)];
-%     
-% else
-%     GhaxGRIN.YLim = [0 .1];
-% end
 pause(.1)
 
 
@@ -2071,7 +1938,6 @@ haxROI.Title = text(0.5,0.5,...
 
 %% GET DATA FOR ROI LINE PLOTS
 
-
 for nn = 1:size(dfDiff,3)
 
     dfROI(:,:,nn) = IMGSdf(:,:,nn,ROIf) .* ROIMASKNEW;
@@ -2129,25 +1995,6 @@ leg1 = legend(hmkrs,{[TreatmentGroup{ROIf} ' [SOLID=LOADED]'],[TreatmentGroup{RO
     set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
     set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
     set(hmkrs,'Visible','off','HandleVisibility', 'off')                
-
-
-
-% if max([ROIfacDat ROIfacDatNEW]) > .1 && min([ROIfacDat ROIfacDatNEW]) >= 0
-%     
-%     GhaxGRIN.YLim = [0 max([ROIfacDat ROIfacDatNEW])];
-%     
-% elseif max([ROIfacDat ROIfacDatNEW]) > .1 && min([ROIfacDat ROIfacDatNEW]) < 0
-%     
-%     GhaxGRIN.YLim = [min([ROIfacDat ROIfacDatNEW]) max([ROIfacDat ROIfacDatNEW])];
-%     
-% else
-%     GhaxGRIN.YLim = [0 .1];
-% end
-
-
-
-
-
 
 
 %%
@@ -2322,6 +2169,196 @@ end
 
 
 
+
+
+%----------------------------------------------------
+%  UPDATE GLOBAL VARIABLES
+%----------------------------------------------------
+function updateGlobals()
+
+    BlurVal   = str2num(smoothimgnumH.String);
+    quantMin  = str2num(quantMinH.String);
+    minROIsz  = str2num(minROIszH.String);
+    
+    % GET FRAME FOR CS_ONSET CS_MIDWAY US_ONSET US_MIDWAY
+    Fcson   = XLSdata.CSonsetFrame;
+    Fcsmid  = Fcson + round(XLSdata.CS_lengthFrames/2);
+    Fcsoff  = XLSdata.CSoffsetFrame;
+    Fusmid  = Fcsoff + round((XLSdata.framesPerTrial - Fcsoff)/2);
+    Fusend  = XLSdata.framesPerTrial;
+    Sframe = str2num(SframeH.String);
+    Eframe = str2num(EframeH.String);
+    
+    TreatmentGroup = unique(GRINstruct.csus);
+
+end
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%     BULK ROI FINDER (SILENT)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%------------------------------------------------------------------------------
+%        FIND ROI FUNCTION
+%------------------------------------------------------------------------------
+function BulkFindROIs(hObject, eventdata)
+    
+    IMGROI = struct();
+    nGroups = length(TreatmentGroup);
+    IMGROI(nGroups,nGroups).Index = nGroups*nGroups;
+    
+    updateGlobals()
+    
+    for mm = 1:size(GRINstruct.tf,2)
+        IMGSdf(:,:,:,mm) = squeeze(mean(IMG(:,:,:,GRINstruct.tf(:,mm)),4));        
+    end
+    
+    
+for rf = 1:length(TreatmentGroup)
+for rc = 1:length(TreatmentGroup)    
+clear B BW BW_filled TooSmall dfROI
+
+
+% GET TREATMENT GROUP STRINGS
+% TreatmentGroup = unique(GRINstruct.csus);
+% for nn = 1:size(GRINstruct.tf,2)
+%     RFac(nn) = strcmp(TreatmentGroup{nn},ROIfac);
+%     RCof(nn) = strcmp(TreatmentGroup{nn},ROIcof);
+% end
+% 
+% ROIf = find(RFac);
+% ROIc = find(RCof);
+
+
+IMGROI(rf,rc).Index = nGroups*nGroups;
+
+if rf == rc
+   continue 
+end
+
+    ROIf = rf;
+    ROIc = rc;
+
+%     %------------------------------------------------------------------------------
+%     if strcmp(ROIfac,ROIcof)
+%         findHighActivity(ROIf,TreatmentGroup{ROIf},IMGSdf,IMGSraw,Sframe,Eframe)
+%         return
+%     end
+%     %------------------------------------------------------------------------------
+
+    rawDiff = IMGSraw(:,:,:,ROIf) - IMGSraw(:,:,:,ROIc);
+    dfDiff = IMGSdf(:,:,:,ROIf) - IMGSdf(:,:,:,ROIc);
+
+    DFmu = mean(dfDiff(:,:,Sframe:Eframe),3);
+    
+    DFmuCon = convn( DFmu, GRINkern(.5, 9, BlurVal, .1, 1),'same');
+
+    qcrit = quantile(DFmuCon(:),quantMin);
+    
+    DFmuCon(DFmuCon<qcrit) = 0;
+
+    BW = im2bw(DFmuCon, graythresh(DFmuCon));
+
+    BW_filled = imfill(BW,'holes');
+
+    [B,L] = bwboundaries(BW,'noholes');
+
+    for mm = 1:size(B,1)
+        TooSmall(mm) = length(B{mm}) < minROIsz;
+    end
+
+
+    B(TooSmall) = [];
+    ROIROI = B;
+    ROIMASK = BW_filled;
+
+
+    for k = 1:length(B)
+        boundary = B{k};
+    end
+
+
+    % GET DATA FOR ROI LINE PLOTS
+
+    for v = 1:size(dfDiff,3)
+
+        dfROI(:,:,v) = IMGSdf(:,:,v,ROIf) .* ROIMASK;
+        dROI = dfROI(:,:,v);
+        dROI = dROI(:);
+        ROIfacDat(v) = mean(dROI(dROI~=0));
+
+    end
+
+    for v = 1:size(dfDiff,3)
+
+        dfROI(:,:,v) = IMGSdf(:,:,v,ROIc) .* ROIMASK;
+        dROI = dfROI(:,:,v);
+        dROI = dROI(:);
+        ROIcofDat(v) = mean(dROI(dROI~=0));
+
+    end
+
+
+    %% PREPARE ROI DATA FOR OUTPUT TO MAT FILE
+    
+    
+    
+    IM_SfEf = squeeze(mean(IMGSdf(:,:,  Sframe  :  Eframe  ,ROIf),3));
+    
+    IM_Base = squeeze(mean(IMGSdf(:,:,       1  :  Fcson   ,ROIf),3));
+    IM_CSfh = squeeze(mean(IMGSdf(:,:,  Fcson   :  Fcsmid  ,ROIf),3));
+    IM_CSlh = squeeze(mean(IMGSdf(:,:,  Fcsmid  :  Fcsoff  ,ROIf),3));
+    IM_USfh = squeeze(mean(IMGSdf(:,:,  Fcsoff  :  Fusmid  ,ROIf),3));
+    IM_USlh = squeeze(mean(IMGSdf(:,:,  Fusmid  :  Fusend  ,ROIf),3));
+    
+
+    IMGROI(rf,rc).Groups       = TreatmentGroup;
+    IMGROI(rf,rc).ROIf         = ROIf;
+    IMGROI(rf,rc).ROIc         = ROIc;
+    IMGROI(rf,rc).Sframe       = Sframe;
+    IMGROI(rf,rc).Eframe       = Eframe;
+    IMGROI(rf,rc).ROIfacDat    = ROIfacDat;
+    IMGROI(rf,rc).ROIcofDat    = ROIcofDat;
+    IMGROI(rf,rc).ROIROI       = ROIROI;
+    IMGROI(rf,rc).ROIMASK      = ROIMASK;
+    
+    IMGROI(rf,rc).IM_SfEf      = IM_SfEf;
+    IMGROI(rf,rc).IM_Base      = IM_Base;
+    IMGROI(rf,rc).IM_CSfh      = IM_CSfh;
+    IMGROI(rf,rc).IM_CSlh      = IM_CSlh;
+    IMGROI(rf,rc).IM_USfh      = IM_USfh;
+    IMGROI(rf,rc).IM_USlh      = IM_USlh;
+
+
+
+
+
+
+
+    
+end
+end
+
+
+cLabels = {'Save IMGROI to variable named:' ...
+           'Save GRINstruct to variable named:' ...
+           'Save GRINtable to variable named:' ...
+           'Save XLSdata to variable named:'}; 
+varNames = {'IMGROI','GRINstruct','GRINtable','XLSdata'};
+items = {IMGROI,GRINstruct,GRINtable,XLSdata};
+wsh = export2wsdlg(cLabels,varNames,items,'Save Variables to Workspace');
+uiwait(wsh)
+
+%%
+end
 
 
 
