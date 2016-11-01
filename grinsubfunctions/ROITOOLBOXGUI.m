@@ -51,7 +51,7 @@ clc
 global GhaxGRIN GimgsliderYAH GimgsliderYBH GimgsliderXAH GimgsliderXBH
 global slideValYA slideValYB slideValXA slideValXB slideValIM
 global GupdateGraphH Gcheckbox1H Gcheckbox2H Gcheckbox3H Gcheckbox4H
-global Gcheckbox5H Gcheckbox6H Gcheckbox7H
+global Gcheckbox5H Gcheckbox6H Gcheckbox7H customBaseCheckH BSframeH BEframeH
 global CSUSvals IMGt ROIs LICKs LhaxGRIN 
 global IM IMsz colorord haxROI IMpanel phIM
 global tabgp btabs dtabs itabs gtabs
@@ -60,8 +60,9 @@ global ROIgroups IMGSdf ROIinfo ROIMASK ROIMASKNEW
 global ROIDATANEW ROIROINEW ROIfacDatNEW ROIcofDatNEW ROIinfoNEW
 global BlurVal zcrit zout smoothimgnumH TreatmentGroup
 global quantMinH minROIszH quantMin minROIsz
-global Sframe Eframe frameBG frameSE IMGROI
+global Sframe Eframe frameBG frameSE IMGROI BSframe BEframe
 global memos memoboxH haxMINI racerline
+global Fbson Fbsoff Fcson Fcsmid Fcsoff Fuson Fusmid Fusend doCustomBaseline
 
 ROIDATA = {};
 ROIinfo.file = GRINstruct.file(1:end-4);
@@ -80,20 +81,26 @@ zout = 9;
 quantMin = .90;
 minROIsz = 15;
 
+
 ROIfac = CSUSvals(1);
 ROIcof = CSUSvals(1);
 
 % GET FRAME FOR CS_ONSET CS_MIDWAY US_ONSET US_MIDWAY
+Fbson   = 1;
+Fbsoff  = XLSdata.CSonsetFrame - 1;
 Fcson   = XLSdata.CSonsetFrame;
 Fcsmid  = Fcson + round(XLSdata.CS_lengthFrames/2);
 Fcsoff  = XLSdata.CSoffsetFrame;
+Fuson   = XLSdata.CSoffsetFrame + 1;
 Fusmid  = Fcsoff + round((XLSdata.framesPerTrial - Fcsoff)/2);
 Fusend  = XLSdata.framesPerTrial;
 
 Sframe = Fcsoff;
 Eframe = Fusend;
 
-
+BSframe = 5;
+BEframe = Fcson-1;
+doCustomBaseline = 0;
 
 
 
@@ -270,16 +277,21 @@ haxMINI = axes('Parent', IMpanel, 'NextPlot', 'replacechildren',...
 %-----------------------------------
 GIPpanelH = uipanel('Parent', btabs,'Title','Image Processing','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
-    'Position', [0.02 0.02 0.45 0.95]); % 'Visible', 'Off',
+    'Position', [0.02 0.01 0.45 0.98]); % 'Visible', 'Off',
 
 findROIcallbackH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
-    'Position', [.05 0.90 .90 .09], 'FontSize', 13, 'String', 'FIND ROI',...
+    'Position', [.05 0.94 .90 .05], 'FontSize', 13, 'String', 'FIND ROI',...
     'Callback', @findROIcallback, 'Enable','on');
+
+
+BulkFindROIsH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
+    'Position', [.05 0.88 .90 .05], 'FontSize', 12, 'String', 'BULK FIND ROIs',...
+    'Callback', @BulkFindROIs); % , 'Enable','on' 'BackgroundColor',[.95 .95 .95],...
 
 
 
 buttongroup1 = uibuttongroup('Parent', GIPpanelH,'Title','ROI FACTOR',...
-                  'Units', 'normalized','Position',[.01 0.45 .98 .40],...
+                  'Units', 'normalized','Position',[.01 0.40 .98 .37],...
                   'SelectionChangedFcn',@buttongroup1selection);
               
 bva = 1;
@@ -318,7 +330,7 @@ end
 
 
 buttongroup2 = uibuttongroup('Parent', GIPpanelH,'Title','ROI COFACTOR',...
-                  'Units', 'normalized','Position',[.01 0.01 .98 .40],...
+                  'Units', 'normalized','Position',[.01 0.01 .98 .37],...
                   'SelectionChangedFcn',@buttongroup2selection);
               
 bva = 1;
@@ -371,35 +383,31 @@ end
 %-----------------------------------
 %    ROI PARAMETERS PANEL
 %-----------------------------------
-ParamPanelH = uipanel('Parent', btabs,'Title','ROI Search Parameters','FontSize',10,...
+ParamPanelH = uipanel('Parent', btabs,'Title','ROI Processing Parameters','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
-    'Position', [0.50 0.64 0.45 0.34]); % 'Visible', 'Off',
+    'Position', [0.50 0.85 0.45 0.14]); % 'Visible', 'Off',
 
 
 smoothimgtxtH = uicontrol('Parent', ParamPanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.01 0.85 0.46 0.10], 'FontSize', 10,'String', 'Smooth amount: ');
+    'Position', [0.01 0.69 0.46 0.22], 'FontSize', 10,'String', 'Smooth amount: ');
 smoothimgnumH = uicontrol('Parent', ParamPanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.51 0.87 0.42 0.10], 'FontSize', 10,'Callback',@smoothimgnumHCallback);
-
+    'Position', [0.51 0.69 0.42 0.27], 'FontSize', 10,'Callback',@smoothimgnumHCallback);
 
 quantMinT = uicontrol('Parent', ParamPanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.01 0.70 0.46 0.10], 'FontSize', 10,'String', 'Min Quantile: ');
+    'Position', [0.01 0.35 0.46 0.22], 'FontSize', 10,'String', 'Min Quantile: ');
 quantMinH = uicontrol('Parent', ParamPanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.51 0.72 0.42 0.10], 'FontSize', 10,'Callback',@quanMinFun);
+    'Position', [0.51 0.36 0.42 0.27], 'FontSize', 10,'Callback',@quanMinFun);
 
 minROIszT = uicontrol('Parent', ParamPanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [0.01 0.55 0.46 0.10], 'FontSize', 10,'String', 'Min ROI pixels: ');
+    'Position', [0.01 0.02 0.46 0.22], 'FontSize', 10,'String', 'Min ROI pixels: ');
 minROIszH = uicontrol('Parent', ParamPanelH, 'Style', 'Edit', 'Units', 'normalized', ...
-    'Position', [0.51 0.57 0.42 0.10], 'FontSize', 10,'Callback',@minROIszFun);
+    'Position', [0.51 0.04 0.42 0.27], 'FontSize', 10,'Callback',@minROIszFun);
 
 
 
 % BulkFindROIsH = uicontrol('Parent', ParamPanelH,'Style','checkbox','Units','normalized',...
 %     'Position', [0.01 0.35 0.46 0.10] ,'String','Bulk Find ROIs', 'Value',0,'Callback',{@BulkFindROIsCall,1});
 
-BulkFindROIsH = uicontrol('Parent', ParamPanelH, 'Units', 'normalized', ...
-    'Position', [0.05 0.35 0.90 0.14], 'FontSize', 12, 'String', 'BULK FIND ROIs',...
-    'Callback', @BulkFindROIs); % , 'Enable','on' 'BackgroundColor',[.95 .95 .95],...
 
 
 
@@ -414,34 +422,56 @@ minROIszH.String        = num2str(minROIsz);
 
 
 
-
+%%
 %-----------------------------------
-%    PLOT DISPLAY CHECKLIST PANEL
+%    TIMING PARAMETERS PANEL
 %-----------------------------------
 TimePanelH = uipanel('Parent', btabs,'Title','Timing Parameters','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
-    'Position', [0.50 0.25 0.45 0.34]); % 'Visible', 'Off',
+    'Position', [0.50 0.25 0.45 0.57]); % 'Visible', 'Off',
 
 frameinfoH = uicontrol('Parent', TimePanelH, 'Units', 'normalized', ...
-    'Position', [.01 0.80 .98 .18], 'FontSize', 13, 'String', 'Frame Timing Info',...
+    'Position', [.01 0.88 .98 .11], 'FontSize', 13, 'String', 'Frame Timing Info',...
     'Callback', @frameinfocallback, 'Enable','on');
 
 
+
+customTimingH = uicontrol('Parent', TimePanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', [.01 0.38 .98 .05], 'FontSize', 11,'String', 'Custom Comparison');
 custFrameTimingH = uicontrol('Parent', TimePanelH, 'Style', 'Text', 'Units', 'normalized',...
-    'Position', [.01 0.15 .98 .12], 'FontSize', 11,'String', 'Start Frame     -     End Frame');
+    'Position', [.01 0.33 .98 .05], 'FontSize', 11,'String', 'Start Frame     -     End Frame');
 SframeH = uicontrol('Parent', TimePanelH, 'Style', 'Edit', 'Units', 'normalized','Enable', 'Off',...
-    'Position', [.01 0.01 .48 .13], 'FontSize', 10,'Callback',@custSFrameTiming);
+    'Position', [.02 0.26 .45 .07], 'FontSize', 10,'Callback',@custSFrameTiming);
 EframeH = uicontrol('Parent', TimePanelH, 'Style', 'Edit', 'Units', 'normalized','Enable', 'Off', ...
-    'Position', [.51 0.01 .48 .13], 'FontSize', 10,'Callback',@custEFrameTiming);
+    'Position', [.52 0.26 .45 .07], 'FontSize', 10,'Callback',@custEFrameTiming);
 
 SframeH.String = num2str(Sframe);
 EframeH.String = num2str(Eframe);
 
 
+
+
+customBaselineH = uicontrol('Parent', TimePanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', [.10 0.13 .78 .05], 'FontSize', 11,'String', 'Custom Baseline');
+customBaseCheckH = uicontrol('Parent', TimePanelH,'Style','checkbox','Units','normalized',...
+    'Position', [.03 0.01 .45 .07] ,'String','Use Custom',...
+    'Value',doCustomBaseline,'Callback',@customBaseCheck);
+custBaseTimingH = uicontrol('Parent', TimePanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', [.55 0.08 .40 .05], 'FontSize', 11,'String', 'Frame Number');
+BSframeH = uicontrol('Parent', TimePanelH, 'Style', 'Edit', 'Units', 'normalized','Enable', 'Off',...
+    'Position', [.52 0.01 .45 .07], 'FontSize', 10,'Callback',@custBSFrameTiming);
+% BEframeH = uicontrol('Parent', TimePanelH, 'Style', 'Edit', 'Units', 'normalized','Enable', 'Off', ...
+%     'Position', [.51 0.01 .48 .07], 'FontSize', 10,'Callback',@custBEFrameTiming);
+
+BSframeH.String = num2str(BSframe);
+% BEframeH.String = num2str(BEframe);
+
+
+%%
 function custSFrameTiming(hObject, eventdata, handles)
 
     Sframe = str2double(get(hObject,'String'));
-    SframeH.String = SframeH.String;
+    % SframeH.String = SframeH.String;
     memolog(['Start frame updated to: ' SframeH.String])
     memolog(['Frame range now: ' SframeH.String ' - ' EframeH.String])
 
@@ -457,28 +487,74 @@ end
 
 
 
+function custBSFrameTiming(hObject, eventdata, handles)
 
+    BSframe = str2double(get(hObject,'String'));
+    % BSframeH.String = BSframeH.String;
+    memolog(['Rolling Baseline frames: ' BSframeH.String])
+    %memolog(['Frame range is: ' BSframeH.String ' - ' BEframeH.String])
 
+end
 
+function customBaseCheck(hObject, eventdata, handles)
 
+    % BEframe = str2double(get(hObject,'String'));
+    
+    doCustomBaseline = customBaseCheckH.Value;
+    
+    if doCustomBaseline == 1
+        BSframe = str2num(BSframeH.String);
+        BSframeH.Enable = 'on';
+        memolog('Rolling Baseline ON')
+    end
+    if doCustomBaseline == 0
+        BSframe = 0;
+        BSframeH.String = num2str(BSframe);
+        BSframeH.Enable = 'off';
+        memolog('Rolling Baseline OFF')
+    end
+    
+end
+
+%%
 
 frameBG = uibuttongroup('Parent', TimePanelH,'Title','Comparison Frame Range',...
-                  'Units', 'normalized','Position',[.01 0.30 .98 .48],...
+                  'Units', 'normalized','Position',[.01 0.45 .98 .40],...
                   'SelectionChangedFcn',@frameBGfun);
               
     framerange1 = uicontrol(frameBG,'Style','radiobutton','Units', 'normalized',...
-        'Position',[.01 0.70 .48 .20],'String','Baseline','HandleVisibility','off');
-
+        'Position',[.01 0.75 .48 .20],'String','Baseline','HandleVisibility','off');
 
     framerange2 = uicontrol(frameBG,'Style','radiobutton','Units', 'normalized',...
-        'Position',[.01 0.39 .48 .20],'String','Custom','HandleVisibility','off');
+        'Position',[.51 0.75 .48 .20],'String','Custom','HandleVisibility','off');
+    
     
     
     framerange3 = uicontrol(frameBG,'Style','radiobutton','Units', 'normalized',...
-        'Position',[.51 0.70 .48 .20],'String','CS Frames','HandleVisibility','off');
+        'Position',[.01 0.50 .48 .20],'String','CS All','HandleVisibility','off');
 
     framerange4 = uicontrol(frameBG,'Style','radiobutton','Units', 'normalized',...
-        'Position',[.51 0.39 .48 .20],'String','US Frames','HandleVisibility','off');
+        'Position',[.51 0.50 .48 .20],'String','US All','HandleVisibility','off');
+    
+    
+    
+    framerange5 = uicontrol(frameBG,'Style','radiobutton','Units', 'normalized',...
+        'Position',[.01 0.25 .48 .20],'String','CS 1st Half','HandleVisibility','off');
+
+    framerange6 = uicontrol(frameBG,'Style','radiobutton','Units', 'normalized',...
+        'Position',[.51 0.25 .48 .20],'String','US 1st Half','HandleVisibility','off');
+    
+    
+    
+    framerange7 = uicontrol(frameBG,'Style','radiobutton','Units', 'normalized',...
+        'Position',[.01 0.01 .48 .20],'String','CS 2nd Half','HandleVisibility','off');
+
+    framerange8 = uicontrol(frameBG,'Style','radiobutton','Units', 'normalized',...
+        'Position',[.51 0.01 .48 .20],'String','US 2nd Half','HandleVisibility','off');
+    
+    
+%%    
+    
 
 function frameBGfun(source,callbackdata)
     
@@ -489,20 +565,8 @@ function frameBGfun(source,callbackdata)
     
     
     if strcmp(frameSE,'Baseline')
-        SframeH.String = 1;
-        EframeH.String = Fcson-1;
-        SframeH.Enable = 'off';
-        EframeH.Enable = 'off';
-    end
-    if strcmp(frameSE,'CS Frames')
-        SframeH.String = Fcson;
-        EframeH.String = Fcsoff;
-        SframeH.Enable = 'off';
-        EframeH.Enable = 'off';
-    end
-    if strcmp(frameSE,'US Frames')
-        SframeH.String = Fcsoff+1;
-        EframeH.String = Fusend;
+        SframeH.String = Fbson;
+        EframeH.String = Fbsoff;
         SframeH.Enable = 'off';
         EframeH.Enable = 'off';
     end
@@ -513,6 +577,45 @@ function frameBGfun(source,callbackdata)
         EframeH.Enable = 'on';
     end
     
+    if strcmp(frameSE,'CS All')
+        SframeH.String = Fcson;
+        EframeH.String = Fcsoff;
+        SframeH.Enable = 'off';
+        EframeH.Enable = 'off';
+    end
+    if strcmp(frameSE,'US All')
+        SframeH.String = Fuson;
+        EframeH.String = Fusend;
+        SframeH.Enable = 'off';
+        EframeH.Enable = 'off';
+    end
+
+    if strcmp(frameSE,'CS 1st Half')
+        SframeH.String = Fcson;
+        EframeH.String = Fcsmid;
+        SframeH.Enable = 'off';
+        EframeH.Enable = 'off';
+    end
+    if strcmp(frameSE,'US 1st Half')
+        SframeH.String = Fuson;
+        EframeH.String = Fusmid;
+        SframeH.Enable = 'off';
+        EframeH.Enable = 'off';
+    end
+    
+    if strcmp(frameSE,'CS 2nd Half')
+        SframeH.String = Fcsmid;
+        EframeH.String = Fcsoff;
+        SframeH.Enable = 'off';
+        EframeH.Enable = 'off';
+    end
+    if strcmp(frameSE,'US 2nd Half')
+        SframeH.String = Fusmid;
+        EframeH.String = Fusend;
+        SframeH.Enable = 'off';
+        EframeH.Enable = 'off';
+    end
+    
     Sframe = str2num(SframeH.String);
     Eframe = str2num(EframeH.String);
     
@@ -521,11 +624,6 @@ function frameBGfun(source,callbackdata)
 end
 
 frameBG.SelectedObject = framerange4;
-
-
-
-
-
 
 
 
@@ -673,14 +771,27 @@ AXsliderH = uicontrol('Parent', IMGpanelH, 'Units', 'normalized','Style','slider
 %----------------------------------------------------
 
 
-hROI = imrect(haxIMG, [XLSdata.blockSize*4+.5 XLSdata.blockSize*4+.5 ...
-                       XLSdata.blockSize*2 XLSdata.blockSize*2]);
+impx = size(IMG,1)/2;
+
+
+hROI = imrect(haxIMG, [impx/2 impx/2 ...
+                       impx impx]);
+% hROI = imrect(haxIMG, [XLSdata.blockSize*4+.5 XLSdata.blockSize*4+.5 ...
+%                        XLSdata.blockSize*2 XLSdata.blockSize*2]);
 
 ROIpos = hROI.getPosition;
 
 
-tv1 = round(ROIpos(1):ROIpos(1)+ROIpos(3));
-tv2 = round(ROIpos(2):ROIpos(2)+ROIpos(4));
+tv1 = round(ROIpos(1):ROIpos(3));
+tv2 = round(ROIpos(2):ROIpos(3));
+% tv1 = round(ROIpos(1):ROIpos(1)+ROIpos(3));
+% tv2 = round(ROIpos(2):ROIpos(2)+ROIpos(4));
+
+% size(IMG)
+% 
+% keyboard
+
+
 
 tv3 = squeeze(mean(mean(IMG(tv1,tv2,:,:))));
 
@@ -690,7 +801,6 @@ for nn = 1:size(XLSdata.CSUSvals,1)
     ROIs(:,nn) = mean(tv3(:,GRINstruct.tf(:,nn)),2);
     
 end
-
 
 
 
@@ -1275,6 +1385,10 @@ function findHighActivity(ROIf,TreatGroup,IMGSdf,IMGSraw,Sframe,Eframe)
         
     dfDiffmu = mean(dfDiff(:,:,Sframe:Eframe),3);
     
+    DFmu = dfDiffmu - mean(dfDiff(:,:,Fbson:Fbsoff),3);
+    
+    
+    %{
     ff = 1;
     if Eframe ~= XLSdata.framesPerTrial && Sframe ~= 1
     
@@ -1305,7 +1419,7 @@ function findHighActivity(ROIf,TreatGroup,IMGSdf,IMGSraw,Sframe,Eframe)
         return
         
     end
-    
+    %}
 
         
     %% GET DATA ABOVE QUANTILE THRESHOLD FOR DF STACK
@@ -1518,7 +1632,6 @@ BlurVal   = str2num(smoothimgnumH.String);
 quantMin  = str2num(quantMinH.String);
 minROIsz  = str2num(minROIszH.String);
 
-
 haxROI.Title = text(0.5,0.5,sprintf('Mean of Current IMG Stack'));
 phIM.CData = squeeze(mean(squeeze(mean(IMG,4)),3));
 
@@ -1564,6 +1677,10 @@ Fusmid  = Fcsoff + round((XLSdata.framesPerTrial - Fcsoff)/2);
 Fusend  = XLSdata.framesPerTrial;
 Sframe = str2num(SframeH.String);
 Eframe = str2num(EframeH.String);
+
+doCustomBaseline = customBaseCheckH.Value;
+BSframe = str2num(BSframeH.String);
+% BEframe = str2num(BEframeH.String);
 
 
 % GET TREATMENT GROUP STRINGS
@@ -1612,12 +1729,30 @@ haxROI.Title = text(0.5,0.5,sprintf('Making stack of: [%s] - [%s] ',...
     TreatmentGroup{ROIf},TreatmentGroup{ROIc}));
 
 
-rawDiff = IMGSraw(:,:,:,ROIf) - IMGSraw(:,:,:,ROIc);
-dfDiff = IMGSdf(:,:,:,ROIf) - IMGSdf(:,:,:,ROIc);
+% muIMGBLf = mean(IMGSdf(:,:,BSframe:Sframe-1,ROIf),3);
+% muIMGBLc = mean(IMGSdf(:,:,BSframe:Sframe-1,ROIc),3);
+
+if doCustomBaseline
     
+    
+    muIMGBL = mean(IMGSraw(:,:,Sframe-BSframe:Sframe-1,:),3);
+    im = repmat(muIMGBL,1,1,size(IMGSraw,3),1);
+    IMGf = (IMGSraw - im) ./ im;
 
+%     muIMGBL = mean(IMGSdf(:,:,Sframe-BSframe:Sframe-1,:),3);
+%     im = repmat(muIMGBL,1,1,size(IMGSdf,3),1);
+%     %IMGf = (IMGSdf - im) ./ im;
+%     IMGf = IMGSdf - im;
+    
+    rawDiff = IMGSraw(:,:,:,ROIf) - IMGSraw(:,:,:,ROIc);
+    dfDiff = IMGf(:,:,:,ROIf) - IMGf(:,:,:,ROIc);
+        
+else
 
-
+    rawDiff = IMGSraw(:,:,:,ROIf) - IMGSraw(:,:,:,ROIc);
+    dfDiff = IMGSdf(:,:,:,ROIf) - IMGSdf(:,:,:,ROIc);
+    
+end
 
 
 
@@ -1845,12 +1980,18 @@ ROIinfo.ROIc = ROIc;
 ROIinfo.TreatmentGroup = TreatmentGroup;
 ROIinfo.Sframe = Sframe;
 ROIinfo.Eframe = Eframe;
+
+ROIinfo.Fbson  = Fbson;
+ROIinfo.Fbsoff = Fbsoff;
 ROIinfo.Fcson  = Fcson;
 ROIinfo.Fcsmid = Fcsmid;
 ROIinfo.Fcsoff = Fcsoff;
+ROIinfo.Fuson  = Fuson;
 ROIinfo.Fusmid = Fusmid;
 ROIinfo.Fusend = Fusend;
 
+% BSframe
+% doCustBL
 
 %%
 end
@@ -2181,16 +2322,25 @@ function updateGlobals()
     minROIsz  = str2num(minROIszH.String);
     
     % GET FRAME FOR CS_ONSET CS_MIDWAY US_ONSET US_MIDWAY
+    Fbson   = 1;
+    Fbsoff  = XLSdata.CSonsetFrame - 1;
     Fcson   = XLSdata.CSonsetFrame;
     Fcsmid  = Fcson + round(XLSdata.CS_lengthFrames/2);
     Fcsoff  = XLSdata.CSoffsetFrame;
+    Fuson   = XLSdata.CSoffsetFrame + 1;
     Fusmid  = Fcsoff + round((XLSdata.framesPerTrial - Fcsoff)/2);
     Fusend  = XLSdata.framesPerTrial;
     Sframe = str2num(SframeH.String);
     Eframe = str2num(EframeH.String);
     
     TreatmentGroup = unique(GRINstruct.csus);
-
+    
+    
+    % customBaseCheckH.Value
+    BSframe = str2num(BSframeH.String);
+    % BEframe = str2num(BEframeH.String);
+    
+    
 end
 
 
