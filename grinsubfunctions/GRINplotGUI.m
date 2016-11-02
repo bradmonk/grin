@@ -96,7 +96,7 @@ GhaxGRIN = axes('Parent', graphguih, 'NextPlot', 'replacechildren',...
     'Position', [0.05 0.08 0.55 0.85],...
     'XLimMode', 'manual','YLimMode', 'manual','Color','none');
     GhaxGRIN.YLim = [-.15 .15];
-    GhaxGRIN.XLim = [1 100];
+    GhaxGRIN.XLim = [1 size(IMG,3)];
 
 
 GimgsliderYAH = uicontrol('Parent', graphguih, 'Units', 'normalized','Style','slider',...
@@ -798,36 +798,21 @@ end
 function plotLickData(hObject, eventdata)
     
 
-    LICKmu = squeeze(sum(LICK,1));
-
-    for nn = 1:size(XLSdata.CSUSvals,1)
-
-        LICKs(:,nn) = mean(LICKmu(:,GRINstruct.tf(:,nn)),2);
-
-    end
-
-    % LhaxGRIN.ColorOrderIndex = 1; 
-    % hpLick = plot(LhaxGRIN, LICKs , ':', 'LineWidth',2,'HandleVisibility', 'off');
-
     lickfigh = figure('Units', 'normalized','Position', [.02 .05 .50 .32], 'BusyAction',...
     'cancel', 'Name', 'lickfigh', 'Tag', 'lickfigh','MenuBar', 'none'); 
-
-%     LhaxGRIN = axes('Parent', lickfigh, 'NextPlot', 'replacechildren',...
-%     'Position', [0.05 0.05 0.9 0.9],'Color','none','XTick',[],'YTick',[],...
-%     'XColor','none','YColor','none'); hold on;
 
     LhaxGRIN = axes('Parent', lickfigh, 'NextPlot', 'replacechildren',...
     'Position', [0.05 0.05 0.9 0.9],'Color','none'); hold on;
 
     LhaxGRIN.ColorOrderIndex = 1; 
-    hpLick = plot(LhaxGRIN, LICKs , ':', 'LineWidth',2,'HandleVisibility', 'off');
+    
+hpLick = plot(LhaxGRIN, LICK' , ':', 'LineWidth',2,'HandleVisibility', 'off');
     
     
     legLick = legend(hpLick,XLSdata.CSUSvals);
 	set(legLick, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
     set(legLick, 'Position', legLick.Position .* [1 .94 1 1.4])                
     
-
 end
 
 

@@ -853,7 +853,6 @@ memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     CS_lengthFrames = round(CS_length .* framesPerSec); % CS length in frames
 
     
-    memocon('XLS data successfully imported and processed!')
     
     fprintf('\n\n In this dataset there are...')
     fprintf('\n    total trials: %10.1f  ', total_trials)
@@ -918,11 +917,44 @@ memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     end
     GRINstruct.TreatmentGroups = GRINstruct.csus(fid);
      
-     
-     
-    % if isbrad
-        if numel(lickfilename) > 2;
-        % ------------- LICK DATA IMPORT CODE -----------
+    
+    
+    
+    
+    if XLSdata.total_frames == size(IMG,3)
+        memocon('GOOD: XLSdata.total_frames == size(IMG,3)')
+    else
+        memocon('WARNING: XLSdata.total_frames ~= size(IMG,3)')
+        warning('WARNING: XLSdata.total_frames ~= size(IMG,3)')
+    end
+    
+    if numel(xlsT{2,8}) > 5
+        memocon(sprintf('XLSdata reports 2 channels: %s',xlsT{2,8}),'WARNING',6)
+        
+        Isz = size(reshape(IMG,size(IMG,1),size(IMG,2),[],XLSdata.total_trials));
+        
+        if Isz(3) == XLSdata.framesPerTrial && Isz(4) == XLSdata.total_trials
+            memocon('When IMG stack is reshaped it matches XLS data')
+            memocon('IMG matches XLS for frames per trial & total trials')
+            memocon(sprintf('Frames per trial: %s',num2str(Isz(3))))
+            memocon(sprintf('Total trials: %s',num2str(Isz(4))))
+        else
+            memocon('When IMG stack is reshaped it DOES NOT matches XLS data')
+            memocon('IMG ~= XLS for frames per trial & total trials')
+            memocon('RESETTING TOOLBOX IN 5 SECONDS','ERROR',6)
+            resetws
+        end
+        
+    end
+    
+    
+    memocon('XLS experiment parameters successfully imported!')
+    
+    % ------------- LICK DATA IMPORT CODE -----------
+    if numel(lickfilename) > 2;
+        
+        memocon('Importing lick data...')
+        
         [lickN,~,~] = xlsread([lickpathname , lickfilename]);
 
         if (size(lickN,2) ~= total_trials) 
@@ -930,20 +962,42 @@ memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
             'of trials in % s \n (toolbox may crash during analysis). \n'],...
             lickfilename, xlsfilename)
         end
+        
+        
+        
+        
+        LICK = lickN';
+        
+        LICKs = [];
+        for nn = 1:size(XLSdata.CSUSvals,1)
 
-        LICK = reshape(lickN,floor(size(lickN,1) / framesPerTrial),...
-                       [], size(lickN,2));
-
-        memocon('Lick data imported and reshaped')
-        fprintf('\n\n Lick data imported and reshaped to size:\n   size(LICK) % s \n\n', ...
-                 num2str(size(LICK)));
-        % LICK = squeeze(sum(LICK,1));
+            LICKs(nn,:) = mean(LICK(GRINstruct.tf(:,nn),:),1);
 
         end
-    % end
-     
-     
-     
+
+
+        ndx = round(linspace(1,size(LICKs,2),size(GRINstruct.frames,2)+1));
+        %ndx = round(linspace(1,size(GRINstruct.frames,2),size(GRINstruct.id,1)+1));
+
+        LICKmu = zeros(size(GRINstruct.tf,2),size(ndx,2)-1);
+
+        for nn = 1:size(GRINstruct.tf,2)
+            for tt = 2:size(ndx,2)
+
+            LICKmu(nn,tt-1) = mean(mean(LICK(GRINstruct.tf(:,nn),ndx(tt-1):ndx(tt)),2));
+
+            end
+        end
+        
+        LICK = LICKmu;
+        
+        clear lickN LICKmu
+
+        % LICK = reshape(lickN,floor(size(lickN,1) / framesPerTrial),[], size(lickN,2));
+        % LICK = squeeze(sum(LICK,1));
+        
+        memocon(sprintf('Lick data imported and reshaped to size: % s',num2str(size(LICK))))
+    end
      
      
      
@@ -952,14 +1006,13 @@ memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
      
      
      % VISUALIZE AND ANNOTATE
-     memocon(sprintf('Imported stack size: % s ', num2str(size(IMG))));
-     fprintf('\n\n Imported stack size: % s ', num2str(size(IMG)));
+     memocon(sprintf('Imported image stack size: % s ', num2str(size(IMG))));
      
   IMG = IMG(:,:,1:total_frames);
-     
-     fprintf('\n Size after excel-informed adjustment:  % s \n\n', num2str(size(IMG)));
-     
-     update_IMGfactors()
+
+    memocon(sprintf('Size after xls-informed adjustment: % s ', num2str(size(IMG))));
+
+    update_IMGfactors()
     
 enableButtons
 memocon('Image stack and xls data import completed!')
@@ -2413,228 +2466,6 @@ end
 
 
 
-%% ------------------------- OUT OF USE ------------------------------
-
-
-%----------------------------------------------------
-%   MAIN GUI CLOSE REQUEST FUNCTION
-%----------------------------------------------------
-function mainGUIclosereq(src,callbackdata)
-   selection = questdlg('Clear globals from memory?',...
-      'Close Request Function',...
-      'Yes','No','Yes'); 
-   switch selection, 
-      case 'Yes',
-         clc
-         initialVars = who;
-         memocon('Clearing globals...')
-         memocon(initialVars)
-         clearvars -global
-         % clearvars IMG;
-         memocon('Global variables cleared from memory.')
-         memocon('GRIN toolbox closed.')
-         delete(gcf)
-      case 'No'
-      delete(gcf)
-      memocon('GRIN toolbox closed.')
-   end
-end
-
-
-
-
-%----------------------------------------------------
-%        COMING SOON NOTIFICATION
-%----------------------------------------------------
-function comingsoon(hObject, eventdata)
-   msgbox('Coming Soon!'); 
-end
-
-
-
-
-
-%----------------------------------------------------
-%        MOTION CORRECTION
-%----------------------------------------------------
-function motioncorrection(hObject, eventdata)
-   msgbox('Coming Soon!'); 
-   return
-   
-    % clc; clear all; close all;
-
-    % Input video file which needs to be stabilized.
-    % filename = 'shaky_car.avi';
-    filename = 'GRIN_zstack.avi';
-
-    hVideoSource = vision.VideoFileReader(filename, ...
-              'ImageColorSpace', 'Intensity','VideoOutputDataType', 'double');
-
-
-    % Create geometric translator object used to compensate for movement.
-    hTranslate = vision.GeometricTranslator( ...
-           'OutputSize', 'Same as input image', 'OffsetSource', 'Input port');
-
-
-    % Create template matcher object to compute location of best target match
-    % in frame. Use location to find translation between successive frames.
-    hTM = vision.TemplateMatcher('ROIInputPort', true, ...
-                                'BestMatchNeighborhoodOutputPort', true);
-
-
-    % Create object to memoconlay the original video and the stabilized video.
-    hVideoOut = vision.VideoPlayer('Name', 'Video Stabilization');
-    hVideoOut.Position(1) = round(0.4*hVideoOut.Position(1));
-    hVideoOut.Position(2) = round(1.5*(hVideoOut.Position(2)));
-    hVideoOut.Position(3:4) = [900 550];
-
-
-        imgA = step(hVideoSource); % Read first frame into imgA
-        figure
-        imagesc(imgA);
-        title('USE MOUSE TO DRAW BOX AROUND BEST STABILIZATION OBJECT')
-        h1 = imrect;
-        pos1 = round(getPosition(h1)); % [xmin ymin width height]
-
-
-    % Here we initialize some variables used in the processing loop.
-
-    pos.template_orig = [pos1(1) pos1(2)]; % [x y] upper left corner
-    pos.template_size = [pos1(3:4)];    % [width height]
-    pos.search_border = [10 10];        % max horizontal and vertical memoconlacement
-
-    pos.template_center = floor((pos.template_size-1)/2);
-    pos.template_center_pos = (pos.template_orig + pos.template_center - 1);
-    fileInfo = info(hVideoSource);
-    W = fileInfo.VideoSize(1); % Width in pixels
-    H = fileInfo.VideoSize(2); % Height in pixels
-    BorderCols = [1:pos.search_border(1)+4 W-pos.search_border(1)+4:W];
-    BorderRows = [1:pos.search_border(2)+4 H-pos.search_border(2)+4:H];
-    sz = fileInfo.VideoSize;
-    TargetRowIndices = ...
-      pos.template_orig(2)-1:pos.template_orig(2)+pos.template_size(2)-2;
-    TargetColIndices = ...
-      pos.template_orig(1)-1:pos.template_orig(1)+pos.template_size(1)-2;
-    SearchRegion = pos.template_orig - pos.search_border - 1;
-    Offset = [0 0];
-    Target = zeros(20,20);
-    % Target = zeros(18,22);
-    firstTime = true;
-
-
-
-    % Stream Processing Loop
-
-    % Processing loop using objects created above to perform stabilization
-    nn = 0;
-    while ~isDone(hVideoSource)
-    nn = nn+1;
-
-        input = step(hVideoSource);
-
-        % Find location of Target in the input video frame
-        if firstTime
-          Idx = int32(pos.template_center_pos);
-          MotionVector = [0 0];
-          firstTime = false;
-        else
-          IdxPrev = Idx;
-
-          ROI = [SearchRegion, pos.template_size+2*pos.search_border];
-          Idx = step(hTM, input, Target, ROI);
-
-          MotionVector = double(Idx-IdxPrev);
-        end
-
-        [Offset, SearchRegion] = updatesearch(sz, MotionVector, ...
-            SearchRegion, Offset, pos);
-
-        % Translate video frame to offset the camera motion
-        Stabilized = step(hTranslate, input, fliplr(Offset));
-
-        Target = Stabilized(TargetRowIndices, TargetColIndices);
-
-        % Add black border for memoconlay
-        Stabilized(:, BorderCols) = minmin;
-        Stabilized(BorderRows, :) = minmin;
-
-        TargetRect = [pos.template_orig-Offset, pos.template_size];
-        SearchRegionRect = [SearchRegion, pos.template_size + 2*pos.search_border];
-
-        % Draw rectangles on input to show target and search region
-        input = insertShape(input, 'Rectangle', [TargetRect; SearchRegionRect],...
-                            'Color', 'white');
-        % Display the offset (memoconlacement) values on the input image
-        txt = sprintf('(%+05.1f,%+05.1f)', Offset);
-        input = insertText(input(:,:,1),[191 215],txt,'FontSize',16, ...
-                        'TextColor', 'white', 'BoxOpacity', 0);
-        % Display video
-        step(hVideoOut, [input(:,:,1) Stabilized]);
-
-
-        sGRINs{nn} = Stabilized;
-    end
-
-    % Release hVideoSource
-    release(hVideoSource);
-    % ===============================================
-   
-end
-
-
-
-%----------------------------------------------------
-%        RADIO BUTTON CALLBACK
-%----------------------------------------------------
-function stimselection(source,callbackdata)
-        
-    % strcmp(stimtypeh.SelectedObject.String,'CSxUS')
-    stimtype = stimtypeh.SelectedObject.String;
-    
-    memoconlay(['Previous Stim: ' callbackdata.OldValue.String]);
-    memoconlay(['Current Stim: ' callbackdata.NewValue.String]);
-    memoconlay('------------------');
-    
-    
-    % % RADIO BUTTON GROUP FOR TIMEPOINT MEANS
-    % stimtypeh = uibuttongroup('Parent', IPpanelH, 'Visible','on',...
-    %                   'Units', 'normalized',...
-    %                   'Position',[0.63 0.31 0.35 0.06],...
-    %                   'SelectionChangedFcn',@stimselection);              
-    % stimtypeh1 = uicontrol(stimtypeh,'Style','radiobutton',...
-    %                   'String','CSxUS',...
-    %                   'Units', 'normalized',...
-    %                   'Position',[0.04 0.05 0.38 0.9],...
-    %                   'HandleVisibility','off');
-    % stimtypeh2 = uicontrol(stimtypeh,'Style','radiobutton',...
-    %                   'String','CS',...
-    %                   'Units', 'normalized',...
-    %                   'Position',[0.42 0.05 0.3 0.9],...
-    %                   'HandleVisibility','off');
-    % stimtypeh3 = uicontrol(stimtypeh,'Style','radiobutton',...
-    %                   'String','US',...
-    %                   'Units', 'normalized',...
-    %                   'Position',[0.68 0.05 0.3 0.9],...
-    %                   'HandleVisibility','off');
-
-end
-
-
-
-
-%----------------------------------------------------
-%        FORMAT XLS DATASHEETS
-%----------------------------------------------------
-function formatXLS()
-    
-    msgbox('Coming Soon!'); 
-   return
-   
-   xlsdata = formatXLS(varargin);
-     
-end
-
-
 
 
 
@@ -3396,18 +3227,21 @@ end
 %----------------------------------------------------
 %        MEMO LOG UPDATE
 %----------------------------------------------------
-function memocon(spf)
+function memocon(spf,varargin)
     
+  
     if iscellstr(spf)
         spf = [spf{:}];
     end
     
     if iscell(spf)
+        return
         keyboard
         spf = [spf{:}];
     end
     
     if ~ischar(spf)
+        return
         keyboard
         spf = [spf{:}];
     end
@@ -3418,6 +3252,34 @@ function memocon(spf)
     memes{end} = spf;
     conboxH.String = memes;
     pause(.02)
+    
+    if nargin == 3
+        
+        vrs = deal(varargin);
+                
+        memi = memes;
+                 
+        memes(1:end) = {' '};
+        memes{end-1} = vrs{1};
+        memes{end} = spf;
+        conboxH.String = memes;
+        
+        conboxH.FontAngle = 'italic';
+        conboxH.ForegroundColor = [.9 .4 .01];
+        pause(vrs{2})
+        
+        conboxH.FontAngle = 'normal';
+        conboxH.ForegroundColor = [0 0 0];
+        conboxH.String = memi;
+        pause(.02)
+        
+    elseif nargin == 2
+        vrs = deal(varargin);
+        pause(vrs{1})
+    end
+    
+    
+    
 
 end
 
@@ -3425,3 +3287,229 @@ end
 
 end
 %% EOF
+
+
+
+%% ------------------------- OUT OF USE ------------------------------
+%{
+
+%----------------------------------------------------
+%   MAIN GUI CLOSE REQUEST FUNCTION
+%----------------------------------------------------
+function mainGUIclosereq(src,callbackdata)
+   selection = questdlg('Clear globals from memory?',...
+      'Close Request Function',...
+      'Yes','No','Yes'); 
+   switch selection, 
+      case 'Yes',
+         clc
+         initialVars = who;
+         memocon('Clearing globals...')
+         memocon(initialVars)
+         clearvars -global
+         % clearvars IMG;
+         memocon('Global variables cleared from memory.')
+         memocon('GRIN toolbox closed.')
+         delete(gcf)
+      case 'No'
+      delete(gcf)
+      memocon('GRIN toolbox closed.')
+   end
+end
+
+
+
+
+%----------------------------------------------------
+%        COMING SOON NOTIFICATION
+%----------------------------------------------------
+function comingsoon(hObject, eventdata)
+   msgbox('Coming Soon!'); 
+end
+
+
+
+
+
+%----------------------------------------------------
+%        MOTION CORRECTION
+%----------------------------------------------------
+function motioncorrection(hObject, eventdata)
+   msgbox('Coming Soon!'); 
+   return
+   
+    % clc; clear all; close all;
+
+    % Input video file which needs to be stabilized.
+    % filename = 'shaky_car.avi';
+    filename = 'GRIN_zstack.avi';
+
+    hVideoSource = vision.VideoFileReader(filename, ...
+              'ImageColorSpace', 'Intensity','VideoOutputDataType', 'double');
+
+
+    % Create geometric translator object used to compensate for movement.
+    hTranslate = vision.GeometricTranslator( ...
+           'OutputSize', 'Same as input image', 'OffsetSource', 'Input port');
+
+
+    % Create template matcher object to compute location of best target match
+    % in frame. Use location to find translation between successive frames.
+    hTM = vision.TemplateMatcher('ROIInputPort', true, ...
+                                'BestMatchNeighborhoodOutputPort', true);
+
+
+    % Create object to memoconlay the original video and the stabilized video.
+    hVideoOut = vision.VideoPlayer('Name', 'Video Stabilization');
+    hVideoOut.Position(1) = round(0.4*hVideoOut.Position(1));
+    hVideoOut.Position(2) = round(1.5*(hVideoOut.Position(2)));
+    hVideoOut.Position(3:4) = [900 550];
+
+
+        imgA = step(hVideoSource); % Read first frame into imgA
+        figure
+        imagesc(imgA);
+        title('USE MOUSE TO DRAW BOX AROUND BEST STABILIZATION OBJECT')
+        h1 = imrect;
+        pos1 = round(getPosition(h1)); % [xmin ymin width height]
+
+
+    % Here we initialize some variables used in the processing loop.
+
+    pos.template_orig = [pos1(1) pos1(2)]; % [x y] upper left corner
+    pos.template_size = [pos1(3:4)];    % [width height]
+    pos.search_border = [10 10];        % max horizontal and vertical memoconlacement
+
+    pos.template_center = floor((pos.template_size-1)/2);
+    pos.template_center_pos = (pos.template_orig + pos.template_center - 1);
+    fileInfo = info(hVideoSource);
+    W = fileInfo.VideoSize(1); % Width in pixels
+    H = fileInfo.VideoSize(2); % Height in pixels
+    BorderCols = [1:pos.search_border(1)+4 W-pos.search_border(1)+4:W];
+    BorderRows = [1:pos.search_border(2)+4 H-pos.search_border(2)+4:H];
+    sz = fileInfo.VideoSize;
+    TargetRowIndices = ...
+      pos.template_orig(2)-1:pos.template_orig(2)+pos.template_size(2)-2;
+    TargetColIndices = ...
+      pos.template_orig(1)-1:pos.template_orig(1)+pos.template_size(1)-2;
+    SearchRegion = pos.template_orig - pos.search_border - 1;
+    Offset = [0 0];
+    Target = zeros(20,20);
+    % Target = zeros(18,22);
+    firstTime = true;
+
+
+
+    % Stream Processing Loop
+
+    % Processing loop using objects created above to perform stabilization
+    nn = 0;
+    while ~isDone(hVideoSource)
+    nn = nn+1;
+
+        input = step(hVideoSource);
+
+        % Find location of Target in the input video frame
+        if firstTime
+          Idx = int32(pos.template_center_pos);
+          MotionVector = [0 0];
+          firstTime = false;
+        else
+          IdxPrev = Idx;
+
+          ROI = [SearchRegion, pos.template_size+2*pos.search_border];
+          Idx = step(hTM, input, Target, ROI);
+
+          MotionVector = double(Idx-IdxPrev);
+        end
+
+        [Offset, SearchRegion] = updatesearch(sz, MotionVector, ...
+            SearchRegion, Offset, pos);
+
+        % Translate video frame to offset the camera motion
+        Stabilized = step(hTranslate, input, fliplr(Offset));
+
+        Target = Stabilized(TargetRowIndices, TargetColIndices);
+
+        % Add black border for memoconlay
+        Stabilized(:, BorderCols) = minmin;
+        Stabilized(BorderRows, :) = minmin;
+
+        TargetRect = [pos.template_orig-Offset, pos.template_size];
+        SearchRegionRect = [SearchRegion, pos.template_size + 2*pos.search_border];
+
+        % Draw rectangles on input to show target and search region
+        input = insertShape(input, 'Rectangle', [TargetRect; SearchRegionRect],...
+                            'Color', 'white');
+        % Display the offset (memoconlacement) values on the input image
+        txt = sprintf('(%+05.1f,%+05.1f)', Offset);
+        input = insertText(input(:,:,1),[191 215],txt,'FontSize',16, ...
+                        'TextColor', 'white', 'BoxOpacity', 0);
+        % Display video
+        step(hVideoOut, [input(:,:,1) Stabilized]);
+
+
+        sGRINs{nn} = Stabilized;
+    end
+
+    % Release hVideoSource
+    release(hVideoSource);
+    % ===============================================
+   
+end
+
+
+
+%----------------------------------------------------
+%        RADIO BUTTON CALLBACK
+%----------------------------------------------------
+function stimselection(source,callbackdata)
+        
+    % strcmp(stimtypeh.SelectedObject.String,'CSxUS')
+    stimtype = stimtypeh.SelectedObject.String;
+    
+    memoconlay(['Previous Stim: ' callbackdata.OldValue.String]);
+    memoconlay(['Current Stim: ' callbackdata.NewValue.String]);
+    memoconlay('------------------');
+    
+    
+    % % RADIO BUTTON GROUP FOR TIMEPOINT MEANS
+    % stimtypeh = uibuttongroup('Parent', IPpanelH, 'Visible','on',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.63 0.31 0.35 0.06],...
+    %                   'SelectionChangedFcn',@stimselection);              
+    % stimtypeh1 = uicontrol(stimtypeh,'Style','radiobutton',...
+    %                   'String','CSxUS',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.04 0.05 0.38 0.9],...
+    %                   'HandleVisibility','off');
+    % stimtypeh2 = uicontrol(stimtypeh,'Style','radiobutton',...
+    %                   'String','CS',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.42 0.05 0.3 0.9],...
+    %                   'HandleVisibility','off');
+    % stimtypeh3 = uicontrol(stimtypeh,'Style','radiobutton',...
+    %                   'String','US',...
+    %                   'Units', 'normalized',...
+    %                   'Position',[0.68 0.05 0.3 0.9],...
+    %                   'HandleVisibility','off');
+
+end
+
+
+
+
+%----------------------------------------------------
+%        FORMAT XLS DATASHEETS
+%----------------------------------------------------
+function formatXLS()
+    
+    msgbox('Coming Soon!'); 
+   return
+   
+   xlsdata = formatXLS(varargin);
+     
+end
+
+
+%}
