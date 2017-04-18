@@ -536,14 +536,26 @@ end
 %----------------------------------------------------
 
 
-hROI = imrect(haxIMG, [XLSdata.blockSize*4+.5 XLSdata.blockSize*4+.5 ...
+
+if all(IMG(1) == IMG(1:XLSdata.blockSize))
+
+    hROI = imrect(haxIMG, [XLSdata.blockSize*4+.5 XLSdata.blockSize*4+.5 ...
                        XLSdata.blockSize*2 XLSdata.blockSize*2]);
+    
+else
+
+    impx = size(IMG,1)/2;
+    hROI = imrect(haxIMG, [impx/2 impx/2 impx impx]);
+    
+end
+
 
 ROIpos = hROI.getPosition;
 
 
 tv1 = round(ROIpos(1):ROIpos(1)+ROIpos(3));
 tv2 = round(ROIpos(2):ROIpos(2)+ROIpos(4));
+
 
 tv3 = squeeze(mean(mean(IMG(tv1,tv2,:,:))));
 
@@ -797,7 +809,14 @@ end
 %------------------------------------------------------------------------------
 function plotLickData(hObject, eventdata)
     
-
+    
+    
+    if size(LICK,2) < 2
+        msgbox('There is no Lick Data.');
+        return
+    end
+    
+    
     lickfigh = figure('Units', 'normalized','Position', [.02 .05 .50 .32], 'BusyAction',...
     'cancel', 'Name', 'lickfigh', 'Tag', 'lickfigh','MenuBar', 'none'); 
 
@@ -811,7 +830,8 @@ hpLick = plot(LhaxGRIN, LICK' , ':', 'LineWidth',2,'HandleVisibility', 'off');
     
     legLick = legend(hpLick,XLSdata.CSUSvals);
 	set(legLick, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
-    set(legLick, 'Position', legLick.Position .* [1 .94 1 1.4])                
+    set(legLick, 'Position', legLick.Position .* [1 .94 1 1.4])     
+    
     
 end
 

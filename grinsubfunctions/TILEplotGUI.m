@@ -11,9 +11,9 @@ global GupdateGraphH Gcheckbox1H Gcheckbox2H Gcheckbox3H Gcheckbox4H
 global Gcheckbox5H Gcheckbox6H Gcheckbox7H GhaxLCK GhaxBG
 
 
-global CSUSvals
+global CSUSvals toglick
 CSUSvals = unique(GRINstruct.csus);
-
+toglick = 0;
 
 
 %% -------- MAIN FIGURE WINDOW --------   
@@ -395,7 +395,6 @@ end
 %----------------------------------------------------
 %     CALLBACK FUNCTIONS FOR UPDATING PLOT
 %----------------------------------------------------
-
     function plot_callback(hObject, eventdata, column)
 
         % htable.ColumnName{column}
@@ -454,37 +453,61 @@ end
 %------------------------------------------------------------------------------
 function plotLickData(hObject, eventdata)
     
+	if toglick == 1
+        if isvalid(GhaxLCK)
+            delete(GhaxLCK.Children)
+            %delete(LhaxGRIN)
+            delete(GhaxBG.Children)
+            %delete(GhaxLCK)
+            
+            
+        end
+        
+        toglick = 0;
+        return
+	end
+    toglick = 1;
     
+%     lickfigh = figure('Units', 'normalized','Position', [.02 .05 .50 .32], 'BusyAction',...
+%     'cancel', 'Name', 'lickfigh', 'Tag', 'lickfigh','MenuBar', 'none'); 
+% 
+%     LhaxGRIN = axes('Parent', lickfigh, 'NextPlot', 'replacechildren',...
+%     'Position', [0.05 0.05 0.9 0.9],'Color','none'); hold on;
+% 
+%     LhaxGRIN.ColorOrderIndex = 1;
+%     
+% hpLick = plot(LhaxGRIN, LICK' , ':', 'LineWidth',2,'HandleVisibility', 'off');
+%     
+%     
+%     legLick = legend(hpLick,XLSdata.CSUSvals);
+% 	set(legLick, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+%     set(legLick, 'Position', legLick.Position .* [1 .94 1 1.4])      
     
-    lickfigh = figure('Units', 'normalized','Position', [.02 .05 .50 .32], 'BusyAction',...
-    'cancel', 'Name', 'lickfigh', 'Tag', 'lickfigh','MenuBar', 'none'); 
-
-    LhaxGRIN = axes('Parent', lickfigh, 'NextPlot', 'replacechildren',...
-    'Position', [0.05 0.05 0.9 0.9],'Color','none'); hold on;
-
-    LhaxGRIN.ColorOrderIndex = 1;
-    
-hpLick = plot(LhaxGRIN, LICK' , ':', 'LineWidth',2,'HandleVisibility', 'off');
-    
-    
-    legLick = legend(hpLick,XLSdata.CSUSvals);
-	set(legLick, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
-    set(legLick, 'Position', legLick.Position .* [1 .94 1 1.4])      
-    
-    
-    min(min(LICK))
-    max(max(LICK))
-
-    
+    %-----------------------------------
+    %    PLOT LICK DATA
+    %-----------------------------------
     axes(GhaxLCK); hold on;
     GhaxLCK.ColorOrderIndex = 1;
     plot(GhaxLCK, LICK' , ':', 'LineWidth',3);
     
     
+    
+    %-----------------------------------
+    %    PLOT CS ON/OFF LINES
+    %-----------------------------------
+    CSonsetFrame = round(XLSdata.CSonsetDelay .* XLSdata.framesPerSec);
+    CSoffsetFrame = round((XLSdata.CSonsetDelay+XLSdata.CS_length) .* XLSdata.framesPerSec);
+    line([CSonsetFrame CSonsetFrame],GhaxLCK.YLim,...
+    'Color',[.52 .52 .52],'Parent',GhaxLCK,'LineWidth',2)
+    line([CSoffsetFrame CSoffsetFrame],GhaxLCK.YLim,...
+    'Color',[.5 .5 .5],'Parent',GhaxLCK,'LineWidth',2)
+    pause(.02)
+    
+    
     % toggleGridOverlay()
     axes(GhaxBG);
-    bg = zeros(500);
-    bg(1) = 1;
+    bg = ones(500);
+    bg(1) = 0;
     imagesc(bg,'Parent',GhaxBG,'CDataMapping','scaled','AlphaData',0.7)
     % GhaxLCK.Color = [.3 .3 .3];
     
@@ -495,50 +518,6 @@ hpLick = plot(LhaxGRIN, LICK' , ':', 'LineWidth',2,'HandleVisibility', 'off');
     
    
 end
-
-
-
-
-
-%----------------------------------------------------
-%        TOGGLE GRID OVERLAY
-%----------------------------------------------------
-function toggleGridOverlay()
-
-
-    if toggrid == 1
-        if isvalid(axGRID)
-            delete(axGRID.Children)
-            delete(axGRID)
-        end
-            toggrid = 0;
-        return
-    end
-    toggrid = 1;
-    
-
-    
-    
-    
-    
-
-    axGRID = axes('Position',[.001 .001 .999 .999],'Color','none'); hold on;
-
-    phR = imagesc(IMGraw,'Parent',axGRID,...
-          'CDataMapping','scaled','AlphaData',0.6);
-        axis image;  pause(.01)
-        axis normal; pause(.01)
-    
-    
-        axGRID.YTick = [0:blockSize:size(IMGraw,1)];
-        axGRID.XTick = [0:blockSize:size(IMGraw,1)];
-        
-        axGRID.GridAlpha = .8;
-        axGRID.GridColor = [0.99 0.1 0.1];
-
-              
-end
-
 
 
 

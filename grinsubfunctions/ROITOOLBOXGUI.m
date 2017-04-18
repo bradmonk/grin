@@ -61,7 +61,7 @@ global ROIDATANEW ROIROINEW ROIfacDatNEW ROIcofDatNEW ROIinfoNEW
 global BlurVal zcrit zout smoothimgnumH TreatmentGroup
 global quantMinH minROIszH quantMin minROIsz
 global Sframe Eframe frameBG frameSE IMGROI BSframe BEframe
-global memos memoboxH haxMINI racerline
+global memos memoboxH haxMINI racerline toglick
 global Fbson Fbsoff Fcson Fcsmid Fcsoff Fuson Fusmid Fusend doCustomBaseline
 
 ROIDATA = {};
@@ -80,7 +80,7 @@ zcrit = 5;
 zout = 9;
 quantMin = .90;
 minROIsz = 15;
-
+toglick = 0;
 
 ROIfac = CSUSvals(1);
 ROIcof = CSUSvals(1);
@@ -117,6 +117,22 @@ IM = squeeze(IMGSraw(:,:,:,1));
 IMsz = size(IM);
 
 %----------------------------------------------------
+%%     GET AXES LIMIT DATA
+%----------------------------------------------------
+
+    maxY = max(max(max(max(IMG))));
+    minY = min(min(min(min(IMG))));
+    rmaxY = round(maxY,3);
+    rminY = round(minY,3);
+
+    if size(LICK,2) > 2
+    LmaxY = (max(max(LICK)));
+    LminY = (min(min(LICK)));
+    LrmaxY = ceil(round(LmaxY,2));
+    LrminY = floor(round(LminY,2));
+    end
+
+%----------------------------------------------------
 %%     CREATE GRINplotGUI FIGURE WINDOW
 %----------------------------------------------------
 % close(graphguih)
@@ -128,16 +144,41 @@ ROIguih = figure('Units', 'normalized','Position', [.02 .1 .85 .80], 'BusyAction
 %----------------------------------------------------
 %%     LEFT PANE MAIN PLOT WINDOW
 %----------------------------------------------------
-
-% LhaxGRIN = axes('Parent', graphguih, 'NextPlot', 'replacechildren',...
-%     'Position', [0.05 0.08 0.55 0.85],'Color','none','XTick',[],'YTick',[],...
-%     'XColor','none','YColor','none'); hold on;
-
 GhaxGRIN = axes('Parent', ROIguih, 'NextPlot', 'replacechildren',...
-    'Position', [0.05 0.08 0.55 0.65],...
+    'Position', [0.05 0.08 0.54 0.65],...
     'XLimMode', 'manual','YLimMode', 'manual','Color','none');
-    GhaxGRIN.YLim = [-.15 .15];
-    GhaxGRIN.XLim = [1 100];
+    if rmaxY > .150
+        GhaxGRIN.YLim = [-.15 .15];
+    else
+        GhaxGRIN.YLim = [-.15 .15];
+    end
+    GhaxGRIN.XLim = [1 size(IMG,3)];
+
+if size(LICK,2) > 2
+GhaxBG = axes('Parent', ROIguih, 'NextPlot', 'replacechildren',...
+    'Position', [0.05 0.08 0.54 0.65],'XColor','none','YColor','none',...
+    'Color','none','YAxisLocation','right','YTickLabel','none','XTickLabel',' ',...
+    'XLimMode', 'manual','YLimMode', 'manual');
+    GhaxBG.YLim = [1 500];
+    GhaxBG.XLim = [1 500];
+    colormap(bone)
+    hold on;
+
+
+GhaxLCK = axes('Parent', ROIguih, 'NextPlot', 'replacechildren',...
+    'Position', [0.05 0.08 0.54 0.65],'XColor','none','YColor','none',...
+    'Color','none','YAxisLocation','right','XTickLabel',' ',...
+    'XLimMode', 'manual','YLimMode', 'manual'); % 'YTickLabel','none',
+    GhaxLCK.YLim = [LrminY LrmaxY];
+    GhaxLCK.XLim = [1 size(LICK,2)];
+    axis off
+    hold on
+end
+
+
+axes(GhaxGRIN)
+    
+    
 
 
 GimgsliderYAH = uicontrol('Parent', ROIguih, 'Units', 'normalized','Style','slider',...
@@ -264,7 +305,7 @@ haxMINI = axes('Parent', IMpanel, 'NextPlot', 'replacechildren',...
     'Position', [0.01 0.02 0.98 0.18],...
     'XLimMode', 'manual','YLimMode', 'manual','Color','none');
     haxMINI.YLim = [-.10 .15];
-    haxMINI.XLim = [1 100];
+    haxMINI.XLim = [1 size(IMG,3)];
 
 
 %----------------------------------------------------
@@ -288,7 +329,15 @@ BulkFindROIsH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
     'Position', [.05 0.88 .90 .05], 'FontSize', 12, 'String', 'BULK FIND ROIs',...
     'Callback', @BulkFindROIs); % , 'Enable','on' 'BackgroundColor',[.95 .95 .95],...
 
-
+if size(LICK,2) > 2
+togLickDataH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
+    'Position', [.05 0.82 .90 .05], 'FontSize', 12, 'String', 'Toggle Lick Data',...
+    'Callback', @togLickData, 'Enable','on');
+else
+togLickDataH = uicontrol('Parent', GIPpanelH, 'Units', 'normalized', ...
+    'Position', [.05 0.82 .90 .05], 'FontSize', 12, 'String', 'Toggle Lick Data',...
+    'Callback', @togLickData, 'Enable','off');
+end
 
 buttongroup1 = uibuttongroup('Parent', GIPpanelH,'Title','ROI FACTOR',...
                   'Units', 'normalized','Position',[.01 0.40 .98 .37],...
@@ -851,9 +900,9 @@ CSoffsetFrame = round((XLSdata.CSonsetDelay+XLSdata.CS_length) .* XLSdata.frames
 
 
 line([CSonsetFrame CSonsetFrame],GhaxGRIN.YLim,...
-    'Color',[.8 .8 .8],'HandleVisibility', 'off','Parent',GhaxGRIN)
+    'Color',[.7 .7 .7],'HandleVisibility', 'off','Parent',GhaxGRIN)
 line([CSoffsetFrame CSoffsetFrame],GhaxGRIN.YLim,...
-    'Color',[.8 .8 .8],'HandleVisibility', 'off','Parent',GhaxGRIN)
+    'Color',[.7 .7 .7],'HandleVisibility', 'off','Parent',GhaxGRIN)
                 
 
 
@@ -1895,8 +1944,8 @@ for m = 1:size(dfDiff,3)
         haxROI.Title=text(.5,.5,sprintf('FRAME: %.0f  [%s]',Fcsoff,'CS OFF'));
     end
     
-    racerline.XData = [nn nn];
-    pause(.03)
+    racerline.XData = [m m];
+    pause(.04)
 end
 
 
@@ -2112,12 +2161,13 @@ haxROI.Title = text(0.5,0.5,sprintf('Found %.0f ROI ROIs',length(ROIROI)));
 GhaxGRIN.ColorOrderIndex = 1;
 phMainData = plot([ROIfacDatNEW; ROIcofDatNEW; ROIfacDat; ROIcofDat]',...
                  'Parent',GhaxGRIN, 'LineWidth',2);
+
 phMainData(1).LineStyle = '-';
 phMainData(2).LineStyle = '-';
 phMainData(3).LineStyle = ':';
 phMainData(4).LineStyle = ':';
-phMainData(3).Color = phMainData(1).Color;
-phMainData(4).Color = phMainData(2).Color;
+phMainData(3).Color = phMainData(2).Color;
+phMainData(4).Color = phMainData(1).Color;
 
 
 GhaxGRIN.ColorOrderIndex = 1; 
@@ -2127,16 +2177,30 @@ hmkrs(1).LineStyle = '-';
 hmkrs(2).LineStyle = '-';
 hmkrs(3).LineStyle = ':';
 hmkrs(4).LineStyle = ':';
-hmkrs(3).Color = hmkrs(1).Color;
-hmkrs(4).Color = hmkrs(2).Color;        
+hmkrs(3).Color = hmkrs(2).Color;
+hmkrs(4).Color = hmkrs(1).Color;        
 
+
+
+
+
+if ~iscellstr(TreatmentGroup)
+leg1 = legend(hmkrs,{[TreatmentGroup(ROIf) ' [SOLID=LOADED]'],[TreatmentGroup(ROIc) ' [SOLID=LOADED]'],...
+                     [TreatmentGroup(ROIc) ' [DOT=WRKSPC]'], [TreatmentGroup(ROIf) ' [DOT=WRKSPC]']});
+    set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+    set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
+    set(hmkrs,'Visible','off','HandleVisibility', 'off')
+    
+end
+
+if iscellstr(TreatmentGroup)
 
 leg1 = legend(hmkrs,{[TreatmentGroup{ROIf} ' [SOLID=LOADED]'],[TreatmentGroup{ROIc} ' [SOLID=LOADED]'],...
-                     [TreatmentGroup{ROIf} ' [DOT=WRKSPC]'], [TreatmentGroup{ROIc} ' [DOT=WRKSPC]']});
+                     [TreatmentGroup{ROIc} ' [DOT=WRKSPC]'], [TreatmentGroup{ROIf} ' [DOT=WRKSPC]']});
     set(leg1, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
     set(leg1, 'Position', leg1.Position .* [1 .94 1 1.4])
     set(hmkrs,'Visible','off','HandleVisibility', 'off')                
-
+end
 
 %%
 end
@@ -2512,6 +2576,93 @@ end
 
 
 
+
+%------------------------------------------------------------------------------
+%        PLOT LICKING DATA
+%------------------------------------------------------------------------------
+function togLickData(hObject, eventdata)
+    
+	if toglick == 1
+        if isvalid(GhaxLCK)
+            
+            axes(GhaxLCK); axis on
+            GhaxLCK.YColor = 'none';
+            
+            delete(GhaxLCK.Children)
+            %delete(LhaxGRIN)
+            delete(GhaxBG.Children)
+            %delete(GhaxLCK)
+            
+            
+        end
+        
+        axes(GhaxGRIN)
+        toglick = 0;
+        return
+	end
+    toglick = 1;
+    
+    
+	
+	axes(GhaxLCK); axis on
+    GhaxLCK.YColor = [0 0 0];
+    
+    %-----------------------------------
+    %    PLOT LICK DATA
+    %-----------------------------------
+    axes(GhaxLCK); hold on;
+    GhaxLCK.ColorOrderIndex = 1;
+    plot(GhaxLCK, LICK' , ':', 'LineWidth',3);
+    
+    
+    %-----------------------------------
+    %    PLOT CS ON/OFF LINES
+    %-----------------------------------
+    CSonsetFrame = round(XLSdata.CSonsetDelay .* XLSdata.framesPerSec);
+    CSoffsetFrame = round((XLSdata.CSonsetDelay+XLSdata.CS_length) .* XLSdata.framesPerSec);
+    line([CSonsetFrame CSonsetFrame],GhaxLCK.YLim,...
+    'Color',[.52 .52 .52],'Parent',GhaxLCK,'LineWidth',2)
+    line([CSoffsetFrame CSoffsetFrame],GhaxLCK.YLim,...
+    'Color',[.5 .5 .5],'Parent',GhaxLCK,'LineWidth',2)
+    pause(.02)
+    
+    
+    % toggleGridOverlay()
+    axes(GhaxBG);
+    bg = ones(500);
+    bg(1) = 0;
+    imagesc(bg,'Parent',GhaxBG,'CDataMapping','scaled','AlphaData',0.7)
+    % GhaxLCK.Color = [.3 .3 .3];
+    % axis image;  pause(.01)
+    % axis normal; pause(.01)
+    
+    axes(GhaxLCK);
+    pause(.2)
+    
+    
+    
+    
+    
+%{
+    
+%     lickfigh = figure('Units', 'normalized','Position', [.02 .05 .50 .32], 'BusyAction',...
+%     'cancel', 'Name', 'lickfigh', 'Tag', 'lickfigh','MenuBar', 'none'); 
+% 
+%     LhaxGRIN = axes('Parent', lickfigh, 'NextPlot', 'replacechildren',...
+%     'Position', [0.05 0.05 0.9 0.9],'Color','none'); hold on;
+% 
+%     LhaxGRIN.ColorOrderIndex = 1;
+%     
+% hpLick = plot(LhaxGRIN, LICK' , ':', 'LineWidth',2,'HandleVisibility', 'off');
+%     
+%     
+%     legLick = legend(hpLick,XLSdata.CSUSvals);
+% 	set(legLick, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+%     set(legLick, 'Position', legLick.Position .* [1 .94 1 1.4])      
+%}
+    
+   
+end
 
 
 

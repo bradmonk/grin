@@ -45,11 +45,12 @@ function [] = GRINtoolboxGUI(varargin)
 % % 2016.07.04
 %}
 %----------------------------------------------------
-
 clc; close all; clear; clear java;
-% clearvars -except varargin
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
+
+% clearvars -except varargin
 % set(0,'HideUndocumented','off')
+
 
 global thisfilepath
 thisfile = 'GRINtoolboxGUI.m';
@@ -58,25 +59,19 @@ cd(thisfilepath);
 
 fprintf('\n\n Current working path set to: \n % s \n', thisfilepath)
 
-% global isbrad
-% upath = userpath;
-% isbrad = strcmp('/Users/bradleymonk',upath(1:18));
-
-
     
     pathdir0 = thisfilepath;
-    pathdir1 = [thisfilepath '/grinsubfunctions'];
-    pathdir2 = [thisfilepath '/grincustomfunctions'];
-    pathdir3 = [thisfilepath '/grinsubfunctions/grinfiji'];
+    pathdir1 = [thisfilepath filesep 'grinsubfunctions'];
+    pathdir2 = [thisfilepath filesep 'grincustomfunctions'];
     
-    gpath = [pathdir0 ':' pathdir1 ':' pathdir2 ':' pathdir3];
+    gpath = [pathdir0 pathsep pathdir1 pathsep pathdir2];
     
     addpath(gpath)
 
 fprintf('\n\n Added folders to path: \n % s \n % s \n % s \n % s \n\n',...
-        pathdir0,pathdir1,pathdir2,pathdir3)
-
-
+        pathdir0,pathdir1,pathdir2)
+    
+    
 %% MANUALLY SET PER-SESSION PATH PARAMETERS IF WANTED (OPTIONAL)
 
 global imgfilename imgpathname xlsfilename xlspathname lickfilename lickpathname
@@ -86,15 +81,16 @@ global imgfullpath xlsfullpath lickfullpath
 
 global mainguih imgLogo
 
-global IMG GRINstruct GRINtable XLSdata LICK
+global IMG GRINstruct GRINtable XLSdata LICK IMGred IMGr
 global xlsN xlsT xlsR
-global lickN %lickT lickR
+global lickN LICKraw
 global IMGraw IMGSraw IM
 global memes conboxH
+global NormType
 
 global frame_period framesUncomp CS_type US_type delaytoCS CS_length compressFrms
 global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial 
-global total_frames CS_lengthFrames IMhist
+global total_frames CS_lengthFrames IMhist tiledatX tiledatY
 
 IMhist.smoothed   = 0;
 IMhist.cropped    = 0;
@@ -106,6 +102,11 @@ IMhist.rawIM      = [];
 IMhist.minIM      = [];
 IMhist.maxIM      = [];
 IMhist.aveIM      = [];
+
+IMGred = [];
+IMGr   = [];
+
+NormType = 'dF';
 
 
 
@@ -274,7 +275,7 @@ HposTxt.C    = [.71  .57  .27  .04];
 HposTxt.D    = [.71  .44  .27  .04];
 HposTxt.E    = [.71  .34  .27  .04];
 HposTxt.F    = [.71  .21  .27  .04];
-HposTxt.G    = [.71  .07  .27  .04];
+HposTxt.G    = [.71  .082 .27  .04];
 
 HposEdit.A   = [.71  .76  .27  .07];
 HposEdit.B   = [.70  .63  .28  .07];
@@ -282,7 +283,7 @@ HposEdit.C   = [.71  .50  .27  .07];
 HposEdit.D   = [.71  .39  .27  .08];
 HposEdit.E   = [.71  .27  .27  .07];
 HposEdit.F   = [.70  .14  .28  .07];
-HposEdit.G   = [.70  .01  .27  .08];
+HposEdit.G   = [.70  .002 .27  .08];
 
 checkbox1H = uicontrol('Parent', IPpanelH,'Style','checkbox','Units','normalized',...
     'Position', HposCheck.A ,'String','', 'Value',1);
@@ -351,7 +352,7 @@ alignCSFramesnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'nor
 
 
 dFoverFH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
-    'Position', HposButton.F, 'FontSize', 12, 'String', 'Compute dF / F',...
+    'Position', HposButton.F, 'FontSize', 12, 'String', 'Normalize Dataset',...
     'Callback', @dFoverF, 'Enable','off'); 
 dFoverFtxtH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
     'Position', HposTxt.F, 'FontSize', 10,'String', 'Baseline time (s)');
@@ -359,14 +360,22 @@ dFoverFnumH = uicontrol('Parent', IPpanelH, 'Style', 'Edit', 'Units', 'normalize
     'Position', HposEdit.F, 'FontSize', 11);
 
 
+NormTypeH = uicontrol('Parent', IPpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', HposTxt.G, 'FontSize', 10,'String', 'Normalization Type');
+NormTypePopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
+    'Units', 'normalized', 'String', {'dF','Zscore','Dprime'},...
+    'Position', HposEdit.G,...
+    'Callback', @NormTypePopup, 'Enable','on');
+
 
 timepointMeansH = uicontrol('Parent', IPpanelH, 'Units', 'normalized', ...
     'Position', HposButton.G, 'FontSize', 12, 'String', 'Compute trial means ',...
     'Callback', @timepointMeans, 'Enable','off');              
-CSUSpopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
-    'Units', 'normalized', 'String', {'CS','US'},...
-    'Position', HposEdit.G,...
-    'Callback', @CSUSpopup, 'Enable','off');
+% CSUSpopupH = uicontrol('Parent', IPpanelH,'Style', 'popup',...
+%     'Units', 'normalized', 'String', {'CS','US'},...
+%     'Position', HposEdit.G,...
+%     'Callback', @CSUSpopup, 'Enable','off');
+
 
 
               
@@ -437,9 +446,18 @@ runCustomCH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function C',...
     'Callback', @runCustomC);
 
-runCustomDH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function D',...
-    'Callback', @runCustomD);
+% runCustomDH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
+%     'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function D',...
+%     'Callback', @redChannelSubtraction);
+
+
+redChImportH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.03 0.45 0.20], 'FontSize', 11, 'String', 'Import Red Ch.',...
+    'Callback', @redChImport, 'Enable','off');
+
+redChSubtractionH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.53 0.03 0.45 0.20], 'FontSize', 11, 'String', 'Red Ch. Norm.',...
+    'Callback', @redChSubtraction, 'Enable','off');
 
 
 
@@ -451,22 +469,40 @@ runCustomDH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
 explorepanelH = uipanel('Title','Data Exploration & API','FontSize',10,...
     'BackgroundColor',[.95 .95 .95],...
     'Position', [0.80 0.23 0.18 0.24]); % 'Visible', 'Off',
-              
+
 openImageJH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Open stack in ImageJ ',...
+    'Position', [0.03 0.75 0.45 0.20], 'FontSize', 12, 'String', 'Open in ImageJ ',...
     'Callback', @openImageJ, 'Enable','off');
 
 img3dH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', '3D Views',...
+    'Position', [0.53 0.75 0.45 0.20], 'FontSize', 12, 'String', '3D Views',...
     'Callback', @img3d, 'Enable','off');
 
+normLickH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.50 0.45 0.20], 'FontSize', 12, 'String', 'Normalize Lick',...
+    'Callback', @normLick, 'Enable','off');
+
+plotLickH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
+    'Position', [0.53 0.50 0.45 0.20], 'FontSize', 12, 'String', 'Plot Lick',...
+    'Callback', @plotLick, 'Enable','off');
+
+tempfun1H = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.25 0.45 0.20], 'FontSize', 12, 'String', 'TBD',...
+    'Callback', @tempfun1, 'Enable','off');
+
+tempfun2H = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
+    'Position', [0.53 0.25 0.45 0.20], 'FontSize', 12, 'String', 'TBD',...
+    'Callback', @tempfun2, 'Enable','off');
+
 visualexplorerH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Visual Explorer',...
+    'Position', [0.03 0.01 0.45 0.20], 'FontSize', 12, 'String', 'Explorer',...
     'Callback', @visualexplorer, 'Enable','off');
 
 resetwsH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Reset Toolbox',...
+    'Position', [0.53 0.01 0.45 0.20], 'FontSize', 12, 'String', 'Reset Toolbox',...
     'Callback', @resetws);
+
+
 
 
 
@@ -881,7 +917,7 @@ memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     set(dFoverFnumH, 'String', num2str(baselineTime));
         
      CSUSvals = unique(GRINstruct.csus);
-     set(CSUSpopupH, 'String', CSUSvals);
+     % set(CSUSpopupH, 'String', CSUSvals);
      
      CSonsetFrame = round(CSonsetDelay .* framesPerSec);
      CSoffsetFrame = round((CSonsetDelay+CS_length) .* framesPerSec);
@@ -929,7 +965,7 @@ memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     end
     
     if numel(xlsT{2,8}) > 5
-        memocon(sprintf('XLSdata reports 2 channels: %s',xlsT{2,8}),'WARNING',6)
+        memocon(sprintf('XLSdata reports 2 channels: %s',xlsT{2,8}),'WARNING',4)
         
         Isz = size(reshape(IMG,size(IMG,1),size(IMG,2),[],XLSdata.total_trials));
         
@@ -995,7 +1031,8 @@ memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
         % LICK = reshape(lickN,floor(size(lickN,1) / framesPerTrial),[], size(lickN,2));
         % LICK = squeeze(sum(LICK,1));
-        
+        plotLickH.Enable = 'on';
+        normLickH.Enable = 'on';
         memocon(sprintf('Lick data imported and reshaped to size: % s',num2str(size(LICK))))
     end
      
@@ -1014,7 +1051,10 @@ memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
     update_IMGfactors()
     
+    
+    
 enableButtons
+redChImportH.Enable = 'on';
 memocon('Image stack and xls data import completed!')
 % diary(confile)
 diary off
@@ -1344,16 +1384,16 @@ pause(.02);
     % RESHAPE IMAGE STACK INTO SIZE: YPIXELS by XPIXELS in NFRAMES per NTRIALS
     memocon(' '); memocon('Reshaping dataset to 4D');
     
-    IMGr = reshape(IMG,size(IMG,1),size(IMG,2),framesPerTrial,[]);
+    IMGrs = reshape(IMG,size(IMG,1),size(IMG,2),framesPerTrial,[]);
         
     
         % VISUALIZE AND ANNOTATE
         fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
-        fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGr)));
+        fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGrs)));
         memocon(sprintf('IMG matrix previous size: % s ', num2str(size(IMG))));
-        memocon(sprintf('IMG matrix current size: % s ', num2str(size(IMGr))));
+        memocon(sprintf('IMG matrix current size: % s ', num2str(size(IMGrs))));
     
-    IMG = IMGr;
+    IMG = IMGrs;
         
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
@@ -1485,12 +1525,44 @@ pause(.02);
 
 
 
-    % COMPUTE dF/F FOR ALL FRAMES
+if strcmp(NormType,'dF')
+    
     memocon(' '); memocon('Computing dF/F for all frames...')
+
+    muIMG = mean(IMG(:,:,1:round(baselineTime*framesPerSec),:),3);
+    im = repmat(muIMG,1,1,size(IMG,3),1);
+    IMGf = (IMG - im) ./ im;
     
+    IMG = IMGf;
     
+elseif strcmp(NormType,'Zscore')
     
-    if numel(size(IMG)) == 3
+    zIMG = std(IMG(:,:,1:round(baselineTime*framesPerSec),:), 0,3);
+    zm = repmat(zIMG,1,1,size(IMG,3),1);
+
+    muIMG = mean(IMG(:,:,1:round(baselineTime*framesPerSec),:),3);
+    im = repmat(muIMG,1,1,size(IMG,3),1);
+
+    IMGz = (IMG - im) ./ zm;
+    
+    IMG = IMGz;
+    
+elseif strcmp(NormType,'Dprime')
+    
+    muIMG = mean(IMG(:,:,1:round(baselineTime*framesPerSec),:),3);
+    im = repmat(muIMG,1,1,size(IMG,3),1);
+    IMGd = (IMG - im) ./ ((IMG + im)./2);
+    
+    IMG = IMGd;
+
+end
+
+
+        
+
+    
+%{
+if numel(size(IMG)) == 3
         
         % As a shortcut and to retain the original frame number I am using
         % circshift to move the first image to the end of the image matrix
@@ -1504,14 +1576,20 @@ pause(.02);
     
     elseif numel(size(IMG)) == 4
         
+        zIMG = std(IMG(:,:,1:round(baselineTime*framesPerSec),:), 0,3);
+        zm = repmat(zIMG,1,1,size(IMG,3),1);
+        
         muIMG = mean(IMG(:,:,1:round(baselineTime*framesPerSec),:),3);
         im = repmat(muIMG,1,1,size(IMG,3),1);
+        
+        IMGz = (IMG - im) ./ zm;
+        
         IMGf = (IMG - im) ./ im;
         
     end
 
-    
-    
+
+
         % VISUALIZE AND ANNOTATE
         fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
         fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGf)));
@@ -1519,8 +1597,58 @@ pause(.02);
         mainguih.HandleVisibility = 'off';
         close all;
         mainguih.HandleVisibility = 'on';
+%}
+
+
+
+previewStack
+axes(haxGRIN)
+phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+
+IMhist.normalized = 1;
+dFoverFH.FontWeight = 'normal';
+pause(.02);
+enableButtons        
+memocon('dF/F computation completed!')
+end
+
+
+
+%----------------------------------------------------
+%        Z normalize
+%----------------------------------------------------
+function Znormalize(hObject, eventdata)
+disableButtons; 
+ZnormalizeH.FontWeight = 'bold';
+pause(.02);
+
+
+
+    % COMPUTE Z FOR ALL FRAMES
+    memocon(' '); memocon('Performing Z-score normalization for all frames...')
     
-    IMG = IMGf;
+
+        zIMG = std(IMG(:,:,1:round(baselineTime*framesPerSec),:),3);
+        zm = repmat(zIMG,1,1,size(IMG,3),1);
+        
+        muIMG = mean(IMG(:,:,1:round(baselineTime*framesPerSec),:),3);
+        im = repmat(muIMG,1,1,size(IMG,3),1);
+        
+        IMGz = (IMG - im) ./ zm;
+        
+        % IMGf = (IMG - im) ./ im;
+
+    
+    
+        % VISUALIZE AND ANNOTATE
+        fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
+        fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGz)));
+        % GRINcompare(IMG, IMGf, previewNframes, [.98 1.05], [8 2])
+        mainguih.HandleVisibility = 'off';
+        close all;
+        mainguih.HandleVisibility = 'on';
+    
+    IMG = IMGz;
     
         previewStack
         axes(haxGRIN)
@@ -1529,10 +1657,10 @@ pause(.02);
         
 
 IMhist.normalized = 1;
-dFoverFH.FontWeight = 'normal';
+ZnormalizeH.FontWeight = 'normal';
 pause(.02);
-enableButtons        
-memocon('dF/F computation completed!')
+enableButtons
+memocon('Z-score normalization completed!')
 end
 
 
@@ -1570,6 +1698,8 @@ pause(.02);
         im = IMG(:,:,:,GRINstruct.tf(:,tt));
         muIMGS(:,:,:,tt) = squeeze(mean(im,4));
     end
+    
+    
 
 
     
@@ -1797,6 +1927,7 @@ end
 function plotTileStats(hObject, eventdata)
 % disableButtons; pause(.02);
 
+
     if size(muIMGS,1) < 1
        
         msgbox('DATA HAS NOT BEEN PROCESSED'); 
@@ -1835,7 +1966,22 @@ function plotTileStats(hObject, eventdata)
     aXlocs = aXlocs+.005;
     aYlocs = aYlocs+.005;
     [aX,aY] = meshgrid(aXlocs,aYlocs);
-    YL=[-.15 .15];
+    
+    if strcmp(NormType,'dF')
+        
+        YL = [-.15 .15];
+
+    elseif strcmp(NormType,'Zscore')
+        
+        YL = [-2 4];
+        
+    elseif strcmp(NormType,'Dprime')
+        
+        YL = [-.15 .15];
+        
+    else
+        YL = 'auto';
+    end
     
 
     % PLOT ALL THE TILES ON A SINGLE FIGURE WINDOW. THIS PLOTS THE FIRST
@@ -1848,10 +1994,15 @@ function plotTileStats(hObject, eventdata)
         hold on;
     
         % h = squeeze(pixels(ii,:,:));
-        pha = plot( 1:size(pixels,2) , squeeze(pixels(ii,:,:)));
-        set(gca,'YLim',YL)
-        line([CSUSonoff(1) CSUSonoff(1)],YL,'Color',[.8 .8 .8])
-        line([CSUSonoff(2) CSUSonoff(2)],YL,'Color',[.8 .8 .8])
+        tiledatX{ii} = 1:size(pixels,2);
+        tiledatY{ii} = squeeze(pixels(ii,:,:));
+        
+        pha{ii} = plot( 1:size(pixels,2) , squeeze(pixels(ii,:,:)));
+        % set(gca,'YLim',YL)
+        ylim(YL)
+        cYlim = get(gca,'YLim');
+        line([CSUSonoff(1) CSUSonoff(1)],cYlim,'Color',[.8 .8 .8])
+        line([CSUSonoff(2) CSUSonoff(2)],cYlim,'Color',[.8 .8 .8])
         
         
         set(axh{ii},'ButtonDownFcn',@(~,~)disp(gca),...
@@ -1863,15 +2014,15 @@ function plotTileStats(hObject, eventdata)
     
     
     
-    legpos = {  [0.01,0.94,0.15,0.033], ...
-                [0.01,0.90,0.15,0.033], ...
+    legpos = {  [0.01,0.95,0.15,0.033], ...
+                [0.01,0.92,0.15,0.033], ...
+                [0.01,0.89,0.15,0.033], ...
                 [0.01,0.86,0.15,0.033], ...
-                [0.01,0.82,0.15,0.033], ...
-                [0.01,0.78,0.15,0.033], ...
-                [0.01,0.74,0.15,0.033], ...
+                [0.01,0.83,0.15,0.033], ...
+                [0.01,0.80,0.15,0.033], ...
                 };
     
-    pc = {pha.Color};
+    pc = {pha{1}.Color};
     pt = CSids;
     
     for nn = 1:size(pixels,3)
@@ -1881,29 +2032,45 @@ function plotTileStats(hObject, eventdata)
     'Color',pc{nn},...
     'FontWeight','bold',...
     'String',pt(nn),...
-    'FontSize',14,...
+    'FontSize',12,...
     'FitBoxToText','on',...
     'EdgeColor',pc{nn},...
-    'FaceAlpha',.7,...
+    'FaceAlpha',.8,...
     'Margin',3,...
-    'LineWidth',2,...
+    'LineWidth',1,...
     'VerticalAlignment','bottom',...
     'BackgroundColor',[1 1 1]);
     
     end
     
     annotation(fh10,'textbox',...
-    'Position',[.01 .97 .2 .05],...
+    'Position',[.85 .975 .15 .04],...
     'Color',[0 0 0],...
     'FontWeight','bold',...
-    'String','RIGHT-CLICK ON ANY GRAPH TO OPEN ADVANCED REPLOT GUI',...
-    'FontSize',14,...
+    'String','RIGHT-CLICK ANY GRAPH TO EXPAND',...
+    'FontSize',10,...
     'FitBoxToText','on',...
     'EdgeColor','none',...
     'FaceAlpha',.7,...
     'Margin',3,...
     'LineWidth',2,...
     'VerticalAlignment','bottom',...
+    'BackgroundColor',[1 1 1]);
+
+
+    annotation(fh10,'textbox',...
+    'Position',[.01 .975 .15 .04],...
+    'Color',[0 0 0],...
+    'FontWeight','bold',...
+    'String',GRINstruct.file,...
+    'FontSize',12,...
+    'FitBoxToText','on',...
+    'EdgeColor','none',...
+    'FaceAlpha',.7,...
+    'Margin',3,...
+    'LineWidth',2,...
+    'VerticalAlignment','bottom',...
+    'Interpreter','none',...
     'BackgroundColor',[1 1 1]);
     
     
@@ -1937,7 +2104,11 @@ function plotTileStats(hObject, eventdata)
                   'Callback',@toggleGridOverlay);
     
     
-    
+    savetilesH = uicontrol(fh10,'Units','normalized',...
+                  'Position',[.90 .01 .1 .05],...
+                  'String','Save Tile Data',...
+                  'Tag','gridbutton',...
+                  'Callback',@savetilesfun);    
     
     
     
@@ -1954,6 +2125,7 @@ function plotTileStats(hObject, eventdata)
         
 enableButtons
 memocon('PLOTTING TILE STATS DATA COMPLETED!')
+
 end
 
 
@@ -1973,6 +2145,36 @@ function plottile(hObject, eventdata)
     TILEplotGUI(axesdata, GRINstruct, XLSdata, LICK)
  
 end
+
+
+
+
+
+%----------------------------------------------------
+%        PLOT TILE CALLBACK - LAUNCH TILEplotGUI.m
+%----------------------------------------------------
+function savetilesfun(hObject, eventdata)
+% disableButtons; pause(.02);
+
+
+    % tiledatX
+    
+    for nn = 1:length(tiledatY)
+        maxT(nn) = max(max(tiledatY{nn}));
+    end
+    
+    TILE = tiledatY;
+    
+    uisave({'TILE','GRINstruct','XLSdata'},...
+           ['TILE_' GRINstruct.file(1:end-4)]);
+ 
+end
+
+
+
+
+
+
 
 
 
@@ -2259,6 +2461,70 @@ function plotGroupMeans(hObject, eventdata)
 % disableButtons; pause(.02);
 
 
+%{
+%     CSids = unique(GRINstruct.csus);
+%     
+%     size(IMG)
+%     meanIMG = squeeze(mean(IMG(:,:,CSUSonoff(1),GRINstruct.tf(:,4)),4));
+%     size(meanIMG)
+%     
+%         % Perform averaging for each (nCSUS) unique trial type
+%     % This will create a matrix 'muIMGS' of size [h,w,f,nCSUS]
+%     
+%     muIMGS = zeros(szIMG(1), szIMG(2), szIMG(3), nCSUS);
+%     for tt = 1:nCSUS
+%         im = IMG(:,:,:,GRINstruct.tf(:,tt));
+%         muIMGS(:,:,:,tt) = squeeze(mean(im,4));
+%     end
+    
+
+
+fh33=figure('Units','normalized','OuterPosition',[.1 .1 .7 .9],'Color','w','MenuBar','none');
+hax1 = axes('Position',[.05 .55 .40 .40],'Color','none'); axis off; hold on;
+hax2 = axes('Position',[.55 .55 .40 .40],'Color','none'); axis off; hold on;
+hax3 = axes('Position',[.05 .05 .40 .40],'Color','none'); axis off; hold on;
+hax4 = axes('Position',[.55 .05 .40 .40],'Color','none'); axis off; hold on;
+
+
+meanIMG1 = squeeze(mean(IMG(:,:,CSUSonoff(1),GRINstruct.tf(:,4)),4));
+meanIMG2 = squeeze(mean(IMG(:,:,CSUSonoff(2),GRINstruct.tf(:,4)),4));
+meanIMG3 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,4)),4));
+meanIMG4 = squeeze(mean(IMG(:,:,CSUSonoff(4),GRINstruct.tf(:,4)),4));
+
+axes(hax1)
+imagesc(meanIMG1)
+axes(hax2)
+imagesc(meanIMG2)
+axes(hax3)
+imagesc(meanIMG3)
+axes(hax4)
+imagesc(meanIMG4)
+
+
+
+fh34=figure('Units','normalized','OuterPosition',[.1 .1 .7 .9],'Color','w','MenuBar','none');
+hax1 = axes('Position',[.05 .55 .40 .40],'Color','none'); axis off; hold on;
+hax2 = axes('Position',[.55 .55 .40 .40],'Color','none'); axis off; hold on;
+hax3 = axes('Position',[.05 .05 .40 .40],'Color','none'); axis off; hold on;
+hax4 = axes('Position',[.55 .05 .40 .40],'Color','none'); axis off; hold on;
+
+meanIMG1 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,1)),4));
+meanIMG2 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,2)),4));
+meanIMG3 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,3)),4));
+meanIMG4 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,4)),4));
+
+axes(hax1)
+imagesc(meanIMG1)
+axes(hax2)
+imagesc(meanIMG2)
+axes(hax3)
+imagesc(meanIMG3)
+axes(hax4)
+imagesc(meanIMG4)
+
+%}
+
+
     if size(muIMGS,1) < 1
        
         msgbox('Group means have not yet been calculated'); 
@@ -2465,6 +2731,87 @@ end
 
 
 
+%----------------------------------------------------
+%        PLOT GROUP MEANS (CI ENVELOPE PLOT)
+%----------------------------------------------------
+function viewSameFrames(hObject, eventdata)
+% disableButtons; pause(.02);
+
+
+%     CSids = unique(GRINstruct.csus);
+%     
+%     size(IMG)
+%     meanIMG = squeeze(mean(IMG(:,:,CSUSonoff(1),GRINstruct.tf(:,4)),4));
+%     size(meanIMG)
+%     
+%         % Perform averaging for each (nCSUS) unique trial type
+%     % This will create a matrix 'muIMGS' of size [h,w,f,nCSUS]
+%     
+%     muIMGS = zeros(szIMG(1), szIMG(2), szIMG(3), nCSUS);
+%     for tt = 1:nCSUS
+%         im = IMG(:,:,:,GRINstruct.tf(:,tt));
+%         muIMGS(:,:,:,tt) = squeeze(mean(im,4));
+%     end
+    
+
+
+fh33=figure('Units','normalized','OuterPosition',[.1 .1 .7 .9],'Color','w','MenuBar','none');
+hax1 = axes('Position',[.05 .55 .40 .40],'Color','none'); axis off; hold on;
+hax2 = axes('Position',[.55 .55 .40 .40],'Color','none'); axis off; hold on;
+hax3 = axes('Position',[.05 .05 .40 .40],'Color','none'); axis off; hold on;
+hax4 = axes('Position',[.55 .05 .40 .40],'Color','none'); axis off; hold on;
+
+
+meanIMG1 = squeeze(mean(IMG(:,:,CSUSonoff(1),GRINstruct.tf(:,4)),4));
+meanIMG2 = squeeze(mean(IMG(:,:,CSUSonoff(2),GRINstruct.tf(:,4)),4));
+meanIMG3 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,4)),4));
+meanIMG4 = squeeze(mean(IMG(:,:,CSUSonoff(4),GRINstruct.tf(:,4)),4));
+
+axes(hax1)
+imagesc(meanIMG1)
+axes(hax2)
+imagesc(meanIMG2)
+axes(hax3)
+imagesc(meanIMG3)
+axes(hax4)
+imagesc(meanIMG4)
+
+
+
+fh34=figure('Units','normalized','OuterPosition',[.1 .1 .7 .9],'Color','w','MenuBar','none');
+hax1 = axes('Position',[.05 .55 .40 .40],'Color','none'); axis off; hold on;
+hax2 = axes('Position',[.55 .55 .40 .40],'Color','none'); axis off; hold on;
+hax3 = axes('Position',[.05 .05 .40 .40],'Color','none'); axis off; hold on;
+hax4 = axes('Position',[.55 .05 .40 .40],'Color','none'); axis off; hold on;
+
+meanIMG1 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,1)),4));
+meanIMG2 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,2)),4));
+meanIMG3 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,3)),4));
+meanIMG4 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,4)),4));
+
+axes(hax1)
+imagesc(meanIMG1)
+axes(hax2)
+imagesc(meanIMG2)
+axes(hax3)
+imagesc(meanIMG3)
+axes(hax4)
+imagesc(meanIMG4)
+
+
+
+
+    line([CSUSonoff(1) CSUSonoff(1)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
+    line([CSUSonoff(2) CSUSonoff(2)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
+    pause(.1)
+    %-------------------------------------------------------------------------
+    
+
+enableButtons
+memocon('PLOTTING GROUP MEANS COMPLETED!')
+end
+
+
 
 
 
@@ -2601,6 +2948,8 @@ function runCustomA(hObject, eventdata)
 % disableButtons; pause(.02);
 
     memocon('RUNNING CUSTOM FUNCTION A!')
+    
+    [IMG] = stevesRedNormFun(IMG);
 
     [varargin] = grincustomA(IMG, GRINstruct, GRINtable, XLSdata, IMGraw, muIMGS, LICK);
 
@@ -2650,6 +2999,284 @@ function runCustomD(hObject, eventdata)
 enableButtons        
 memocon('Run custom function completed!')
 end
+
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        red Channel IMPORT
+%----------------------------------------------------
+function redChImport(hObject, eventdata)
+pause(.02);
+
+    pathfull = [GRINstruct.path(1:end-5) 'r.tif'];
+    [VpPath,VpFile,VpExt] = fileparts(pathfull);
+    rcFile = dir(pathfull);
+
+    if numel(rcFile.name) > 1
+        
+        memocon(' ');
+        memocon('Red channel stack found; attempting to import...');
+                
+    else
+        
+        memocon(' ');
+        memocon('No red channel stack found named:');
+        memocon(['  ' VpFile VpExt]);
+        memocon(' '); memocon('Select a red channel tif stack...')
+
+        [pathfile, pathdir, ~] = uigetfile({'*.tif*; *.TIF*'}, 'Select file.');
+        pathfull = [pathdir pathfile];
+
+    end
+
+
+
+    % IMPORT RED CHANNEL IMAGE 
+    InfoImage=imfinfo(pathfull);
+    mImage=InfoImage(1).Width;
+    nImage=InfoImage(1).Height;
+    NumberImages=length(InfoImage);
+        
+    IMGred = zeros(nImage,mImage,NumberImages,'double');
+
+    TifLink = Tiff(pathfull, 'r');
+    for i=1:NumberImages
+       TifLink.setDirectory(i);
+       IMGred(:,:,i)=TifLink.read();
+    end
+    TifLink.close();
+    
+
+    if (size(IMG,3) * size(IMG,4)) == size(IMGred,3)
+        memocon('GOOD: size(greenStack) == size(redStack)')
+    else
+        memocon(' ');memocon(' ');memocon(' ');memocon(' ');
+        memocon('******  WARNING: size(greenStack) ~= size(redStack)  *****')
+        warning('WARNING: size(greenStack) ~= size(redStack)')
+        memocon('******    ABORTING RED CHANNEL STACK IMPORT    ******')
+        memocon(' ');memocon(' ');memocon(' ');
+        return
+    end
+
+      
+        % VISUALIZE AND ANNOTATE
+
+        SPF1 = sprintf('Green Channel dims: % s ', num2str(size(IMG))  );
+        SPF2 = sprintf('Red   Channel dims: % s ', num2str(size(IMGred)) );
+       
+        memocon(' '); memocon(SPF1); memocon(SPF2);
+        
+        % GRINcompare(IMG, IMGf, previewNframes, [.98 1.05], [8 2])
+        mainguih.HandleVisibility = 'off';
+        close all;
+        mainguih.HandleVisibility = 'on';
+    
+        
+        memocon(' ');
+        pause(.5)
+        memocon('red Stack Preview'); previewIMGSTACK(IMGred)
+        pause(.5)
+        memocon('green Stack Preview'); previewStack
+        pause(.5)
+        memocon('red Stack Preview'); previewIMGSTACK(IMGred)
+        pause(.5)
+        memocon('green Stack Preview'); previewStack
+        pause(.5)
+        axes(haxGRIN)
+        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+
+
+pause(.02);
+redChSubtractionH.Enable = 'on';
+enableButtons
+memocon('Red channel import completed!')
+end
+
+
+
+
+
+%----------------------------------------------------
+%        red Channel SUBTRACTION
+%----------------------------------------------------
+function redChSubtraction(hObject, eventdata)
+% disableButtons;
+pause(.02);
+
+    
+    %----------------------------------------------------
+    %        SMOOTH IMAGES
+    %----------------------------------------------------    
+    memocon(' '); memocon('PERFORMING IMAGE SMOOTHING')
+    IMGr = [];
+
+    smoothSD = str2num(smoothimgnumH.String);
+    Mask = GRINkernel(smoothHeight, smoothWidth, smoothSD, smoothRes, 1);
+    pause(.2)
+    mbh = waitbar(.5,'Performing convolution smoothing, please wait...');
+
+    IMGr = convn( IMGred, Mask,'same');
+    
+    waitbar(.8); close(mbh);
+    
+    IMGred = IMGr;
+    
+    previewIMGSTACK(IMGred)
+    memocon('Image smoothing completed!')    
+    
+    
+    
+    %----------------------------------------------------
+    %        CROP IMAGES
+    %----------------------------------------------------
+    memocon(' '); memocon('TRIMMING EDGES FROM IMAGE')
+    IMGr = [];
+    
+    cropAmount = str2num(cropimgnumH.String);
+
+    IMGr = IMGred((cropAmount+1):(end-cropAmount) , (cropAmount+1):(end-cropAmount) , :);
+    
+    IMGred = IMGr;
+
+    previewIMGSTACK(IMGred)
+    memocon('Crop Images completed!')
+
+
+    
+    %----------------------------------------------------
+    %        CREATE IMAGE TILES BLOCKS
+    %----------------------------------------------------
+    memocon('SEGMENTING IMGAGES INTO TILES')
+    IMGr = [];
+
+    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+
+    IMGr = zeros(size(IMGred));
+    sz = size(IMGred,3);
+    
+    %-------------------------
+    tv1 = 1:blockSize:size(IMGred,1);
+    tv2 = 0:blockSize:size(IMGred,1);
+    tv2(1) = [];
+    
+    progresstimer('Segmenting images into blocks...')
+    for nn = 1:sz
+      for cc = 1:numel(tv1)
+        for rr = 1:numel(tv1)
+
+          mbloc = IMGred( tv1(rr):tv2(rr), tv1(cc):tv2(cc) , nn );
+          mu = mean(mbloc(:));
+        
+          IMGr( tv1(rr):tv2(rr), tv1(cc):tv2(cc) , nn ) = mu;
+        
+        end
+      end
+    if ~mod(nn,100); progresstimer(nn/sz); end    
+    end
+    %-------------------------
+
+    
+    IMGred = IMGr;
+    
+    previewIMGSTACK(IMGred)
+    memocon('Block-Segment Images completed!')        
+
+
+    
+    
+    %----------------------------------------------------
+    %        RESHAPE DATA BY TRIALS
+    %----------------------------------------------------
+    memocon(' '); memocon('Reshaping dataset to 4D');
+    IMGr = [];
+
+    IMGr = reshape(IMGred,size(IMGred,1),size(IMGred,2),framesPerTrial,[]);
+   
+    IMGred = IMGr;
+
+    previewIMGSTACK(IMGred)
+    memocon('Reshape stack by trial completed!')
+
+
+    
+    
+    %----------------------------------------------------
+    %        ALIGN CS FRAMES BY CS ONSET
+    %----------------------------------------------------
+    memocon(sprintf('Setting CS delay to %s seconds for all trials',alignCSFramesnumH.String));
+    IMGr = [];
+    
+    % Make all CS onsets this many seconds from trial start
+    CSonsetDelay = str2num(alignCSFramesnumH.String);
+    CSonsetFrame = round(CSonsetDelay .* framesPerSec);
+    CSoffsetFrame = round((CSonsetDelay+CS_length) .* framesPerSec);
+
+
+    EqualizeCSdelay  = round((delaytoCS-CSonsetDelay) .* framesPerSec);
+
+    IMGr = IMGred;
+    for nn = 1:size(IMGr,4)
+
+        IMGr(:,:,:,nn) = circshift( IMGr(:,:,:,nn) , -EqualizeCSdelay(nn) ,3);
+
+    end
+        
+    IMGred = IMGr;
+
+    previewIMGSTACK(IMGred)
+    memocon('Align frames by CS onset completed!')
+
+    
+    
+    %----------------------------------------------------
+    %        deltaF OVER F
+    %----------------------------------------------------
+    memocon(' '); memocon('Computing dF/F for all frames...')
+    IMGr = [];
+    
+    IMGr = mean(IMGred(:,:,1:round(baselineTime*framesPerSec),:),3);
+    
+    im = repmat(IMGr,1,1,size(IMGred,3),1);
+    
+    IMGf = (IMGred - im) ./ im;
+    
+    IMGred = IMGf;
+
+    previewIMGSTACK(IMGred)
+    memocon('dF/F computation completed!')
+    
+    
+    
+    %----------------------------------------------------
+    %        RED CHANNEL SUBTRACTION NORMALIZATION
+    %----------------------------------------------------
+    memocon(' '); memocon('Performing red channel normalization...')
+    IMGr = [];
+    
+    IMG = IMG - IMGred;
+    
+    previewIMGSTACK(IMGred)
+    previewStack
+    memocon('Red channel normalization completed.')
+
+
+        
+pause(.02);
+enableButtons        
+memocon('ALL RED CHANNEL PROCESSING IS DONE')
+end
+
+
+
+
+
+
 
 
 
@@ -3166,6 +3793,26 @@ end
 
 
 %----------------------------------------------------
+%        NormType DROPDOWN MENU CALLBACK
+%----------------------------------------------------
+function NormTypePopup(hObject, eventdata)
+    
+    
+    PopValue = NormTypePopupH.Value;
+    NormType = NormTypePopupH.String{PopValue};
+    
+    memocon(sprintf('Normalization set to: % s ',NormType));
+
+    
+    % set(NormTypePopupH, 'String', {'dF','Zscore'});
+    % CSUSvals = unique(GRINstruct.csus);
+    % set(CSUSpopupH, 'String', CSUSvals);
+
+end
+
+
+
+%----------------------------------------------------
 %        ENABLE AND DISABLE GUI BUTTONS
 %----------------------------------------------------
 function enableButtons()
@@ -3189,8 +3836,6 @@ function enableButtons()
     img3dH.Enable = 'on';
     visualexplorerH.Enable = 'on';
     
-    
-
     if numel(size(IMG)) > 1 && numel(size(IMG)) < 4;
         openImageJH.Enable = 'on';
     else
@@ -3282,6 +3927,110 @@ function memocon(spf,varargin)
     
 
 end
+
+
+
+
+
+%------------------------------------------------------------------------------
+%        PLOT LICKING DATA
+%------------------------------------------------------------------------------
+function plotLick(hObject, eventdata)
+
+    maxY = (max(max(LICK)));
+    minY = (min(min(LICK)));
+    rmaxY = ceil(round(maxY,2));
+    rminY = floor(round(minY,2));
+    
+
+    %-----------------------------------
+    %    CREATE FIGURE FOR LICKING PLOT
+    %-----------------------------------
+    lickfigh = figure('Units', 'normalized','Position', [.02 .05 .60 .42], 'BusyAction',...
+    'cancel', 'Name', 'lickfigh', 'Tag', 'lickfigh','MenuBar', 'none'); 
+
+    LhaxGRIN = axes('Parent', lickfigh, 'NextPlot', 'replacechildren',...
+    'Position', [0.05 0.05 0.9 0.9],'Color','none'); 
+    LhaxGRIN.YLim = [rminY rmaxY];
+    LhaxGRIN.XLim = [1 size(LICK,2)];
+
+    GhaxLCK = axes('Parent', lickfigh, 'NextPlot', 'replacechildren',...
+    'Position', [0.05 0.05 0.9 0.9],'Color','none'); hold on;
+    GhaxLCK.YLim = LhaxGRIN.YLim;
+    GhaxLCK.XLim = LhaxGRIN.XLim;
+    hold on;
+
+    %-----------------------------------
+    %    PLOT LICKING DATA
+    %-----------------------------------
+    axes(LhaxGRIN)
+    LhaxGRIN.ColorOrderIndex = 1;
+hpLick = plot(LhaxGRIN, LICK' , ':', 'LineWidth',2,'HandleVisibility', 'off');
+    
+    legLick = legend(hpLick,XLSdata.CSUSvals);
+	set(legLick, 'Location','NorthWest', 'Color', [1 1 1],'FontSize',12,'Box','off');
+    set(legLick, 'Position', legLick.Position .* [1 .94 1 1.4])      
+    
+    
+    
+    %-----------------------------------
+    %    PLOT CS ON/OFF LINES
+    %-----------------------------------
+    axes(GhaxLCK)
+    
+    CSonsetFrame = round(XLSdata.CSonsetDelay .* XLSdata.framesPerSec);
+    CSoffsetFrame = round((XLSdata.CSonsetDelay+XLSdata.CS_length) .* XLSdata.framesPerSec);
+    line([CSonsetFrame CSonsetFrame],GhaxLCK.YLim,...
+    'Color',[.52 .52 .52],'Parent',GhaxLCK,'LineWidth',2)
+    line([CSoffsetFrame CSoffsetFrame],GhaxLCK.YLim,...
+    'Color',[.5 .5 .5],'Parent',GhaxLCK,'LineWidth',2)
+
+
+
+
+    axes(LhaxGRIN)
+    pause(.02)
+
+   
+end
+
+
+%------------------------------------------------------------------------------
+%        PLOT LICKING DATA
+%------------------------------------------------------------------------------
+function normLick(hObject, eventdata)
+    
+    
+    if strcmp(normLickH.String,'Normalize Lick')
+        memocon('Normalizing Lick Data...')
+        
+        LICKraw = LICK;
+        LICKbase = mean(LICK(:,1:round(baselineTime*framesPerSec)),2);
+        LICKbase = repmat(LICKbase,1,size(LICK,2));
+        LICK = (LICK - LICKbase) ./ (LICKbase);
+        
+        
+        normLickH.String = 'Undo Lick Norm';
+        memocon('Normalization Completed.')
+    elseif strcmp(normLickH.String,'Undo Lick Norm')
+        memocon('Reverting lick data Normalization...')
+        
+        LICK = LICKraw;
+        
+        normLickH.String = 'Normalize Lick';
+        memocon('Undid lick data Normalization.')
+    end
+    
+    
+    
+    
+end
+
+
+
+
+
+
 
 
 
