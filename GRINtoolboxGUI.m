@@ -45,11 +45,16 @@ function [] = GRINtoolboxGUI(varargin)
 % % 2016.07.04
 %}
 %----------------------------------------------------
-clc; close all; clear; clear java;
+clc; close all; clear all; clear java;
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
 % clearvars -except varargin
 % set(0,'HideUndocumented','off')
+[str,maxsize] = computer;
+if strcmp(str,'MACI64')
+    disp(' '); disp('Purging RAM'); 
+    system('sudo purge'); 
+end
 
 
 global thisfilepath
@@ -90,7 +95,7 @@ global NormType
 
 global frame_period framesUncomp CS_type US_type delaytoCS CS_length compressFrms
 global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial 
-global total_frames CS_lengthFrames IMhist tiledatX tiledatY
+global total_frames CS_lengthFrames IMhist tiledatX tiledatY RHposCheck
 
 IMhist.smoothed   = 0;
 IMhist.cropped    = 0;
@@ -455,9 +460,9 @@ redChImportH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.03 0.45 0.20], 'FontSize', 11, 'String', 'Import Red Ch.',...
     'Callback', @redChImport, 'Enable','off');
 
-redChSubtractionH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
+redChanNormalizeH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
     'Position', [0.53 0.03 0.45 0.20], 'FontSize', 11, 'String', 'Red Ch. Norm.',...
-    'Callback', @redChSubtraction, 'Enable','off');
+    'Callback', @redChanNormalize, 'Enable','off');
 
 
 
@@ -3093,7 +3098,7 @@ pause(.02);
 
 
 pause(.02);
-redChSubtractionH.Enable = 'on';
+redChanNormalizeH.Enable = 'on';
 enableButtons
 memocon('Red channel import completed!')
 end
@@ -3103,174 +3108,282 @@ end
 
 
 %----------------------------------------------------
-%        red Channel SUBTRACTION
+%        red Channel NORMALIZATION
 %----------------------------------------------------
-function redChSubtraction(hObject, eventdata)
+function redChanNormalize(hObject, eventdata)
 % disableButtons;
 pause(.02);
 
+
+
+
+RHposCheck.A  = [.02  .76  .05  .05];
+RHposCheck.B  = [.02  .64  .05  .05];
+RHposCheck.C  = [.02  .52  .05  .05];
+RHposCheck.D  = [.02  .40  .05  .05];
+RHposCheck.E  = [.02  .28  .05  .05];
+RHposCheck.F  = [.02  .16  .05  .05];
+RHposCheck.G  = [.02  .04  .05  .05];
+RHposTexts.A  = [.12  .72  .45  .08];
+RHposTexts.B  = [.12  .60  .45  .08];
+RHposTexts.C  = [.12  .48  .45  .08];
+RHposTexts.D  = [.12  .36  .45  .08];
+RHposTexts.E  = [.12  .24  .45  .08];
+RHposTexts.F  = [.12  .12  .45  .08];
+RHposTexts.G  = [.22  .85  .65  .08];
+
+
+
+REDpopupH = figure('Units', 'normalized','Position', [.25 .12 .30 .80], 'BusyAction',...
+    'cancel', 'Name', 'GRIN TOOLBOX', 'Tag', 'REDpopupH','Visible', 'On'); 
+
+REDpanelH = uipanel('Title','Process Red Channel Stack','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],'Position', [0.08 0.20 0.90 0.77]);
+
+Rcheckbox1H = uicontrol('Parent', REDpanelH,'Style','checkbox','Units','normalized',...
+    'Position', RHposCheck.A ,'String','', 'Value',1);
+Rcheckbox2H = uicontrol('Parent', REDpanelH,'Style','checkbox','Units','normalized',...
+    'Position', RHposCheck.B ,'String','', 'Value',1);
+Rcheckbox3H = uicontrol('Parent', REDpanelH,'Style','checkbox','Units','normalized',...
+    'Position', RHposCheck.C ,'String','', 'Value',1);
+Rcheckbox4H = uicontrol('Parent', REDpanelH,'Style','checkbox','Units','normalized',...
+    'Position', RHposCheck.D ,'String','', 'Value',1);
+Rcheckbox5H = uicontrol('Parent', REDpanelH,'Style','checkbox','Units','normalized',...
+    'Position', RHposCheck.E ,'String','', 'Value',1);
+Rcheckbox6H = uicontrol('Parent', REDpanelH,'Style','checkbox','Units','normalized',...
+    'Position', RHposCheck.F ,'String','', 'Value',1);
+
+uicontrol('Parent', REDpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', RHposTexts.A, 'FontSize', 14,'String', 'Smooth');
+uicontrol('Parent', REDpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', RHposTexts.B, 'FontSize', 14,'String', 'Crop');
+uicontrol('Parent', REDpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', RHposTexts.C, 'FontSize', 14,'String', 'Tile');
+uicontrol('Parent', REDpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', RHposTexts.D, 'FontSize', 14,'String', 'Reshape');
+uicontrol('Parent', REDpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', RHposTexts.E, 'FontSize', 14,'String', 'Align to CS');
+uicontrol('Parent', REDpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', RHposTexts.F, 'FontSize', 14,'String', 'Normalize');
+% uicontrol('Parent', REDpanelH, 'Style', 'Text', 'Units', 'normalized',...
+%     'Position', RHposTexts.G, 'FontSize', 14,'String', 'CLOSE THIS WINDOW TO CONTINUE');
+
+
+REDcontinueH = uicontrol('Parent', REDpopupH, 'Units', 'normalized', ...
+    'Position', [.1 .05 .8 .12], 'FontSize', 12, 'String', 'Continue',...
+    'Callback', @REDcontinue, 'Enable','on');
+
+uiwait
+REDpopupH.Visible = 'Off';
+
     
     %----------------------------------------------------
-    %        SMOOTH IMAGES
-    %----------------------------------------------------    
-    memocon(' '); memocon('PERFORMING IMAGE SMOOTHING')
-    IMGr = [];
+    %        SMOOTH RED CHAN IMAGES
+    %----------------------------------------------------  
+    if Rcheckbox1H.Value
+        memocon(' '); memocon('PERFORMING RED CH IMAGE SMOOTHING')
+        IMGr = [];
 
-    smoothSD = str2num(smoothimgnumH.String);
-    Mask = GRINkernel(smoothHeight, smoothWidth, smoothSD, smoothRes, 1);
-    pause(.2)
-    mbh = waitbar(.5,'Performing convolution smoothing, please wait...');
+        smoothSD = str2num(smoothimgnumH.String);
+        Mask = GRINkernel(smoothHeight, smoothWidth, smoothSD, smoothRes, 1);
+        pause(.2)
+        mbh = waitbar(.5,'Performing convolution smoothing, please wait...');
 
-    IMGr = convn( IMGred, Mask,'same');
-    
-    waitbar(.8); close(mbh);
-    
-    IMGred = IMGr;
-    
-    previewIMGSTACK(IMGred)
-    memocon('Image smoothing completed!')    
-    
+        IMGr = convn( IMGred, Mask,'same');
+
+        waitbar(.8); close(mbh);
+
+        IMGred = IMGr;
+
+        previewIMGSTACK(IMGred)
+        memocon('Image smoothing completed!')    
+    end
     
     
     %----------------------------------------------------
-    %        CROP IMAGES
+    %        CROP RED CHANNEL IMAGES
     %----------------------------------------------------
-    memocon(' '); memocon('TRIMMING EDGES FROM IMAGE')
-    IMGr = [];
-    
-    cropAmount = str2num(cropimgnumH.String);
+    if Rcheckbox2H.Value
+        memocon(' '); memocon('TRIMMING EDGES FROM IMAGE')
+        IMGr = [];
 
-    IMGr = IMGred((cropAmount+1):(end-cropAmount) , (cropAmount+1):(end-cropAmount) , :);
-    
-    IMGred = IMGr;
+        cropAmount = str2num(cropimgnumH.String);
 
-    previewIMGSTACK(IMGred)
-    memocon('Crop Images completed!')
+        IMGr = IMGred((cropAmount+1):(end-cropAmount) , (cropAmount+1):(end-cropAmount) , :);
 
+        IMGred = IMGr;
+
+        previewIMGSTACK(IMGred)
+        memocon('Crop Images completed!')
+    end
 
     
     %----------------------------------------------------
     %        CREATE IMAGE TILES BLOCKS
     %----------------------------------------------------
-    memocon('SEGMENTING IMGAGES INTO TILES')
-    IMGr = [];
+    if Rcheckbox3H.Value
+        memocon('SEGMENTING IMGAGES INTO TILES')
+        IMGr = [];
 
-    blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+        blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
 
-    IMGr = zeros(size(IMGred));
-    sz = size(IMGred,3);
-    
-    %-------------------------
-    tv1 = 1:blockSize:size(IMGred,1);
-    tv2 = 0:blockSize:size(IMGred,1);
-    tv2(1) = [];
-    
-    progresstimer('Segmenting images into blocks...')
-    for nn = 1:sz
-      for cc = 1:numel(tv1)
-        for rr = 1:numel(tv1)
+        IMGr = zeros(size(IMGred));
+        sz = size(IMGred,3);
 
-          mbloc = IMGred( tv1(rr):tv2(rr), tv1(cc):tv2(cc) , nn );
-          mu = mean(mbloc(:));
-        
-          IMGr( tv1(rr):tv2(rr), tv1(cc):tv2(cc) , nn ) = mu;
-        
+        %-------------------------
+        tv1 = 1:blockSize:size(IMGred,1);
+        tv2 = 0:blockSize:size(IMGred,1);
+        tv2(1) = [];
+
+        progresstimer('Segmenting images into blocks...')
+        for nn = 1:sz
+          for cc = 1:numel(tv1)
+            for rr = 1:numel(tv1)
+
+              mbloc = IMGred( tv1(rr):tv2(rr), tv1(cc):tv2(cc) , nn );
+              mu = mean(mbloc(:));
+
+              IMGr( tv1(rr):tv2(rr), tv1(cc):tv2(cc) , nn ) = mu;
+
+            end
+          end
+        if ~mod(nn,100); progresstimer(nn/sz); end    
         end
-      end
-    if ~mod(nn,100); progresstimer(nn/sz); end    
+        %-------------------------
+
+
+        IMGred = IMGr;
+
+        previewIMGSTACK(IMGred)
+        memocon('Block-Segment Images completed!')        
     end
-    %-------------------------
-
-    
-    IMGred = IMGr;
-    
-    previewIMGSTACK(IMGred)
-    memocon('Block-Segment Images completed!')        
-
 
     
     
     %----------------------------------------------------
     %        RESHAPE DATA BY TRIALS
     %----------------------------------------------------
-    memocon(' '); memocon('Reshaping dataset to 4D');
-    IMGr = [];
+    if Rcheckbox4H.Value
+        memocon(' '); memocon('Reshaping dataset to 4D');
+        IMGr = [];
 
-    IMGr = reshape(IMGred,size(IMGred,1),size(IMGred,2),framesPerTrial,[]);
-   
-    IMGred = IMGr;
+        IMGr = reshape(IMGred,size(IMGred,1),size(IMGred,2),framesPerTrial,[]);
 
-    previewIMGSTACK(IMGred)
-    memocon('Reshape stack by trial completed!')
+        IMGred = IMGr;
 
+        previewIMGSTACK(IMGred)
+        memocon('Reshape stack by trial completed!')
+    end
 
     
     
     %----------------------------------------------------
     %        ALIGN CS FRAMES BY CS ONSET
     %----------------------------------------------------
-    memocon(sprintf('Setting CS delay to %s seconds for all trials',alignCSFramesnumH.String));
-    IMGr = [];
-    
-    % Make all CS onsets this many seconds from trial start
-    CSonsetDelay = str2num(alignCSFramesnumH.String);
-    CSonsetFrame = round(CSonsetDelay .* framesPerSec);
-    CSoffsetFrame = round((CSonsetDelay+CS_length) .* framesPerSec);
+    if Rcheckbox5H.Value
+        memocon(sprintf('Setting CS delay to %s seconds for all trials',alignCSFramesnumH.String));
+        IMGr = [];
+
+        % Make all CS onsets this many seconds from trial start
+        CSonsetDelay = str2num(alignCSFramesnumH.String);
+        CSonsetFrame = round(CSonsetDelay .* framesPerSec);
+        CSoffsetFrame = round((CSonsetDelay+CS_length) .* framesPerSec);
 
 
-    EqualizeCSdelay  = round((delaytoCS-CSonsetDelay) .* framesPerSec);
+        EqualizeCSdelay  = round((delaytoCS-CSonsetDelay) .* framesPerSec);
 
-    IMGr = IMGred;
-    for nn = 1:size(IMGr,4)
+        IMGr = IMGred;
+        for nn = 1:size(IMGr,4)
 
-        IMGr(:,:,:,nn) = circshift( IMGr(:,:,:,nn) , -EqualizeCSdelay(nn) ,3);
+            IMGr(:,:,:,nn) = circshift( IMGr(:,:,:,nn) , -EqualizeCSdelay(nn) ,3);
 
+        end
+
+        IMGred = IMGr;
+
+        previewIMGSTACK(IMGred)
+        memocon('Align frames by CS onset completed!')
     end
-        
-    IMGred = IMGr;
-
-    previewIMGSTACK(IMGred)
-    memocon('Align frames by CS onset completed!')
-
     
     
     %----------------------------------------------------
     %        deltaF OVER F
     %----------------------------------------------------
-    memocon(' '); memocon('Computing dF/F for all frames...')
-    IMGr = [];
-    
-    IMGr = mean(IMGred(:,:,1:round(baselineTime*framesPerSec),:),3);
-    
-    im = repmat(IMGr,1,1,size(IMGred,3),1);
-    
-    IMGf = (IMGred - im) ./ im;
-    
-    IMGred = IMGf;
+    if Rcheckbox6H.Value
+        memocon(' '); memocon('Computing dF/F for all frames...')
+        IMGr = [];
 
-    previewIMGSTACK(IMGred)
-    memocon('dF/F computation completed!')
-    
+        IMGr = mean(IMGred(:,:,1:round(baselineTime*framesPerSec),:),3);
+
+        im = repmat(IMGr,1,1,size(IMGred,3),1);
+
+        IMGf = (IMGred - im) ./ im;
+
+        IMGred = IMGf;
+
+        previewIMGSTACK(IMGred)
+        memocon('dF/F computation completed!')
+    end
     
     
     %----------------------------------------------------
     %        RED CHANNEL SUBTRACTION NORMALIZATION
     %----------------------------------------------------
-    memocon(' '); memocon('Performing red channel normalization...')
-    IMGr = [];
     
-    IMG = IMG - IMGred;
+    szGimg = size(IMG);
+    szRimg = size(IMGred);
     
-    previewIMGSTACK(IMGred)
-    previewStack
-    memocon('Red channel normalization completed.')
+    disp('Green Stack Dims:')
+    disp(szGimg)
+    disp('Red Stack Dims:')
+    disp(szRimg)
+    
+    
+    if all(szGimg == szRimg)
+    
+        prompt = {'Enter normalization equation:'};
+        dlgout = inputdlg(prompt,'Equation Input',1,{'IMG = IMG - IMGred;'});    
+
+        eval(char(dlgout));
+
+        previewIMGSTACK(IMG)
+
+    else
+       
+        warning('Green and Red IMG stacks are not the same size.')
+        warning('Cannot perform normalization.')
+        
+    end
+
+
+
 
 
         
 pause(.02);
 enableButtons        
-memocon('ALL RED CHANNEL PROCESSING IS DONE')
+memocon('RED CHANNEL NORMALIZATION COMPLETED')
 end
+
+
+
+
+
+
+%----------------------------------------------------
+%        RED CHANNEL CONTINUE BUTTON CALLBACK
+%----------------------------------------------------
+function REDcontinue(hObject, eventdata)    
+
+    uiresume
+    
+end
+
+
+
+
+
+
 
 
 
