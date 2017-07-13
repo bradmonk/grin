@@ -143,6 +143,18 @@ smoothWidth = 9;
 smoothSD = .14;
 smoothRes = .1;
 
+
+global AlignVals
+AlignVals.P1x = [];
+AlignVals.P1y = [];
+AlignVals.P2x = [];
+AlignVals.P2y = [];
+AlignVals.P3x = [];
+AlignVals.P3y = [];
+AlignVals.P4x = [];
+AlignVals.P4y = [];
+
+
  
 global muIMGS phGRIN previewStacknum toggrid axGRID
 global IMGcMax IMGcMaxInd IMGcMin IMGcMinInd
@@ -432,36 +444,108 @@ getROIstatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
 
 
 
-%----------------------------------------------------
-%    CUSTOM FUNCTIONS PANEL
-%----------------------------------------------------
-customfunpanelH = uipanel('Title','Custom Code & Data Exploration','FontSize',10,...
-    'BackgroundColor',[.95 .95 .95],...
-    'Position', [0.80 0.49 0.18 0.26]); % 'Visible', 'Off',
+% %----------------------------------------------------
+% %    CUSTOM FUNCTIONS PANEL
+% %----------------------------------------------------
+% customfunpanelH = uipanel('Title','Custom Code & Data Exploration','FontSize',10,...
+%     'BackgroundColor',[.95 .95 .95],...
+%     'Position', [0.80 0.49 0.18 0.26]); % 'Visible', 'Off',
               
-runCustomAH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function A',...
-    'Callback', @runCustomA);
+% runCustomAH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
+%     'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function A',...
+%     'Callback', @runCustomA);
 
-runCustomBH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function B',...
-    'Callback', @runCustomB);
+% runCustomBH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
+%     'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function B',...
+%     'Callback', @runCustomB);
 
-runCustomCH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function C',...
-    'Callback', @runCustomC);
+% runCustomCH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
+%     'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function C',...
+%     'Callback', @runCustomC);
 
 % runCustomDH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
 %     'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function D',...
 %     'Callback', @redChannelSubtraction);
 
 
-redChImportH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.03 0.45 0.20], 'FontSize', 11, 'String', 'Import Red Ch.',...
+%----------------------------------------------------
+%    ALIGN & NORMALIZE PANEL
+%----------------------------------------------------
+alignfunpanelH = uipanel('Title','Align & Normalize','FontSize',10,...
+    'BackgroundColor',[.95 .95 .95],...
+    'Position', [0.80 0.49 0.18 0.26]); % 'Visible', 'Off',
+
+
+getAlignH = uicontrol('Parent', alignfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.80 0.45 0.17], 'FontSize', 13, 'String', 'Get Align',...
+    'Callback', @getAlign, 'Enable','off');
+
+setAlignH = uicontrol('Parent', alignfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.53 0.80 0.45 0.17], 'FontSize', 13, 'String', 'Set Align',...
+    'Callback', @setAlign, 'Enable','off');
+
+
+imgAlignXTxtH = uicontrol('Parent', alignfunpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', [0.12 0.70 0.35 0.09], 'FontSize', 10,'String', 'X');
+
+imgAlignYTxtH = uicontrol('Parent', alignfunpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', [0.57 0.70 0.35 0.09], 'FontSize', 10,'String', 'Y');
+
+
+imgAlignP1TxtH = uicontrol('Parent', alignfunpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', [0.01 0.59 0.13 0.10], 'FontSize', 10,'String', 'P1: ');
+
+imgAlignP2TxtH = uicontrol('Parent', alignfunpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', [0.01 0.46 0.13 0.10], 'FontSize', 10,'String', 'P2: ');
+
+imgAlignP3TxtH = uicontrol('Parent', alignfunpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', [0.01 0.33 0.13 0.10], 'FontSize', 10,'String', 'P3: ');
+
+imgAlignP4TxtH = uicontrol('Parent', alignfunpanelH, 'Style', 'Text', 'Units', 'normalized',...
+    'Position', [0.01 0.20 0.13 0.10], 'FontSize', 10,'String', 'P4: ');
+
+
+
+
+imgAlignP1Xh = uicontrol('Parent', alignfunpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
+    'Position', [0.18 0.59 0.28 0.11], 'FontSize', 10);
+
+imgAlignP1Yh = uicontrol('Parent', alignfunpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
+    'Position', [0.62 0.59 0.28 0.11], 'FontSize', 10);
+
+
+imgAlignP2Xh = uicontrol('Parent', alignfunpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
+    'Position', [0.18 0.46 0.28 0.11], 'FontSize', 10);
+
+imgAlignP2Yh = uicontrol('Parent', alignfunpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
+    'Position', [0.62 0.46 0.28 0.11], 'FontSize', 10);
+
+
+imgAlignP3Xh = uicontrol('Parent', alignfunpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
+    'Position', [0.18 0.33 0.28 0.11], 'FontSize', 10);
+
+imgAlignP3Yh = uicontrol('Parent', alignfunpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
+    'Position', [0.62 0.33 0.28 0.11], 'FontSize', 10);
+
+
+imgAlignP4Xh = uicontrol('Parent', alignfunpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
+    'Position', [0.18 0.20 0.28 0.11], 'FontSize', 10);
+
+imgAlignP4Yh = uicontrol('Parent', alignfunpanelH, 'Style', 'Edit', 'Units', 'normalized', ...
+    'Position', [0.62 0.20 0.28 0.11], 'FontSize', 10);
+
+
+
+
+
+
+
+redChImportH = uicontrol('Parent', alignfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.02 0.45 0.17], 'FontSize', 11, 'String', 'Import Red Ch.',...
     'Callback', @redChImport, 'Enable','off');
 
-redChanNormalizeH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
-    'Position', [0.53 0.03 0.45 0.20], 'FontSize', 11, 'String', 'Red Ch. Norm.',...
+redChanNormalizeH = uicontrol('Parent', alignfunpanelH, 'Units', 'normalized', ...
+    'Position', [0.53 0.02 0.45 0.17], 'FontSize', 11, 'String', 'Red Ch. Norm.',...
     'Callback', @redChanNormalize, 'Enable','off');
 
 
@@ -1042,8 +1126,51 @@ memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     end
      
      
-     
-     
+
+    % IMPORT ALIGNMENT VALUES FROM EXCEL SHEET
+    try
+
+        xlsA = xlsread([xlspathname , xlsfilename],'ALIGN');
+
+        memocon('Imported pre-existing aligment values fomr ALIGN excel sheet');
+
+        
+        AlignVals.P1x = xlsA(1,1);
+        AlignVals.P1y = xlsA(1,2);
+        AlignVals.P2x = xlsA(2,1);
+        AlignVals.P2y = xlsA(2,2);
+        
+        AlignVals.P3x = xlsA(3,1);
+        AlignVals.P3y = xlsA(3,2);
+        AlignVals.P4x = xlsA(4,1);
+        AlignVals.P4y = xlsA(4,2);        
+        
+        imgAlignP1Xh.String = num2str(AlignVals.P1x);
+        imgAlignP1Yh.String = num2str(AlignVals.P1y);
+        imgAlignP2Xh.String = num2str(AlignVals.P2x);
+        imgAlignP2Yh.String = num2str(AlignVals.P2y);        
+        
+        imgAlignP3Xh.String = num2str(AlignVals.P3x);
+        imgAlignP3Yh.String = num2str(AlignVals.P3y);
+        imgAlignP4Xh.String = num2str(AlignVals.P4x);
+        imgAlignP4Yh.String = num2str(AlignVals.P4y);
+        
+
+    catch ME
+
+        memocon(ME.message)
+        
+        imgAlignP1Xh.String = num2str(0);
+        imgAlignP1Yh.String = num2str(0);
+        imgAlignP2Xh.String = num2str(0);
+        imgAlignP2Yh.String = num2str(0);
+        
+        imgAlignP3Xh.String = num2str(0);
+        imgAlignP3Yh.String = num2str(0);
+        imgAlignP4Xh.String = num2str(0);
+        imgAlignP4Yh.String = num2str(0);
+
+    end 
      
      
      
@@ -3013,6 +3140,270 @@ end
 
 
 
+
+
+%----------------------------------------------------
+%        GET ALIGN
+%----------------------------------------------------
+function getAlign(hObject, eventdata)
+% disableButtons; 
+getAlignH.FontWeight = 'bold';
+pause(.02);
+
+%{
+xlsA = [];
+AlignSheetExists = 0;
+try
+    
+   xlsA = xlsread([xlspathname , xlsfilename],'ALIGN');
+   
+   AlignSheetExists = 1;
+   
+   memocon('Imported pre-existing aligment values fomr ALIGN excel sheet');
+   
+catch ME
+    
+    memocon(ME.message)
+    
+end 
+
+
+
+
+
+if isempty(xlsA)
+
+    if AlignSheetExists && isempty(xlsA)
+        memocon('ALIGN excel sheet exists, but is empty');
+    end
+    if ~AlignSheetExists
+        memocon('ALIGN excel sheet does not exist');
+    end
+
+
+%     memocon(' ');
+%     memocon('SMOOTHING AND CROPPING IMAGES...');
+%     if checkbox1H.Value
+%         smoothimg
+%     end
+%     if checkbox2H.Value
+%         cropimg
+%     end
+
+    memocon('OPENING IMG ALIGNMENT POPOUT...');
+    memocon('SELECT TWO (2) ALIGNMENT POINTS');
+
+
+    % CREATE IMG WINDOW POPOUT
+
+    IMGi = IMG(:,:,1:previewStacknum);
+
+    fhIMA=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],'Color','w','MenuBar','none');
+    haxIMA = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[],'YTick',[]);
+    % hold on;
+
+    axes(haxIMA)
+    phG = imagesc(IMGi(:,:,1),'Parent',haxIMA,'CDataMapping','scaled');
+    [cmax, cmaxi] = max(IMGi(:));
+    [cmin, cmini] = min(IMGi(:));
+    cmax = cmax - abs(cmax/4);
+    cmin = cmin + abs(cmin/4);
+    haxIMA.CLim = [cmin cmax];
+    axes(haxIMA)
+    pause(.01)
+
+
+
+    % SELECT TWO ROI POINTS
+    hAP1 = impoint;
+    hAP2 = impoint;
+
+    AP1pos = hAP1.getPosition;
+    AP2pos = hAP2.getPosition;
+
+    imellipse(haxIMA, [AP1pos-5 10 10]); pause(.1);
+    imellipse(haxIMA, [AP2pos-5 10 10]); pause(.1);
+
+    pause(.5);
+    close(fhIMA)
+
+    memocon('  ');
+    memocon('ALIGNMENT POINTS');
+    memocon(sprintf('P1(X,Y): \t    %.2f \t    %.2f',AP1pos));
+    memocon(sprintf('P2(X,Y): \t    %.2f \t    %.2f',AP2pos));
+
+end
+%}
+
+
+
+
+    memocon('OPENING IMG ALIGNMENT POPOUT...');
+    memocon('SELECT TWO (2) ALIGNMENT POINTS');
+
+
+    % CREATE IMG WINDOW POPOUT
+
+    IMGi = IMG(:,:,1:previewStacknum);
+
+    fhIMA=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],'Color','w','MenuBar','none');
+    haxIMA = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[],'YTick',[]);
+    % hold on;
+
+    axes(haxIMA)
+    phG = imagesc(IMGi(:,:,1),'Parent',haxIMA,'CDataMapping','scaled');
+    [cmax, cmaxi] = max(IMGi(:));
+    [cmin, cmini] = min(IMGi(:));
+    cmax = cmax - abs(cmax/4);
+    cmin = cmin + abs(cmin/4);
+    haxIMA.CLim = [cmin cmax];
+    axes(haxIMA)
+    pause(.01)
+
+
+
+    % SELECT TWO ROI POINTS
+    hAP1 = impoint;
+    hAP2 = impoint;
+
+    AP1pos = hAP1.getPosition;
+    AP2pos = hAP2.getPosition;
+
+    imellipse(haxIMA, [AP1pos-5 10 10]); pause(.1);
+    imellipse(haxIMA, [AP2pos-5 10 10]); pause(.1);
+
+    pause(.5);
+    close(fhIMA)
+
+    memocon('  ');
+    memocon('ALIGNMENT POINTS');
+    memocon(sprintf('P1(X,Y): \t    %.2f \t    %.2f',AP1pos));
+    memocon(sprintf('P2(X,Y): \t    %.2f \t    %.2f',AP2pos));
+
+
+
+
+AlignVals.P1x = AP1pos(1);
+AlignVals.P1y = AP1pos(2);
+AlignVals.P2x = AP2pos(1);
+AlignVals.P2y = AP2pos(2);
+
+imgAlignP1Xh.String = num2str(AlignVals.P1x);
+imgAlignP1Yh.String = num2str(AlignVals.P1y);
+imgAlignP2Xh.String = num2str(AlignVals.P2x);
+imgAlignP2Yh.String = num2str(AlignVals.P2y);        
+% imgAlignP3Xh.String = num2str(AlignVals.P3x);
+% imgAlignP3Yh.String = num2str(AlignVals.P3y);
+% imgAlignP4Xh.String = num2str(AlignVals.P4x);
+% imgAlignP4Yh.String = num2str(AlignVals.P4y);
+
+
+
+getAlignH.FontWeight = 'normal';
+pause(.02);
+enableButtons; pause(.02);
+memocon('GET alignment completed.')
+end
+
+
+
+
+
+%----------------------------------------------------
+%        SET ALIGN
+%----------------------------------------------------
+function setAlign(hObject, eventdata)
+% disableButtons; 
+setAlignH.FontWeight = 'bold';
+pause(.02);
+
+
+
+AlignVals.P1x = str2num(imgAlignP1Xh.String);
+AlignVals.P1y = str2num(imgAlignP1Yh.String);
+AlignVals.P2x = str2num(imgAlignP2Xh.String);
+AlignVals.P2y = str2num(imgAlignP2Yh.String);
+AlignVals.P3x = str2num(imgAlignP3Xh.String);
+AlignVals.P3y = str2num(imgAlignP3Yh.String);
+AlignVals.P4x = str2num(imgAlignP4Xh.String);
+AlignVals.P4y = str2num(imgAlignP4Yh.String);
+
+
+
+P1x = AlignVals.P1x;
+P1y = AlignVals.P1y;
+P2x = AlignVals.P2x;
+P2y = AlignVals.P2y;
+P3x = AlignVals.P3x;
+P3y = AlignVals.P3y;
+P4x = AlignVals.P4x;
+P4y = AlignVals.P4y;
+
+
+tX = P3x - P1x;
+tY = P3y - P1y;
+
+[IM,~] = imtranslate(IMG,[tX, tY],'FillValues',mean(IMG(:)),'OutputView','same');
+
+IMG = IM;
+previewStack
+
+
+
+% P1x = P1x + tX;    % after translation P1x moves to P3x
+% P1y = P1y + tY;    % after translation P1y moves to P3y
+% P2x = P2x + tX;    % after translation P2x does not move to P4x
+% P2y = P2y + tY;    % after translation P2y does not move to P4y
+% 
+% 
+% % Make X and Y origins equal zero
+% 
+% Xa = P2x - P1x; 
+% Ya = P2y - P1y; 
+% 
+% RotA = rad2deg(atan2(Ya,Xa));
+% 
+% 
+% Xb = P4x - P3x;
+% Yb = P4y - P3y;
+% 
+% RotB = rad2deg(atan2(Yb,Xb));
+% 
+% RotAng = RotB - RotA;
+% 
+% IM = imrotate(IMG,RotAng,'bilinear','crop'); % Make output image B the same size as the input image A, cropping the rotated image to fit
+% 
+% IMG = IM;
+% previewStack
+
+
+
+
+% fixed = IMG(:,:,1);
+% moving = IMG(:,:,500);
+% imshowpair(fixed, moving,'Scaling','joint')
+% [optimizer, metric] = imregconfig('multimodal');
+% optimizer.InitialRadius = 0.009;
+% optimizer.Epsilon = 1.5e-4;
+% optimizer.GrowthFactor = 1.01;
+% optimizer.MaximumIterations = 300;
+% movingRegistered = imregister(moving, fixed, 'affine', optimizer, metric);
+% imshowpair(fixed, movingRegistered,'Scaling','joint')
+
+
+
+
+setAlignH.FontWeight = 'normal';
+pause(.02);
+enableButtons; pause(.02);
+memocon('SET alignment completed.')
+end
+
+
+
+
+
+
 %----------------------------------------------------
 %        red Channel IMPORT
 %----------------------------------------------------
@@ -3948,6 +4339,8 @@ function enableButtons()
     plotGUIH.Enable = 'on';
     img3dH.Enable = 'on';
     visualexplorerH.Enable = 'on';
+    getAlignH.Enable = 'on';
+    setAlignH.Enable = 'on';
     
     if numel(size(IMG)) > 1 && numel(size(IMG)) < 4;
         openImageJH.Enable = 'on';
@@ -3976,6 +4369,8 @@ function disableButtons()
     plotGUIH.Enable = 'off';
     img3dH.Enable = 'off';
     visualexplorerH.Enable = 'off';
+    getAlignH.Enable = 'off';
+    setAlignH.Enable = 'off';
 
 end
 
