@@ -2143,7 +2143,12 @@ function plotTileStats(hObject, eventdata)
     end
         pause(.05)
     
-    
+    % INCREASE LINE WIDTH CHENYU
+    for ii = 1:size(pha,2)
+        for jj = 1:size(pha{ii},1)
+            pha{ii}(jj).LineWidth = 3;
+        end
+    end
     
     
     legpos = {  [0.01,0.95,0.15,0.033], ...
