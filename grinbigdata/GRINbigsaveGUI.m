@@ -46,20 +46,18 @@ function [] = GRINbigsaveGUI(varargin)
 %}
 %----------------------------------------------------
 clc; close all; clear all;
-system('sudo purge')
+% [str,maxsize] = computer;
+% if strcmp(str,'MACI64')
+%     disp(' '); disp('Purging RAM'); 
+%     system('sudo purge'); 
+% end
 
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
 % NOTE: WHEN CONVERTING THIS BACK TO GRINtollboxGUI REMEMBER TO EDIT
 % THE NAME IN THE IMPORT IMAGE FUNCTION FROM GRINbigdataGUI
 
-% clearvars -except varargin
-% set(0,'HideUndocumented','off')
-% [str,maxsize] = computer;
-% if strcmp(str,'MACI64')
-%     disp(' '); disp('Purging RAM'); 
-%     system('sudo purge'); 
-% end
+
 
 global datafilepath
 global thisfilefun
@@ -68,6 +66,8 @@ thisfilefun = 'GRINbigsaveGUI';
 thisfile = 'GRINbigsaveGUI.m';
 thisfilepath = fileparts(which(thisfile));
 cd(thisfilepath);
+cd('..');
+thisfilepath = pwd;
 
 % fprintf('\n\n Current working path set to: \n % s \n', thisfilepath)
 
@@ -109,13 +109,13 @@ disp(' '); fprintf('   %s \r',  datapaths{:} ); disp(' ')
 %% MANUALLY SET PER-SESSION PATH PARAMETERS IF WANTED (OPTIONAL)
 
 global imgfilename imgpathname xlsfilename xlspathname lickfilename lickpathname
-global imgfullpath xlsfullpath lickfullpath
+global imgfullpath xlsfullpath lickfullpath rimgfilename rimagepathname
 
 %% ESTABLISH GLOBALS AND SET STARTING VALUES
 
 global mainguih imgLogo
 
-global IMG GRINstruct GRINtable XLSdata LICK IMGred IMGr
+global IMG GRINstruct GRINtable XLSdata LICK IMGred IMGr IMGR
 global xlsN xlsT xlsR
 global lickN LICKraw
 global IMGraw IMGSraw IM
@@ -1016,12 +1016,23 @@ memocon(datapaths{ii})
 
   %--- IMPORT TIF IMAGE STACK
 
-        memocon('image stack path was set manually')
+
+        %memocon('image stack path was set manually')
 
         [imgpathname, imgfilename, imgext] = fileparts(datapaths{ii});
         imgpathname = [imgpathname, filesep];
         imgfilename = [imgfilename, imgext];
         imgfullpath = [imgpathname imgfilename];
+
+
+
+        [IMGfpPath,IMGfpFile,IMGfpExt] = fileparts(imgfullpath);
+        lickpathname = dir([imgpathname, IMGfpFile(1:14) '*.mat*']);
+        lickfilename = [lickpathname.folder filesep lickpathname.name];
+
+        lickfullpath = matfile(lickfilename);
+        LICK = lickfullpath.lick_data;
+
 
 
   %--- IMPORT MAIN XLS DATA OF EXPERIMENT PARAMETERS    
@@ -1063,8 +1074,11 @@ memocon(datapaths{ii})
     memocon(sprintf('GRIN DATASET: % s ', imgfilename));
     %fprintf('\n\n GRIN DATASET: % s \n\n', imgfilename);
     pause(.1)
-    
-    
+
+
+
+
+
     % ------------- IMG STACK IMPORT CODE -----------
     memocon(sprintf('Importing tif stack from: % s', [imgpathname , imgfilename]));
     fprintf('\n Importing tif stack from...\n % s \n', [imgpathname , imgfilename]);
@@ -1124,6 +1138,53 @@ memocon(datapaths{ii})
         set(haxGRIN, 'XLim', [1 size(IMG,2)], 'YLim', [1 size(IMG,1)]);
     end
     
+
+
+
+
+
+
+
+    % ------------- RED STACK IMPORT CODE -----------
+    rimgfilename = [imgfullpath(1:end-5) 'r.tif'];
+    memocon(sprintf('Importing tif stack from: % s', rimgfilename));
+
+    FileTif=rimgfilename;
+    InfoImage=imfinfo(FileTif);
+    mImage=InfoImage(1).Width;
+    nImage=InfoImage(1).Height;
+    NumberImages=length(InfoImage);
+    
+    if NumberImages < 2
+
+        IMGr = imread(FileTif);
+
+        IMGr = double(IMGr);
+
+    else
+    
+        IMGr = zeros(nImage,mImage,NumberImages,'double');
+
+        TifLink = Tiff(FileTif, 'r');
+        for i=1:NumberImages
+           TifLink.setDirectory(i);
+           IMGr(:,:,i)=TifLink.read();
+        end
+        TifLink.close();
+
+        clear InfoImage
+    
+    end
+
+
+
+
+
+
+
+
+
+
     
     % ------------- XLS IMPORT CODE -----------
     memocon(sprintf('Importing xls info from: % s', [xlspathname , xlsfilename]));
@@ -1287,71 +1348,58 @@ function BigDataFun(hObject, eventdata)
 
 
     smoothimg
-
     cropimg
-
     %imgblocks
-
-
-%------------------------------------
+    %------------------------------------
     blockSize = 5;
-
-
     IMG = imresize(IMG, 1/blockSize , 'bilinear');
-
     previewStack
     axes(haxGRIN)
     axis tight
     previewStack
     axes(haxGRIN)
     phGRIN = imagesc(mean(IMG,3) , 'Parent', haxGRIN);
-    
-
     XLSdata.blockSize = blockSize;
     XLSdata.sizeIMG = size(IMG);        
     IMhist.tiled = 1;
-%------------------------------------
-
-
-
-
+    %------------------------------------
     reshapeData
-
     alignCSframes
-
     %dFoverF
-
     timepointMeans
-
-    % IMGS = IMG(1:blockSize:end,1:blockSize:end,:,:);
     IMGS = uint16(IMG);
-    %IMGSmu = uint16(muIMGS);
+
+
+    IMG = IMGr;
+    smoothimg
+    cropimg
+    %imgblocks
+    %------------------------------------
+    blockSize = 5;
+    IMG = imresize(IMG, 1/blockSize , 'bilinear');
+    previewStack
+    axes(haxGRIN)
+    axis tight
+    previewStack
+    axes(haxGRIN)
+    phGRIN = imagesc(mean(IMG,3) , 'Parent', haxGRIN);
+    XLSdata.blockSize = blockSize;
+    XLSdata.sizeIMG = size(IMG);        
+    IMhist.tiled = 1;
+    %------------------------------------
+    reshapeData
+    alignCSframes
+    %dFoverF
+    timepointMeans
+    IMGR = uint16(IMG);
+
 
     XLSdata.sizeIMGS = size(IMGS);
-    %XLSdata.sizeIMGSmu = size(IMGSmu);
 
-    %disp('memocon(''XLSdata'') >>')
-    %disp(XLSdata)
-
-
-    %phGRIN.CData = squeeze(mean(squeeze(mean(muIMGS,4)),3));
-
-    %IM = zscore(mean(squeeze(muIMGS(:,:,XLSdata.CSoffsetFrame,:)),3));
-
-    %IM = IMGraw.*(IM + 6);
-
-    %phGRIN.CData = IM;
-    %haxGRIN.CLim = [min(IM(:)) + (max(IM(:))-min(IM(:)))/15 , ...
-            %max(IM(:)) - (max(IM(:))-min(IM(:)))/15];
-
-
-    % figure
-    % imagesc(mean(squeeze(mean(IMGS,4)),3))
-
-
+    
     cd(PATHgrindata);
-    save(['GRIM_' GRINstruct.file(1:end-4)],'IMGS',...
-          'GRINstruct','XLSdata','blockSize')
+    save(['GRIM_' GRINstruct.file(1:end-4)],'IMGS','IMGR',...
+          'GRINstruct','XLSdata','blockSize','LICK')
     cd(thisfilepath);
 
 
