@@ -1,4 +1,4 @@
-function [] = GRINtoolboxGUI(varargin)
+function [] = GRINbigdataGUI(varargin)
 %% GRINtoolboxGUI.m - GRIN LENS IMAGING TOOLBOX
 %{
 % 
@@ -48,17 +48,20 @@ function [] = GRINtoolboxGUI(varargin)
 clc; close all; clear all; clear java;
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
+% NOTE: WHEN CONVERTING THIS BACK TO GRINtollboxGUI REMEMBER TO EDIT
+% THE NAME IN THE IMPORT IMAGE FUNCTION FROM GRINbigdataGUI
+
 % clearvars -except varargin
 % set(0,'HideUndocumented','off')
-[str,maxsize] = computer;
-if strcmp(str,'MACI64')
-    disp(' '); disp('Purging RAM'); 
-    system('sudo purge'); 
-end
+% [str,maxsize] = computer;
+% if strcmp(str,'MACI64')
+%     disp(' '); disp('Purging RAM'); 
+%     system('sudo purge'); 
+% end
 
 
 global thisfilepath
-thisfile = 'GRINtoolboxGUI.m';
+thisfile = 'GRINbigdataGUI.m';
 thisfilepath = fileparts(which(thisfile));
 cd(thisfilepath);
 
@@ -75,6 +78,11 @@ fprintf('\n\n Current working path set to: \n % s \n', thisfilepath)
 
 fprintf('\n\n Added folders to path: \n % s \n % s \n % s \n % s \n\n',...
         pathdir0,pathdir1,pathdir2)
+
+
+global exampledatapath
+exampledatapath = ...
+'/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/grindata/gc33/gc33_2016_0323_g.tif';
     
     
 %% MANUALLY SET PER-SESSION PATH PARAMETERS IF WANTED (OPTIONAL)
@@ -579,19 +587,20 @@ runPCAh = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
     'Position', [0.03 0.25 0.45 0.20], 'FontSize', 12, 'String', 'PCA',...
     'Callback', @runPCA, 'Enable','off');
 
-tempfun2H = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
-    'Position', [0.53 0.25 0.45 0.20], 'FontSize', 12, 'String', 'TBD',...
-    'Callback', @tempfun2, 'Enable','off');
-
-visualexplorerH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
-    'Position', [0.03 0.01 0.45 0.20], 'FontSize', 12, 'String', 'Explorer',...
-    'Callback', @visualexplorer, 'Enable','off');
-
 resetwsH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
-    'Position', [0.53 0.01 0.45 0.20], 'FontSize', 12, 'String', 'Reset Toolbox',...
+    'Position', [0.53 0.25 0.45 0.20], 'FontSize', 12, 'String', 'Reset Toolbox',...
     'Callback', @resetws);
 
+% visualexplorerH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
+%     'Position', [0.03 0.01 0.45 0.20], 'FontSize', 12, 'String', 'Explorer',...
+%     'Callback', @visualexplorer, 'Enable','off');
 
+importBigDataH = uicontrol('Parent', explorepanelH, 'Units', 'normalized', ...
+    'Position', [0.03 0.01 0.45 0.20], 'FontSize', 12, 'String', 'Big Data',...
+    'Callback', @BigDataFun, 'Enable','on');
+
+useExampleDataH = uicontrol('Parent', explorepanelH,'Style','checkbox','Units','normalized',...
+    'Position', [0.50 0.01 0.45 0.20] ,'FontSize', 9,'String','Use Example Data', 'Value',0);
 
 
 
@@ -634,6 +643,13 @@ grinlenstoolbox()
 % -----------------------------------------------------------------------------
 %%                     GUI TOOLBOX FUNCTIONS
 % -----------------------------------------------------------------------------
+
+
+
+
+
+% ----------------- IMAGE STACK DATASET IMPORT -------------------------
+
 
 
 
@@ -686,16 +702,30 @@ function importimgstack(hObject, eventdata)
 % diary on
 memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
+if size(IMG,1) > 1
+    memocon('TRY IMPORT AGAIN AFTER FRESH RESET');
+    memocon('RESETTING TOOLBOX...');
+    pause(1)
+    GRINbigdataGUI
+    return
+end
+
 
   %------------------- IMPORT DATA DIALOGUES --------------------
 
   %--- IMPORT TIF IMAGE STACK
-  
     % PATH TO IMAGE STACK WAS ALREADY SET MANUALLY ABOVE
-    if numel(imgfilename) > 1
+    if useExampleDataH.Value == 1
+    %if numel(imgfilename) > 1
         
         memocon('image stack path was set manually')
-            
+
+        [imgpathname, imgfilename, imgext] = fileparts(exampledatapath);
+        imgpathname = [imgpathname, filesep];
+        imgfilename = [imgfilename, imgext];
+        imgfullpath = [imgpathname imgfilename];
+
+
     % PATH TO IMAGE STACK WAS NOT SET - GET IT NOW    
     else
         [imgfilename, imgpathname] = uigetfile({'*.tif*'},...
@@ -910,6 +940,8 @@ memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
            IMG(:,:,i)=TifLink.read();
         end
         TifLink.close();
+
+        clear InfoImage
     
     end
     
@@ -917,7 +949,8 @@ memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     
     axes(haxGRIN)
     colormap(haxGRIN,parula)
-    phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+    phGRIN = imagesc(mean(IMG,3), 'Parent', haxGRIN);
+    %phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
               pause(1)
     
     IMGraw = IMG(:,:,1);
@@ -1197,6 +1230,647 @@ end
 
 
 
+
+%% ------------------------- BIG DATA ------------------------------
+
+
+
+
+
+
+%----------------------------------------------------
+%        BIG DATA FUNCTION
+%----------------------------------------------------
+function BigDataFun(hObject, eventdata)
+% disableButtons; pause(.02);
+
+
+    memocon('In a moment a popup GUI will open.'); pause(.1);
+    memocon('From this UI popup, select the XLS file'); pause(.1);
+    memocon('  containing a list of full paths to each'); pause(.1);
+    memocon('  tif image stack you want to import.'); pause(1);
+    
+        [iListName, iListPath] = uigetfile({'*.xls*'},...
+        'Select XLS file containing full paths to datasets', thisfilepath);   
+    
+        iListFullPath = [iListPath iListName];
+
+
+    [~,iListItems,~] = xlsread(iListFullPath);
+
+
+
+
+
+
+    FileTif=iListItems{1};
+    InfoImage=imfinfo(FileTif);
+    mImage=InfoImage(1).Width;
+    nImage=InfoImage(1).Height;
+    NumberImages=length(InfoImage);
+
+    NumberImages = 10;
+
+
+
+    IMG = zeros(nImage,mImage,NumberImages,'double');
+
+    TifLink = Tiff(FileTif, 'r');
+    for i=1:NumberImages
+       TifLink.setDirectory(i);
+       IMG(:,:,i)=TifLink.read();
+    end
+    TifLink.close();
+
+    clear InfoImage
+
+        axes(haxGRIN)
+        colormap(haxGRIN,parula)
+        phGRIN = imagesc(mean(IMG,3), 'Parent', haxGRIN);
+        pause(1)
+
+        memocon('Image stack sucessfully imported!')
+
+
+keyboard
+
+IMT = IMG;
+IMU = int16(IMG);
+
+min(PIM(:))
+max(PIM(:))
+mean(PIM(:))
+min(IM(:))
+max(IM(:))
+mean(IM(:))
+
+
+IMDS = imageDatastore(iListItems,...
+'IncludeSubfolders',false,'FileExtensions','.tif','LabelSource','foldernames');
+
+% IMU.ReadFcn = @customreader;
+
+% OBJECT FUNCTIONS FOR objectName = imageDatastore()
+% countEachLabel	Count files in ImageDatastore labels
+% hasdata           Determine if data is available to read
+% numpartitions     Number of partitions
+% partition         Partition a datastore
+% preview           Return array of integers corresponding to the first image.
+% read              Read data in datastore
+% readall           Read all data in datastore
+% readimage         Read specified image from datastore
+% reset             Reset datastore to initial state
+% shuffle           Shuffle files in ImageDatastore
+% splitEachLabel	Split ImageDatastore labels by proportions
+
+
+
+IMU = readimage(IMDS,1);
+
+
+
+
+
+
+
+
+    comchoice = questdlg('Save compressed dataset?', ...
+        'Compress IMG Stack', ...
+        'Single','uint16','Nevermind','Single');
+
+    switch comchoice
+        case 'Single'
+            memocon('DETERMING OPTIMAL DATA COMPRESSION METHOD...')
+            doCompress = 1;
+        case 'uint16'
+            memocon('DETERMING OPTIMAL DATA COMPRESSION METHOD...')
+            doCompress = 2;            
+        case 'Nevermind'
+            memocon('RETURNING TO GUI')
+            doCompress = 0;
+            return
+    end 
+
+    
+    if doCompress == 1
+        IM = IMG;
+        IMhist.rawIM = IMG(:,:,1,1);
+        IMhist.minIM = min(min(min(min(IMG))));
+        IMhist.maxIM = max(max(max(max(IMG))));
+        IMhist.aveIM = mean(mean(mean(mean(IMG))));
+
+
+        if IMhist.minIM < 0
+            IMG = im2uint16(  IMG +  abs(IMhist.minIM)   );
+            % IM = im2single( IMG  );
+        else
+            IMG = im2uint16(  IMG -  abs(IMhist.minIM)   );
+        end
+
+
+        IMGSraw = im2single( IMGSraw  );
+        muIMGS  = im2single( muIMGS  );
+
+
+        [filen,pathn] = uiputfile([GRINstruct.file(1:end-4),'.mat'],'Save Vars to Workspace');
+        if isequal(filen,0) || isequal(pathn,0)
+           memocon('Data Save Cancelled'); return
+        end; memocon('Saving data to .mat file, please wait...')
+
+        disableButtons; pause(.02);
+
+        save(fullfile(pathn,filen),'IMG','GRINstruct','GRINtable','XLSdata',...
+                                   'muIMGS','IMGSraw','LICK','IMhist','-v7.3')
+
+        memocon('Dataset saved!')
+
+        IMG = IM;
+        IM = [];
+
+        IMGSraw = double(IMGSraw);
+        muIMGS  = double(muIMGS);
+    end
+
+
+
+
+
+
+
+t1=[];
+t2=[];
+t3=[];
+t4=[];
+
+
+hb = round(blockSize / 2);
+
+PIM = IMG( hb:blockSize:end, hb:blockSize:end, : , : );
+
+size(PIM)
+
+
+CSp = squeeze(PIM(:,:,:,GRINstruct.tf(:,2)));
+
+CSm = squeeze(PIM(:,:,:,GRINstruct.tf(:,1)));
+
+
+size(CSp)
+size(CSm)
+
+
+CSp = CSp(3:7,3:7,:,:);
+CSm = CSm(3:7,3:7,:,:);
+
+szCSp = size(CSp)
+szCSm = size(CSm)
+
+
+CSP = squeeze(reshape(CSp,[],1,szCSp(3),szCSp(4)));
+CSM = squeeze(reshape(CSm,[],1,szCSm(3),szCSm(4)));
+
+size(CSP)
+size(CSM)
+
+CSplus  = CSP;
+CSminus = CSM;
+
+% save('GRINDATA.mat','CSplus','CSminus')
+
+keyboard
+
+size(CSP)
+size(CSM)
+
+
+figure
+imagesc(CSM(:,:,1))
+
+keyboard
+
+%%
+X = [];
+Y = [];
+
+Y = rand(10,100) .* .01;
+
+figure
+plot(Y')
+
+X = X - mean(X);
+
+
+covMX = 1/(n-1) * sum((X - mean(X)) * (X - mean(X))');
+
+
+
+
+
+
+%%
+
+GRINstruct.TreatmentGroups{1}
+size(CSm)
+
+GRINstruct.TreatmentGroups{2}
+size(CSp)
+
+
+
+
+
+% PCAdata = permute(CSM,[3 1 2]);
+PCAdata = CSM;
+
+size(PCAdata)
+
+
+MaxComponents = 10;
+opt = statset('pca');
+opt.MaxIter = 5000;
+
+[PCAScof,PCAval,PCAlat,PCAtsq,PCAexp,PCAmu] = pca( PCAdata ,...
+    'Options',opt,'NumComponents',MaxComponents);
+
+
+
+disp(PCAexp)
+
+
+figure
+plot(PCAScof(:,1:2))
+hold on
+
+figure
+plot(PCAval)
+
+x = repmat((1:size(PCAScof,1))',1,2);
+
+scatter( x(:)  ,  PCAScof(:) )
+
+
+
+clc
+sum(PCASexp(:))
+
+% format shortG
+% PCASval(1:5 , :)
+
+
+
+
+
+
+
+
+
+
+
+
+% [PCAScof,PCASval,PCAlat,PCAtsq,PCASexp,PCAmu] = pca(...
+%     PCAdata,'Options',opt,'Algorithm','svd','NumComponents',Ncomps,'Centered',false);
+
+% PCAStopcof = PCAScof(1,:);
+% PCAScentered = PCASval*PCAScof';
+% PCAStsredu = mahal(PCASval,PCASval);
+% PCAStsqdiscard = PCASts - PCAStsredu;
+
+
+% size(PIM)
+% size(IMG)
+% size(muIMGS)
+% GRINstruct.tf
+% XLSdata
+% blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
+% pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
+% pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
+% CSids = unique(GRINstruct.csus);
+% for ii = 1:size(pixels,1)
+%     tiledatX{ii} = 1:size(pixels,2);
+%     tiledatY{ii} = squeeze(pixels(ii,:,:));
+%     pha{ii} = squeeze(pixels(ii,:,:));
+% end
+% ii = 48;
+% PCAdata = squeeze(pixels(ii,:,:))';
+
+
+
+
+
+enableButtons        
+memocon('Run custom function completed!')
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+%----------------------------------------------------
+%        RUN PCA
+%----------------------------------------------------
+function runPCA(varargin)
+
+
+clear ts_trials tso_trials  all_trials var1 var2 var3
+ts_trials=IMG(1:blockSize:end,1:blockSize:end,:,(GRINstruct.id==1));% tone/sucrose trials for 10 x 10 tiling
+tso_trials=IMG(1:blockSize:end,1:blockSize:end,:,(GRINstruct.id==2));% tone/omission trials for 10 x 10 tiling
+
+size(ts_trials)    % 10x10x100x24  (tiles*tiles*frames*trials)
+size(tso_trials)   % 10x10x100x12  (tiles*tiles*frames*trials)
+
+
+ts_trials_l=[]; tso_trials_l=[];
+
+for n=1:10
+for m=1:10
+
+ts_trials_l=[ts_trials_l,squeeze(ts_trials(n,m,:,:))];
+tso_trials_l=[tso_trials_l,squeeze(tso_trials(n,m,:,:))];
+
+end
+end
+
+
+size(ts_trials_l)   % 100x2400  (frames * tile1_trials1:24+...tile100_trials_mn)
+size(tso_trials_l)  % 100x1200  (frames * tile1_trials1:24+...tile100_trials_mn)
+
+% I don't get this shape
+
+all_trials = ([ts_trials_l,tso_trials_l])';  %note the transponse
+
+
+[var1,var2,var3] = pca(all_trials);
+
+
+nTiles = 10;
+nTStrials = sum((GRINstruct.id==1));
+nTSOtrials = sum((GRINstruct.id==2));
+
+
+figure; 
+plot(var1(:,1:3));
+
+figure; 
+plot3(var2(1:2400,1),var2(1:2400,2),var2(1:2400,3),'.')
+hold on; 
+plot3(var2(2401:end,1),var2(2401:end,2),var2(2401:end,3),'.')
+grid on
+
+
+figure; 
+plot(var2(1:2400,1),var2(1:2400,2),'.b',var2(2401:end,1),var2(2401:end,2),'.r')
+
+
+t1=[];
+t2=[];
+t3=[];
+t4=[];
+
+keyboard
+
+
+t1 = var2(1:2400,1) > .4 & var2(1:2400,2) > .4;
+
+t2 = find(t1);
+
+mod(t2,24)
+
+
+
+
+
+end
+
+
+
+
+%----------------------------------------------------
+%        RUN PCA
+%----------------------------------------------------
+%{
+function runPCA(varargin)
+% disableButtons; pause(.02);
+
+
+t1=[];
+t2=[];
+t3=[];
+t4=[];
+
+% axh,pha,pixels,tiledatX,tiledatY
+
+INaxh      = varargin{3};
+INpha      = varargin{4};
+INpixels   = varargin{5};
+INtiledatX = varargin{6};
+INtiledatY = varargin{7};
+
+
+Colors = {varargin{1,4}{1}(1:end).Color};
+
+INpha{1}.Children
+
+
+CSids = unique(GRINstruct.csus);
+
+
+pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
+pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
+
+size(muIMGS)
+size(pxl)
+size(pixels)
+
+
+hb = round(blockSize / 2);
+PIM = IMG( hb:blockSize:end, hb:blockSize:end, : , : );
+
+% tiles = 3:8;
+% frames = GRINstruct.CSUSonoff(1)-10:GRINstruct.CSUSonoff(4)+20;
+
+tiles = 1:10;
+frames = 1:100;
+
+PIM = PIM(tiles,tiles,frames,:);
+
+
+disp(CSids)
+CSp = squeeze(PIM(:,:,:,GRINstruct.tf(:,1)));
+CSm = squeeze(PIM(:,:,:,GRINstruct.tf(:,2)));
+
+size(PIM)
+size(CSp)
+size(CSm)
+
+
+t1 = squeeze(reshape(PIM,numel(PIM(:,:,1)),[],size(PIM,3),size(PIM,4)));
+for nn = 1:size(GRINstruct.tf,2)
+    DAT{nn} = squeeze(t1(:,:,GRINstruct.tf(:,nn)));
+end
+
+size(t1)
+
+CSplus  = DAT{1};
+CSminus = DAT{2};
+
+
+%%
+fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
+
+nPlots = numel(tiles);
+
+aXlocs =  (0:nPlots) .* (1/nPlots);
+aXlocs(end) = [];
+aYlocs =  (0:nPlots) .* (1/nPlots);
+aYlocs(end) = [];
+aXlocs = aXlocs+.02;
+aYlocs = aYlocs+.025;
+% aXlocs = aXlocs+.05;
+% aYlocs = aYlocs+.045;
+[aX,aY] = meshgrid(aXlocs,aYlocs);
+
+aW = 1/(nPlots+1);
+aH = 1/(nPlots+1);
+
+NormType = 'dF';
+if strcmp(NormType,'dF')
+    YL = [-.1 .25];
+elseif strcmp(NormType,'Zscore')
+    YL = [-2 4];
+elseif strcmp(NormType,'Dprime')
+    YL = [-.15 .15];
+else
+    YL = 'auto';
+end
+XL = [0 size(DAT{1},2)];
+
+for ii = 1:size(DAT{1},1)
+
+    axh{ii} = axes('Position',[aX(ii) aY(ii) aW aH],...
+    'Color','none','Tag',num2str(ii),'YLim',YL,...
+    'YLimMode','manual','XTick',[]); 
+    hold on;
+    line([10 10],YL,'Color',[.8 .8 .8])
+    line([20 20],YL,'Color',[.8 .8 .8])
+    ylim(YL); xlim(XL); %cYlim = get(gca,'YLim');
+    axis off
+
+
+    for nn = 1:size(DAT,2)
+        pha{ii} = plot( 1:size(DAT{nn},2) , squeeze(DAT{nn}(ii,:,:)) ,...
+                    'Color',Colors{nn} + ((1-Colors{nn})./1.2),'LineWidth',1);
+        hold on
+    end
+
+    ChBx{ii} = uicontrol('Parent', fh10,'Style','checkbox','Units','normalized',...
+    'Position', [aX(ii) aY(ii) .02 .02] ,'String','', 'Value',0);
+
+end
+
+
+
+PCDAT = [];
+for ii = 1:size(DAT{1},1)
+
+    
+
+    for nn = 1:size(DAT,2)
+
+        %PCDAT(:,ii,nn) = smooth( mean(squeeze(DAT{nn}(ii,:,:)),2),  7, 'loess');
+        PCDAT(:,ii,nn) = mean(squeeze(DAT{nn}(ii,:,:)),2);
+
+        plot(axh{ii}, 1:size(DAT{nn},2) , PCDAT(:,ii,nn) ,...
+                    'Color',Colors{nn},'LineWidth',3);
+        hold on
+    end
+
+end
+
+
+%%
+% keyboard
+
+pause(.05)
+
+%%
+
+% ----- PCA ON CS+ & CS- TRIALS SEPERATELY ----
+
+
+% [CSPcoef , CSPscore , CSPvar] = pca(PCDAT(:,:,1)');
+
+figure('Units','normalized','OuterPosition',[.1 .1 .8 .8],'Color','w','MenuBar','none');
+
+sz = size(PCDAT,3);
+
+mm=1;
+for nn = 1:sz
+
+[coef , score , vari] = pca(PCDAT(:,:,nn)');
+
+axL{nn} = subplot(sz, 2, mm);   stem( coef(:,1:2) , 'MarkerFaceColor','auto');
+    xlabel('Frame'); 
+    ylabel([CSids{nn} ' PC1:2 Coef']);
+    mm=mm+1;
+
+axR{nn} = subplot(sz, 2, mm);   plot( score(:,1) , score(:,2) ,'.','MarkerSize',20); 
+    xlabel([CSids{nn} ' PC1 Scores']); 
+    ylabel([CSids{nn} ' PC2 Scores']);
+    %axis([-.6 .6 -.4 .4]);
+    mm=mm+1;
+
+end
+
+axLLim = zeros(size(axL,2),2);
+axRYLim = zeros(size(axR,2),2);
+axRXLim = zeros(size(axR,2),2);
+for nn = 1:size(axL,2)
+    axLLim(nn,:) = axL{nn}.YLim;
+    axRYLim(nn,:) = axR{nn}.YLim;
+    axRXLim(nn,:) = axR{nn}.XLim;
+end
+for nn = 1:size(axL,2)
+    axL{nn}.YLim = [min(axLLim(:,1)) max(axLLim(:,2))];
+    axR{nn}.YLim = [min(axRYLim(:,1)) max(axRYLim(:,2))];
+    axR{nn}.XLim = [min(axRXLim(:,1)) max(axRXLim(:,2))];
+end
+
+
+
+
+
+
+%%
+enableButtons        
+memocon('Run custom function completed!')
+end
+%}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 %% ------------------------- IMAGE PROCESSING ------------------------------
 
 
@@ -1249,7 +1923,8 @@ pause(.02);
         previewStack
 
         axes(haxGRIN)
-        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+        %phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+        phGRIN = imagesc(mean(IMG,3) , 'Parent', haxGRIN);
 
         XLSdata.sizeIMG = size(IMG);
 
@@ -1304,14 +1979,10 @@ pause(.02);
     
     IMG = IMGt;
     
-    IMGraw = IMGt(:,:,1);
-    
     reshapeData
-    
+
     for nn = 1:size(GRINstruct.tf,2)
-        
         IMGSraw(:,:,:,nn) = squeeze(mean(IMG(:,:,:,GRINstruct.tf(:,nn)),4));
-    
     end
     
     % IMGSraw = IMG(:,:,[1, XLSdata.CSonsetFrame, XLSdata.CSoffsetFrame, size(IMG,3)],:);
@@ -1322,12 +1993,14 @@ pause(.02);
     
         previewStack
         axes(haxGRIN)
-        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+        phGRIN = imagesc(mean(IMG,3) , 'Parent', haxGRIN);
 
         update_IMGfactors()
         
         XLSdata.cropAmount = cropAmount;
         XLSdata.sizeIMG = size(IMG);
+
+        IMGraw = mean(IMG,3);
         
         
         
@@ -1420,8 +2093,8 @@ pause(.02);
     
         previewStack
         axes(haxGRIN)
-        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
-
+        %phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+        phGRIN = imagesc(mean(IMG,3) , 'Parent', haxGRIN);
         
         XLSdata.blockSize = blockSize;
         XLSdata.sizeIMG = size(IMG);
@@ -1528,7 +2201,9 @@ pause(.02);
     IMG = IMGrs;
         
         axes(haxGRIN)
-        phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+        %phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+        phGRIN = imagesc(mean(mean(IMG,4),3) , 'Parent', haxGRIN);
+
 
         
         XLSdata.sizeIMG = size(IMG);
@@ -1631,6 +2306,8 @@ pause(.02);
     
         axes(haxGRIN)
         phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+        %phGRIN = imagesc(mean(mean(IMG,4),3) , 'Parent', haxGRIN);
+        
 
         XLSdata.CSonsetFrame = CSonsetFrame;
         XLSdata.CSoffsetFrame = CSoffsetFrame;
@@ -1736,6 +2413,8 @@ if numel(size(IMG)) == 3
 previewStack
 axes(haxGRIN)
 phGRIN = imagesc(IMG(:,:,1) , 'Parent', haxGRIN);
+% phGRIN = imagesc(mean(mean(IMG,4),3) , 'Parent', haxGRIN);
+
 
 IMhist.normalized = 1;
 dFoverFH.FontWeight = 'normal';
@@ -1852,7 +2531,15 @@ pause(.02);
         cmin = cmin + abs(cmin/3);
         haxGRIN.CLim = [cmin cmax];
 
-        % phGRIN.CData = squeeze(mean(squeeze(mean(muIMGS,4)),3));
+        phGRIN.CData = squeeze(mean(squeeze(mean(muIMGS,4)),3));
+
+    IM = zscore(mean(squeeze(muIMGS(:,:,XLSdata.CSoffsetFrame,:)),3));
+
+    IM = IMGraw.*(IM + 6);
+
+    phGRIN.CData = IM;
+    haxGRIN.CLim = [min(IM(:)) + (max(IM(:))-min(IM(:)))/15 , ...
+                    max(IM(:)) - (max(IM(:))-min(IM(:)))/15];
 
     
         
@@ -2239,21 +2926,27 @@ function plotTileStats(hObject, eventdata)
 
     
     
-    
+    pcabutton = uicontrol(fh10,'Units','normalized',...
+                  'Position',[.065 .003 .06 .04],...
+                  'String','PCA',...
+                  'Tag','gridbutton',...
+                  'Callback',{@runPCA,axh,pha,pixels,tiledatX,tiledatY}); 
     
     
     gridbutton = uicontrol(fh10,'Units','normalized',...
-                  'Position',[.01 .01 .1 .05],...
+                  'Position',[.003 .003 .06 .04],...
                   'String','Toggle Grid',...
                   'Tag','gridbutton',...
                   'Callback',@toggleGridOverlay);
     
     
     savetilesH = uicontrol(fh10,'Units','normalized',...
-                  'Position',[.90 .01 .1 .05],...
-                  'String','Save Tile Data',...
+                  'Position',[.96 .003 .04 .04],...
+                  'String','Save',...
                   'Tag','gridbutton',...
                   'Callback',@savetilesfun);    
+
+
     
     
     
@@ -2309,185 +3002,13 @@ function savetilesfun(hObject, eventdata)
     end
     
     TILE = tiledatY;
+
+    IMGmu = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
+    %IMGmu = IMG(1:blockSize:end,1:blockSize:end,:,:);
     
-    uisave({'TILE','GRINstruct','XLSdata'},...
+    uisave({'IMGmu','TILE','GRINstruct','XLSdata'},...
            ['TILE_' GRINstruct.file(1:end-4)]);
  
-end
-
-
-
-
-
-%----------------------------------------------------
-%        RUN PCA
-%----------------------------------------------------
-function runPCA(hObject, eventdata)
-% disableButtons; pause(.02);
-
-
-t1=[];
-t2=[];
-t3=[];
-t4=[];
-
-
-hb = round(blockSize / 2);
-
-PIM = IMG( hb:blockSize:end, hb:blockSize:end, : , : );
-
-size(PIM)
-
-
-CSp = squeeze(PIM(:,:,:,GRINstruct.tf(:,2)));
-
-CSm = squeeze(PIM(:,:,:,GRINstruct.tf(:,1)));
-
-
-size(CSp)
-size(CSm)
-
-
-CSp = CSp(3:7,3:7,:,:);
-CSm = CSm(3:7,3:7,:,:);
-
-szCSp = size(CSp)
-szCSm = size(CSm)
-
-
-CSP = squeeze(reshape(CSp,[],1,szCSp(3),szCSp(4)));
-CSM = squeeze(reshape(CSm,[],1,szCSm(3),szCSm(4)));
-
-size(CSP)
-size(CSM)
-
-CSplus  = CSP;
-CSminus = CSM;
-
-% save('GRINDATA.mat','CSplus','CSminus')
-
-keyboard
-
-size(CSP)
-size(CSM)
-
-
-figure
-imagesc(CSM(:,:,1))
-
-keyboard
-
-%%
-X = [];
-Y = [];
-
-Y = rand(10,100) .* .01;
-
-figure
-plot(Y')
-
-X = X - mean(X);
-
-
-covMX = 1/(n-1) * sum((X - mean(X)) * (X - mean(X))');
-
-
-
-
-
-
-%%
-
-GRINstruct.TreatmentGroups{1}
-size(CSm)
-
-GRINstruct.TreatmentGroups{2}
-size(CSp)
-
-
-
-
-
-% PCAdata = permute(CSM,[3 1 2]);
-PCAdata = CSM;
-
-size(PCAdata)
-
-
-MaxComponents = 10;
-opt = statset('pca');
-opt.MaxIter = 5000;
-
-[PCAScof,PCAval,PCAlat,PCAtsq,PCAexp,PCAmu] = pca( PCAdata ,...
-    'Options',opt,'NumComponents',MaxComponents);
-
-
-
-disp(PCAexp)
-
-
-figure
-plot(PCAScof(:,1:2))
-hold on
-
-figure
-plot(PCAval)
-
-x = repmat((1:size(PCAScof,1))',1,2);
-
-scatter( x(:)  ,  PCAScof(:) )
-
-
-
-clc
-sum(PCASexp(:))
-
-% format shortG
-% PCASval(1:5 , :)
-
-
-
-
-
-
-
-
-
-
-
-
-% [PCAScof,PCASval,PCAlat,PCAtsq,PCASexp,PCAmu] = pca(...
-%     PCAdata,'Options',opt,'Algorithm','svd','NumComponents',Ncomps,'Centered',false);
-
-% PCAStopcof = PCAScof(1,:);
-% PCAScentered = PCASval*PCAScof';
-% PCAStsredu = mahal(PCASval,PCASval);
-% PCAStsqdiscard = PCASts - PCAStsredu;
-
-
-% size(PIM)
-% size(IMG)
-% size(muIMGS)
-% GRINstruct.tf
-% XLSdata
-% blockSize = str2num(imgblockspopupH.String(imgblockspopupH.Value,:));
-% pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
-% pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
-% CSids = unique(GRINstruct.csus);
-% for ii = 1:size(pixels,1)
-%     tiledatX{ii} = 1:size(pixels,2);
-%     tiledatY{ii} = squeeze(pixels(ii,:,:));
-%     pha{ii} = squeeze(pixels(ii,:,:));
-% end
-% ii = 48;
-% PCAdata = squeeze(pixels(ii,:,:))';
-
-
-
-
-
-enableButtons        
-memocon('Run custom function completed!')
 end
 
 
@@ -3047,88 +3568,6 @@ end
 
 
 
-%----------------------------------------------------
-%        PLOT GROUP MEANS (CI ENVELOPE PLOT)
-%----------------------------------------------------
-function viewSameFrames(hObject, eventdata)
-% disableButtons; pause(.02);
-
-
-%     CSids = unique(GRINstruct.csus);
-%     
-%     size(IMG)
-%     meanIMG = squeeze(mean(IMG(:,:,CSUSonoff(1),GRINstruct.tf(:,4)),4));
-%     size(meanIMG)
-%     
-%         % Perform averaging for each (nCSUS) unique trial type
-%     % This will create a matrix 'muIMGS' of size [h,w,f,nCSUS]
-%     
-%     muIMGS = zeros(szIMG(1), szIMG(2), szIMG(3), nCSUS);
-%     for tt = 1:nCSUS
-%         im = IMG(:,:,:,GRINstruct.tf(:,tt));
-%         muIMGS(:,:,:,tt) = squeeze(mean(im,4));
-%     end
-    
-
-
-fh33=figure('Units','normalized','OuterPosition',[.1 .1 .7 .9],'Color','w','MenuBar','none');
-hax1 = axes('Position',[.05 .55 .40 .40],'Color','none'); axis off; hold on;
-hax2 = axes('Position',[.55 .55 .40 .40],'Color','none'); axis off; hold on;
-hax3 = axes('Position',[.05 .05 .40 .40],'Color','none'); axis off; hold on;
-hax4 = axes('Position',[.55 .05 .40 .40],'Color','none'); axis off; hold on;
-
-
-meanIMG1 = squeeze(mean(IMG(:,:,CSUSonoff(1),GRINstruct.tf(:,4)),4));
-meanIMG2 = squeeze(mean(IMG(:,:,CSUSonoff(2),GRINstruct.tf(:,4)),4));
-meanIMG3 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,4)),4));
-meanIMG4 = squeeze(mean(IMG(:,:,CSUSonoff(4),GRINstruct.tf(:,4)),4));
-
-axes(hax1)
-imagesc(meanIMG1)
-axes(hax2)
-imagesc(meanIMG2)
-axes(hax3)
-imagesc(meanIMG3)
-axes(hax4)
-imagesc(meanIMG4)
-
-
-
-fh34=figure('Units','normalized','OuterPosition',[.1 .1 .7 .9],'Color','w','MenuBar','none');
-hax1 = axes('Position',[.05 .55 .40 .40],'Color','none'); axis off; hold on;
-hax2 = axes('Position',[.55 .55 .40 .40],'Color','none'); axis off; hold on;
-hax3 = axes('Position',[.05 .05 .40 .40],'Color','none'); axis off; hold on;
-hax4 = axes('Position',[.55 .05 .40 .40],'Color','none'); axis off; hold on;
-
-meanIMG1 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,1)),4));
-meanIMG2 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,2)),4));
-meanIMG3 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,3)),4));
-meanIMG4 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,4)),4));
-
-axes(hax1)
-imagesc(meanIMG1)
-axes(hax2)
-imagesc(meanIMG2)
-axes(hax3)
-imagesc(meanIMG3)
-axes(hax4)
-imagesc(meanIMG4)
-
-
-
-
-    line([CSUSonoff(1) CSUSonoff(1)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
-    line([CSUSonoff(2) CSUSonoff(2)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
-    pause(.1)
-    %-------------------------------------------------------------------------
-    
-
-enableButtons
-memocon('PLOTTING GROUP MEANS COMPLETED!')
-end
-
-
-
 
 
 
@@ -3160,11 +3599,15 @@ disableButtons; pause(.02);
         
         axes(haxGRIN)
         phGRIN = imagesc(IMGi(:,:,1),'Parent',haxGRIN,'CDataMapping','scaled');
-        cmax = max(max(max(IMGi)));
-        cmin = min(min(min(IMGi)));
-        cmax = cmax - abs(cmax/3);
-        cmin = cmin + abs(cmin/3);
-        haxGRIN.CLim = [cmin cmax];
+        Imax = max(max(max(IMGi)));
+        Imin = min(min(min(IMGi)));
+
+        cmax = Imax - (Imax-Imin)/12;
+        cmin = Imin + (Imax-Imin)/12;
+        
+        if cmax > cmin
+            haxGRIN.CLim = [cmin cmax];
+        end
 
         for nn = 1:previewStacknum
 
@@ -3218,10 +3661,13 @@ disableButtons; pause(.02);
 
         axes(haxGRIN)
         phGRIN = imagesc(IMGi(:,:,1),'Parent',haxGRIN,'CDataMapping','scaled');
-        cmax = max(max(max(IMGi)));
-        cmin = min(min(min(IMGi)));
-        cmax = cmax - abs(cmax/3);
-        cmin = cmin + abs(cmin/3);
+
+        Imax = max(max(max(IMGi)));
+        Imin = min(min(min(IMGi)));
+
+        cmax = Imax - (Imax-Imin)/5;
+        cmin = Imin + (Imax-Imin)/5;
+
         haxGRIN.CLim = [cmin cmax];
 
         for nn = 1:previewStacknum
@@ -3230,17 +3676,21 @@ disableButtons; pause(.02);
 
             pause(.04)
         end
-    
-    
 
-        % VISUALIZE AND ANNOTATE
-        % fprintf('\n\n IMG matrix previous size: % s ', num2str(size(IMG)));
-        % fprintf('\n IMG matrix current size: % s \n\n', num2str(size(IMGt)));
-        % GRINcompare(IMG, IMGt, previewNframes)
-        % mainguih.HandleVisibility = 'off';
-        % close all;
-        % mainguih.HandleVisibility = 'on';
-    
+%     phGRIN.CData = mean(squeeze(muIMGS(:,:,XLSdata.CSoffsetFrame,:)),3);
+% 
+%     phGRIN.CData = IMGraw;
+%     haxGRIN.CLim = [min(IMGraw(:)) + (max(IMGraw(:))-min(IMGraw(:)))/15 , ...
+%                     max(IMGraw(:)) - (max(IMGraw(:))-min(IMGraw(:)))/15];
+% 
+%     IM = zscore(mean(squeeze(muIMGS(:,:,XLSdata.CSoffsetFrame,:)),3));
+% 
+%     IM = IMGraw.*(IM + 7);
+% 
+%     phGRIN.CData = IM;
+%     haxGRIN.CLim = [min(IM(:)) + (max(IM(:))-min(IM(:)))/15 , ...
+%                     max(IM(:)) - (max(IM(:))-min(IM(:)))/15];
+
     
     else
         
@@ -4242,140 +4692,6 @@ end
 
 
 
-%----------------------------------------------------
-%        OPEN IMAGEJ API
-%----------------------------------------------------
-function openImageJ(hObject, eventdata)
-% disableButtons; pause(.02);
-
-
-    memocon('LAUNCHING ImageJ (FIJI) using MIJ!')
-    
-    matfiji(IMG(:,:,1:100), GRINstruct, XLSdata, LICK)
-        
-
-  
-    
-% GRINtoolboxGUI
-return
-enableButtons        
-memocon('ImageJ (FIJI) processes completed!')
-end
-
-
-
-
-%----------------------------------------------------
-%        3D DATA EXPLORATION
-%----------------------------------------------------
-function img3d(hObject, eventdata)
-disableButtons; pause(.02);
-
-
-
-    choice = questdlg({'Contour slicing could take a few minutes.',...
-                       'Do you want to continue?'},' ','Yes','No','No');
-                   
-            switch choice
-                case 'Yes'
-                     memocon('CREATING CONTOUR SLICE (please wait)...')
-                case 'No'
-                    return
-            end
-
-    IM = IMG(:,:,1:50);
-
-    
-    fh10=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],...
-        'Color','w','MenuBar','none','Pointer','circle');
-    hax10 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    rotate3d(fh10);
-    
-    Sx = []; 
-    Sy = [];
-    Sz = [1 25 50];
-    
-    contourslice(IM,Sx,Sy,Sz)
-        campos([0,-15,8])
-        box on
-    
-    
-
-
-    
-enableButtons        
-memocon('3D VIEW FUNCTION COMPLETED!')
-end
-
-
-
-
-%----------------------------------------------------
-%        VISUAL EXPLORATION
-%----------------------------------------------------
-function visualexplorer(hObject, eventdata)
-% disableButtons; pause(.02);
-
-
-
-
-    if numel(size(IMG))==3
-
-        IM = IMG(:,:,1:XLSdata.framesPerTrial);
-        
-        vol = [round(XLSdata.sizeIMG(1)*.25),round(XLSdata.sizeIMG(1)*.5),...
-               round(XLSdata.sizeIMG(2)*.25),round(XLSdata.sizeIMG(2)*.5),...
-               1,XLSdata.framesPerTrial];
-        
-        isoval = 5;
-        
-    else
-        
-        IM = IMG(:,:,1:XLSdata.framesPerTrial,1);
-        
-        vol = [round(XLSdata.sizeIMG(1)*.25),round(XLSdata.sizeIMG(1)*.5),...
-               round(XLSdata.sizeIMG(2)*.25),round(XLSdata.sizeIMG(2)*.5),...
-               1,XLSdata.framesPerTrial];
-        
-        isoval = -1;
-    
-    end
-    
-    
-    memocon('CREATING SUBVOLUME FROM IMAGE STACK...')
-
-    
-    
-    [x,y,z,D] = subvolume(IM,vol);
-
-    
-    
-%     fh10=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],...
-%         'Color','w','MenuBar','none');
-%     hax10 = axes('Position',[.05 .05 .9 .9],'Color','none');
-
-
-    p1 = patch(isosurface(x,y,z,D, isoval),...
-         'FaceColor','red','EdgeColor','none');
-    isonormals(x,y,z,D,p1);
-    p2 = patch(isocaps(x,y,z,D, isoval),...
-         'FaceColor','interp','EdgeColor','none');
-    view(3); axis tight;
-    camlight right; camlight left; lighting gouraud
-    
-    rotate3d(gca);
-
-for i = 1:150;
-   camorbit(3,0)
-   pause(.05)
-end
-
-
-    
-enableButtons        
-memocon('SUBVOLUME CREATION COMPLETED (USE MOUSE TO ROTATE IMAGE)!')
-end
-
 
 
 
@@ -4459,23 +4775,6 @@ end
 
 
 
-%----------------------------------------------------
-%        CSUS DROPDOWN MENU CALLBACK
-%----------------------------------------------------
-function CSUSpopup(hObject, eventdata)
-
-    if numel(GRINtable) > 0 
-        memocon('reminder of CS/US combos...')
-        GRINtable(1:7,1:2)
-        % GRINstruct
-    end
-        
-    stimnum = CSUSpopupH.Value;
-
-    % CSUSvals = unique(GRINstruct.csus);
-    % set(CSUSpopupH, 'String', CSUSvals);
-
-end
 
 
 
@@ -4627,9 +4926,9 @@ end
 
 
 
-%------------------------------------------------------------------------------
+%----------------------------------------------------
 %        PLOT LICKING DATA
-%------------------------------------------------------------------------------
+%----------------------------------------------------
 function plotLick(hObject, eventdata)
 
     maxY = (max(max(LICK)));
@@ -4690,9 +4989,9 @@ hpLick = plot(LhaxGRIN, LICK' , ':', 'LineWidth',2,'HandleVisibility', 'off');
 end
 
 
-%------------------------------------------------------------------------------
-%        PLOT LICKING DATA
-%------------------------------------------------------------------------------
+%----------------------------------------------------
+%        NORMALIZE LICKING DATA
+%----------------------------------------------------
 function normLick(hObject, eventdata)
     
     
@@ -4728,14 +5027,274 @@ end
 
 
 
+%% ------LEGACY FUNCTIONS (WILL BE REMOVED IN FUTURE VERSIONS -------------
+
+
+%----------------------------------------------------
+%        CSUS DROPDOWN MENU CALLBACK
+%----------------------------------------------------
+function CSUSpopup(hObject, eventdata)
+
+    if numel(GRINtable) > 0 
+        memocon('reminder of CS/US combos...')
+        GRINtable(1:7,1:2)
+        % GRINstruct
+    end
+        
+    stimnum = CSUSpopupH.Value;
+
+    % CSUSvals = unique(GRINstruct.csus);
+    % set(CSUSpopupH, 'String', CSUSvals);
+
+end
+
+
+
+%----------------------------------------------------
+%        OPEN IMAGEJ API
+%----------------------------------------------------
+function openImageJ(hObject, eventdata)
+% disableButtons; pause(.02);
+
+
+    memocon('LAUNCHING ImageJ (FIJI) using MIJ!')
+    
+    matfiji(IMG(:,:,1:100), GRINstruct, XLSdata, LICK)
+        
+
+  
+    
+% GRINtoolboxGUI
+return
+enableButtons        
+memocon('ImageJ (FIJI) processes completed!')
+end
+
+
+
+
+%----------------------------------------------------
+%        3D DATA EXPLORATION
+%----------------------------------------------------
+function img3d(hObject, eventdata)
+disableButtons; pause(.02);
+
+
+
+    choice = questdlg({'Contour slicing could take a few minutes.',...
+                       'Do you want to continue?'},' ','Yes','No','No');
+                   
+            switch choice
+                case 'Yes'
+                     memocon('CREATING CONTOUR SLICE (please wait)...')
+                case 'No'
+                    return
+            end
+
+    IM = IMG(:,:,1:50);
+
+    
+    fh10=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],...
+        'Color','w','MenuBar','none','Pointer','circle');
+    hax10 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    rotate3d(fh10);
+    
+    Sx = []; 
+    Sy = [];
+    Sz = [1 25 50];
+    
+    contourslice(IM,Sx,Sy,Sz)
+        campos([0,-15,8])
+        box on
+    
+    
+
+
+    
+enableButtons        
+memocon('3D VIEW FUNCTION COMPLETED!')
+end
+
+
+
 
 end
 %% EOF
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
 
 
 
-%% ------------------------- OUT OF USE ------------------------------
+
+
+
+%% --------------------- TO BE DELETED ------------------------------
 %{
+
+
+%----------------------------------------------------
+%        VIEW SAMPLE FRAMES
+%----------------------------------------------------
+function viewSameFrames(hObject, eventdata)
+% disableButtons; pause(.02);
+
+
+%     CSids = unique(GRINstruct.csus);
+%     
+%     size(IMG)
+%     meanIMG = squeeze(mean(IMG(:,:,CSUSonoff(1),GRINstruct.tf(:,4)),4));
+%     size(meanIMG)
+%     
+%         % Perform averaging for each (nCSUS) unique trial type
+%     % This will create a matrix 'muIMGS' of size [h,w,f,nCSUS]
+%     
+%     muIMGS = zeros(szIMG(1), szIMG(2), szIMG(3), nCSUS);
+%     for tt = 1:nCSUS
+%         im = IMG(:,:,:,GRINstruct.tf(:,tt));
+%         muIMGS(:,:,:,tt) = squeeze(mean(im,4));
+%     end
+    
+
+
+fh33=figure('Units','normalized','OuterPosition',[.1 .1 .7 .9],'Color','w','MenuBar','none');
+hax1 = axes('Position',[.05 .55 .40 .40],'Color','none'); axis off; hold on;
+hax2 = axes('Position',[.55 .55 .40 .40],'Color','none'); axis off; hold on;
+hax3 = axes('Position',[.05 .05 .40 .40],'Color','none'); axis off; hold on;
+hax4 = axes('Position',[.55 .05 .40 .40],'Color','none'); axis off; hold on;
+
+
+meanIMG1 = squeeze(mean(IMG(:,:,CSUSonoff(1),GRINstruct.tf(:,4)),4));
+meanIMG2 = squeeze(mean(IMG(:,:,CSUSonoff(2),GRINstruct.tf(:,4)),4));
+meanIMG3 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,4)),4));
+meanIMG4 = squeeze(mean(IMG(:,:,CSUSonoff(4),GRINstruct.tf(:,4)),4));
+
+axes(hax1)
+imagesc(meanIMG1)
+axes(hax2)
+imagesc(meanIMG2)
+axes(hax3)
+imagesc(meanIMG3)
+axes(hax4)
+imagesc(meanIMG4)
+
+
+
+fh34=figure('Units','normalized','OuterPosition',[.1 .1 .7 .9],'Color','w','MenuBar','none');
+hax1 = axes('Position',[.05 .55 .40 .40],'Color','none'); axis off; hold on;
+hax2 = axes('Position',[.55 .55 .40 .40],'Color','none'); axis off; hold on;
+hax3 = axes('Position',[.05 .05 .40 .40],'Color','none'); axis off; hold on;
+hax4 = axes('Position',[.55 .05 .40 .40],'Color','none'); axis off; hold on;
+
+meanIMG1 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,1)),4));
+meanIMG2 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,2)),4));
+meanIMG3 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,3)),4));
+meanIMG4 = squeeze(mean(IMG(:,:,CSUSonoff(3),GRINstruct.tf(:,4)),4));
+
+axes(hax1)
+imagesc(meanIMG1)
+axes(hax2)
+imagesc(meanIMG2)
+axes(hax3)
+imagesc(meanIMG3)
+axes(hax4)
+imagesc(meanIMG4)
+
+
+
+
+    line([CSUSonoff(1) CSUSonoff(1)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
+    line([CSUSonoff(2) CSUSonoff(2)],[allhax{nn}.YLim(1) allhax{nn}.YLim(2)])
+    pause(.1)
+    %-------------------------------------------------------------------------
+    
+
+enableButtons
+memocon('PLOTTING GROUP MEANS COMPLETED!')
+end
+
+
+
+%----------------------------------------------------
+%        VISUAL EXPLORATION
+%----------------------------------------------------
+function visualexplorer(hObject, eventdata)
+% disableButtons; pause(.02);
+
+
+
+
+    if numel(size(IMG))==3
+
+        IM = IMG(:,:,1:XLSdata.framesPerTrial);
+        
+        vol = [round(XLSdata.sizeIMG(1)*.25),round(XLSdata.sizeIMG(1)*.5),...
+               round(XLSdata.sizeIMG(2)*.25),round(XLSdata.sizeIMG(2)*.5),...
+               1,XLSdata.framesPerTrial];
+        
+        isoval = 5;
+        
+    else
+        
+        IM = IMG(:,:,1:XLSdata.framesPerTrial,1);
+        
+        vol = [round(XLSdata.sizeIMG(1)*.25),round(XLSdata.sizeIMG(1)*.5),...
+               round(XLSdata.sizeIMG(2)*.25),round(XLSdata.sizeIMG(2)*.5),...
+               1,XLSdata.framesPerTrial];
+        
+        isoval = -1;
+    
+    end
+    
+    
+    memocon('CREATING SUBVOLUME FROM IMAGE STACK...')
+
+    
+    
+    [x,y,z,D] = subvolume(IM,vol);
+
+    
+    
+%     fh10=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],...
+%         'Color','w','MenuBar','none');
+%     hax10 = axes('Position',[.05 .05 .9 .9],'Color','none');
+
+
+    p1 = patch(isosurface(x,y,z,D, isoval),...
+         'FaceColor','red','EdgeColor','none');
+    isonormals(x,y,z,D,p1);
+    p2 = patch(isocaps(x,y,z,D, isoval),...
+         'FaceColor','interp','EdgeColor','none');
+    view(3); axis tight;
+    camlight right; camlight left; lighting gouraud
+    
+    rotate3d(gca);
+
+for i = 1:150;
+   camorbit(3,0)
+   pause(.05)
+end
+
+
+    
+enableButtons        
+memocon('SUBVOLUME CREATION COMPLETED (USE MOUSE TO ROTATE IMAGE)!')
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 %----------------------------------------------------
 %   MAIN GUI CLOSE REQUEST FUNCTION

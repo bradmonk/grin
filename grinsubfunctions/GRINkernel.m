@@ -113,25 +113,7 @@ if doMASKfig == 1
         view(-45,30); 
         xlabel('x-axis');ylabel('y-axis');zlabel('z-axis')
     %-------------------------------%
-    
-    
-    
-    
-%     % axis off; hold on;
-%     %----------------%
-%         subplot('Position',[.05 .55 .30 .40]); 
-%     ph5 = imagesc(Mask); 
-%         axis equal;
-%         %set(gca,'XTick',[],'YTick',[])
-%         subplot('Position',[.04 .08 .32 .42]); 
-%     ph6 = surf(X,Y,Z);
-%         axis equal; shading interp; view(90,90); 
-%         subplot('Position',[.45 .05 .50 .90]); 
-%     ph7 = surf(X,Y,Z);
-%         axis vis3d; shading interp;
-%         view(-45,30); 
-%         xlabel('x-axis');ylabel('y-axis');zlabel('z-axis')
-%     %-------------------------------%
+
 end
 %{
 MSK = {[2.5000]    [0]    [0]    [0.1800]    [11]    [0.1000]};
