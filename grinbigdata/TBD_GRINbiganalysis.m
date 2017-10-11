@@ -42,7 +42,8 @@ disp(' '); fprintf('   %s \r',  datapaths{:} ); disp(' ')
 clearvars -except datapaths datafiles
 
 
-%% IMPORT DATASETS
+
+%% IMPORT DATASETS AND NORMALIZE GREEN - RED CHANNEL STACKS
 
 load(datapaths{1})
 
@@ -54,7 +55,9 @@ for nn = 1:size(datapaths,1)
 
     load(datapaths{nn})
 
-    IMG{nn,1} = IMGS;
+    IM = IMGS - IMGR;
+
+    IMG{nn,1} = IM;
     INFO(nn,1) = GRINstruct;
     XLS(nn,1) = XLSdata;
 
@@ -118,6 +121,7 @@ for nn = 1:N
 
     subplot(5,ceil(N/5),nn);
     imagesc( mean(mean(IM,4),3) );
+    axis image
     title(INFO(nn).file(11:14),'Interpreter','none')
 
 end
@@ -168,7 +172,7 @@ if strcmp(datafiles{1}(6:9),'gc33')
 end
 
 
-return
+
 %% CULL INCOMPATIBLE TRIALS FROM KNOWN SUBJECTS
 
 
