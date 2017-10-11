@@ -1,5 +1,5 @@
 function [] = GRINbigsaveGUI(varargin)
-%% GRINtoolboxGUI.m - GRIN LENS IMAGING TOOLBOX
+%% GRINbigsaveGUI.m - GRIN LENS IMAGING TOOLBOX
 %{
 % 
 % Syntax
@@ -46,11 +46,11 @@ function [] = GRINbigsaveGUI(varargin)
 %}
 %----------------------------------------------------
 clc; close all; clear all;
-% [str,maxsize] = computer;
-% if strcmp(str,'MACI64')
-%     disp(' '); disp('Purging RAM'); 
-%     system('sudo purge'); 
-% end
+[str,maxsize] = computer;
+if strcmp(str,'MACI64')
+    disp(' '); disp('Purging RAM'); 
+    system('sudo purge'); 
+end
 
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
@@ -452,28 +452,6 @@ getROIstatsH = uicontrol('Parent', graphspanelH, 'Units', 'normalized', ...
 
 
 
-% %----------------------------------------------------
-% %    CUSTOM FUNCTIONS PANEL
-% %----------------------------------------------------
-% customfunpanelH = uipanel('Title','Custom Code & Data Exploration','FontSize',10,...
-%     'BackgroundColor',[.95 .95 .95],...
-%     'Position', [0.80 0.49 0.18 0.26]); % 'Visible', 'Off',
-              
-% runCustomAH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
-%     'Position', [0.03 0.73 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function A',...
-%     'Callback', @runCustomA);
-
-% runCustomBH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
-%     'Position', [0.03 0.50 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function B',...
-%     'Callback', @runCustomB);
-
-% runCustomCH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
-%     'Position', [0.03 0.26 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function C',...
-%     'Callback', @runCustomC);
-
-% runCustomDH = uicontrol('Parent', customfunpanelH, 'Units', 'normalized', ...
-%     'Position', [0.03 0.03 0.95 0.20], 'FontSize', 13, 'String', 'Custom Function D',...
-%     'Callback', @redChannelSubtraction);
 
 
 %----------------------------------------------------
@@ -628,30 +606,25 @@ loadmatdataH = uicontrol('Parent', exportpanelH, 'Units', 'normalized', ...
     'Callback', @loadmatdata);
 
 
-
-% enableButtons
-
-
 pause(.1)
-
 grinlenstoolbox()
+
+
+
+
+
+
+%########################################################################
 
 bigimportstack(datapaths)
 
-
-% memocon('Ready!')
-
+%########################################################################
 
 
-% -----------------------------------------------------------------------------
+
+% ------------------------------------------------------------------------
 %%                     GUI TOOLBOX FUNCTIONS
-% -----------------------------------------------------------------------------
-
-
-
-
-
-% ----------------- IMAGE STACK DATASET IMPORT -------------------------
+% ------------------------------------------------------------------------
 
 
 
@@ -1004,20 +977,20 @@ end
 %        IMPORT IMAGE STACK MAIN FUNCTION
 %----------------------------------------------------
 function bigimportstack(datapaths)
-% diary on
 memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
 
-for ii = 1:size(datapaths,1)
-memocon('PROCESSING IMAGE STACK:')
-memocon(datapaths{ii})
-
-% IMG = [];
-% IMG = [];
-
-  %--- IMPORT TIF IMAGE STACK
 
 
-        %memocon('image stack path was set manually')
+    %-----------------------
+    % START MAIN IMPORT LOOP
+    %-----------------------
+    for ii = 1:size(datapaths,1)
+    memocon('PROCESSING IMAGE STACK:')
+    memocon(datapaths{ii})
+
+
+        %-------------  GET PATH TO FIRST DATASET   --------------
+        % memocon('image stack path was set manually')
 
         [imgpathname, imgfilename, imgext] = fileparts(datapaths{ii});
         imgpathname = [imgpathname, filesep];
@@ -1026,331 +999,337 @@ memocon(datapaths{ii})
 
 
 
+        %-------------   IMPORT LICKING DATA   --------------
         [IMGfpPath,IMGfpFile,IMGfpExt] = fileparts(imgfullpath);
         lickpathname = dir([imgpathname, IMGfpFile(1:14) '*.mat*']);
         lickfilename = [lickpathname.folder filesep lickpathname.name];
 
-        lickfullpath = matfile(lickfilename);
-        LICK = lickfullpath.lick_data;
 
-
-
-  %--- IMPORT MAIN XLS DATA OF EXPERIMENT PARAMETERS    
-    % tv1=[];tv2=[];tv3=[];tv4=[];tv5=[];
-     
-    
-    
-    [IMGfpPath,IMGfpFile,IMGfpExt] = fileparts(imgfullpath);
-
-    if numel(IMGfpFile)<14
-        xlsFiles = dir([imgpathname, IMGfpFile(1:11) '*.xls*']);
-    else
-        xlsFiles = dir([imgpathname, IMGfpFile(1:14) '*.xls*']);
-    end
-
-    for nn = 1:size(xlsFiles,1)
-    if  strcmp(xlsFiles(nn).name(end-4),'0') |...
-        strcmp(xlsFiles(nn).name(end-4),'1') |...
-        strcmp(xlsFiles(nn).name(end-4),'2') |...
-        strcmp(xlsFiles(nn).name(end-4),'3') |...
-        strcmp(xlsFiles(nn).name(end-4),'4') |...
-        strcmp(xlsFiles(nn).name(end-4),'5') |...
-        strcmp(xlsFiles(nn).name(end-4),'6') |...
-        strcmp(xlsFiles(nn).name(end-4),'7') |...
-        strcmp(xlsFiles(nn).name(end-4),'8') |...
-        strcmp(xlsFiles(nn).name(end-4),'9')
-
-        xlsFiles = xlsFiles(nn);
-        break
-    end
-    end
-
-
-    xlsfilename = xlsFiles.name;
-    xlspathname = imgpathname;
-    xlsfullpath = [xlspathname xlsfilename];
-
-
-    memocon(sprintf('GRIN DATASET: % s ', imgfilename));
-    %fprintf('\n\n GRIN DATASET: % s \n\n', imgfilename);
-    pause(.1)
-
-
-
-
-
-    % ------------- IMG STACK IMPORT CODE -----------
-    memocon(sprintf('Importing tif stack from: % s', [imgpathname , imgfilename]));
-    fprintf('\n Importing tif stack from...\n % s \n', [imgpathname , imgfilename]);
-
-    FileTif=[imgpathname , imgfilename];
-    InfoImage=imfinfo(FileTif);
-    mImage=InfoImage(1).Width;
-    nImage=InfoImage(1).Height;
-    NumberImages=length(InfoImage);
-    
-    if NumberImages < 2
-
-        IMG = imread(FileTif);
-
-        IMG = double(IMG);
-
-    else
-    
-        IMG = zeros(nImage,mImage,NumberImages,'double');
-
-        TifLink = Tiff(FileTif, 'r');
-        for i=1:NumberImages
-           TifLink.setDirectory(i);
-           IMG(:,:,i)=TifLink.read();
+        if numel(lickfilename) > 2
+            lickfullpath = matfile(lickfilename);
+            LICK = lickfullpath.lick_data;
         end
-        TifLink.close();
-
-        clear InfoImage
-    
-    end
-    
-    memocon('Image stack sucessfully imported!') 
-    
-    axes(haxGRIN)
-    colormap(haxGRIN,parula)
-    phGRIN = imagesc(mean(IMG,3), 'Parent', haxGRIN);
-              pause(.3)
-    
-    IMGraw = IMG(:,:,1);
-
-    
-    if size(IMG,1) < 100
-        set(cropimgnumH, 'String', num2str(2));
-        set(haxGRIN, 'XLim', [1 size(IMG,2)+40], 'YLim', [1 size(IMG,1)+40]);
-    elseif (size(IMG,1) < 140) && (size(IMG,1) >= 100)
-        set(cropimgnumH, 'String', num2str(4));
-        set(haxGRIN, 'XLim', [1 size(IMG,2)+30], 'YLim', [1 size(IMG,1)+30]);
-    elseif size(IMG,1) < 180 && (size(IMG,1) >= 140)
-        set(cropimgnumH, 'String', num2str(8));
-        set(haxGRIN, 'XLim', [1 size(IMG,2)+20], 'YLim', [1 size(IMG,1)+20]);
-    elseif size(IMG,1) < 220 && (size(IMG,1) >= 180)
-        set(cropimgnumH, 'String', num2str(12));
-        set(haxGRIN, 'XLim', [1 size(IMG,2)+10], 'YLim', [1 size(IMG,1)+10]);
-    else
-        %set(cropimgnumH, 'String', num2str(18));
-        set(cropimgnumH, 'String', num2str(28));
-        set(haxGRIN, 'XLim', [1 size(IMG,2)], 'YLim', [1 size(IMG,1)]);
-    end
-    
 
 
 
 
+        %------  DETERMINE PATH TO EXPERIMENT PARAMETERS XLS FILE  -------
+        % tv1=[];tv2=[];tv3=[];tv4=[];tv5=[];
+        [IMGfpPath,IMGfpFile,IMGfpExt] = fileparts(imgfullpath);
 
-
-
-    % ------------- RED STACK IMPORT CODE -----------
-    rimgfilename = [imgfullpath(1:end-5) 'r.tif'];
-    memocon(sprintf('Importing tif stack from: % s', rimgfilename));
-
-    FileTif=rimgfilename;
-    InfoImage=imfinfo(FileTif);
-    mImage=InfoImage(1).Width;
-    nImage=InfoImage(1).Height;
-    NumberImages=length(InfoImage);
-    
-    if NumberImages < 2
-
-        IMGr = imread(FileTif);
-
-        IMGr = double(IMGr);
-
-    else
-    
-        IMGr = zeros(nImage,mImage,NumberImages,'double');
-
-        TifLink = Tiff(FileTif, 'r');
-        for i=1:NumberImages
-           TifLink.setDirectory(i);
-           IMGr(:,:,i)=TifLink.read();
-        end
-        TifLink.close();
-
-        clear InfoImage
-    
-    end
-
-
-
-
-
-
-
-
-
-
-    
-    % ------------- XLS IMPORT CODE -----------
-    memocon(sprintf('Importing xls info from: % s', [xlspathname , xlsfilename]));
-    fprintf('\n Importing xls info from...\n % s \n', [xlspathname , xlsfilename]);
-
-    [xlsN,xlsT,xlsR] = xlsread([xlspathname , xlsfilename]);
-    
-    if size(xlsN,1) == size(xlsR,1)
-        xlsN(1,:) = [];
-    end
-
-    %disp(' '); 
-    %disp('Preview of raw xls import...')
-    %disp(xlsR(1:5,1:7))
-
-    frame_period    = xlsN(1,1);
-    framesUncomp    = xlsN(1,2);
-    CS_type         = xlsT(2:end,3);
-    US_type         = xlsT(2:end,4);
-    delaytoCS       = xlsN(:,5);
-    CS_length       = xlsN(1,6);
-    compressFrms    = xlsN(1,7);
-
-    total_trials    = size(xlsN,1);                     % total number of trials
-    framesPerTrial  = framesUncomp / compressFrms;      % frames per trial
-    secPerFrame     = frame_period * compressFrms;      % seconds per frame
-    framesPerSec    = 1 / secPerFrame;                  % frames per second
-    secondsPerTrial = framesPerTrial * secPerFrame;     % seconds per trial
-    total_frames    = total_trials * framesPerTrial;    % total collected frames
-    CS_lengthFrames = round(CS_length .* framesPerSec); % CS length in frames
-
-    
-    
-    %fprintf('\n\n In this dataset there are...')
-    %fprintf('\n    total trials: %10.1f  ', total_trials)
-    %fprintf('\n    frames per trial: %7.1f  ', framesPerTrial)
-    %fprintf('\n    seconds per frame: %8.5f  ', secPerFrame)
-    %fprintf('\n    frames per second: %8.5f  ', framesPerSec)
-    %fprintf('\n    seconds per trial: %8.4f  \n\n', secondsPerTrial)  
-    
-    
-    % CREATE ID FOR EACH UNIQUE CS+US COMBO AND DETERMINE ROW 
-    [GRINstruct, GRINtable] = gettrialtypes(total_trials, CS_type, US_type, framesPerTrial);
-
-    GRINstruct.file  = imgfilename;
-    GRINstruct.path  = [imgpathname imgfilename];
-
-    %disp('GRINstruct contains the following structural arrays:')
-    %disp('{  Example usage: GRINstruct.tf(:,1)  }')
-    %disp(GRINstruct)
-
-    %disp('GRINtable includes the following columns:')
-    %disp(GRINtable(1:10,:))
-
-    CSonsetDelay = min(delaytoCS);
-    set(alignCSFramesnumH, 'String', num2str(CSonsetDelay));
-    baselineTime = CSonsetDelay;
-    set(dFoverFnumH, 'String', num2str(baselineTime));
-        
-     CSUSvals = unique(GRINstruct.csus);
-     % set(CSUSpopupH, 'String', CSUSvals);
-     
-     CSonsetFrame = round(CSonsetDelay .* framesPerSec);
-     CSoffsetFrame = round((CSonsetDelay+CS_length) .* framesPerSec);
-     
-    XLSdata.frame_period    = frame_period;
-    XLSdata.framesUncomp    = framesUncomp;
-    XLSdata.CS_type         = CS_type;
-    XLSdata.US_type         = US_type;
-    XLSdata.delaytoCS       = delaytoCS;
-    XLSdata.CS_length       = CS_length;
-    XLSdata.compressFrms    = compressFrms;
-    XLSdata.total_trials    = total_trials;
-    XLSdata.framesPerTrial  = framesPerTrial;
-    XLSdata.secPerFrame     = secPerFrame;
-    XLSdata.framesPerSec    = framesPerSec;
-    XLSdata.secondsPerTrial = secondsPerTrial;
-    XLSdata.total_frames    = total_frames;
-    XLSdata.CS_lengthFrames = CS_lengthFrames;
-    XLSdata.CSonsetDelay    = CSonsetDelay;
-    XLSdata.CSonsetFrame    = CSonsetFrame;
-    XLSdata.CSoffsetFrame   = CSoffsetFrame;
-    XLSdata.baselineTime    = baselineTime;
-    XLSdata.CSUSvals        = CSUSvals;
-    XLSdata.blockSize       = blockSize;
-    XLSdata.cropAmount      = cropAmount;
-    XLSdata.sizeIMG         = size(IMG);
-    
-    
-    % GET TREATMENT GROUP STRINGS
-    fid=[];
-    for nn = 1:size(GRINstruct.tf,2)
-        fid(nn) = find(GRINstruct.id==nn,1); 
-    end
-    GRINstruct.TreatmentGroups = GRINstruct.csus(fid);
-
-    if XLSdata.total_frames == size(IMG,3)
-        memocon('GOOD: XLSdata.total_frames == size(IMG,3)')
-    else
-        memocon('WARNING: XLSdata.total_frames ~= size(IMG,3)')
-        warning('WARNING: XLSdata.total_frames ~= size(IMG,3)')
-        fprintf('\n%s    Excel Frames: % .0f, Stack Size: % .0f\n',...
-        GRINstruct.file,XLSdata.total_frames,size(IMG,3))
-        continue
-    end
-    
-    if numel(xlsT{2,8}) > 5
-        memocon(sprintf('XLSdata reports 2 channels: %s',xlsT{2,8}),'WARNING',4)
-        
-        Isz = size(reshape(IMG,size(IMG,1),size(IMG,2),[],XLSdata.total_trials));
-        
-        if Isz(3) == XLSdata.framesPerTrial && Isz(4) == XLSdata.total_trials
-            memocon('When IMG stack is reshaped it matches XLS data')
-            memocon('IMG matches XLS for frames per trial & total trials')
-            memocon(sprintf('Frames per trial: %s',num2str(Isz(3))))
-            memocon(sprintf('Total trials: %s',num2str(Isz(4))))
+        if numel(IMGfpFile)<14
+            xlsFiles = dir([imgpathname, IMGfpFile(1:11) '*.xls*']);
         else
-            memocon('When IMG stack is reshaped it DOES NOT matches XLS data')
-            memocon('IMG ~= XLS for frames per trial & total trials')
-            memocon('RESETTING TOOLBOX IN 5 SECONDS','ERROR',6)
-            resetws
+            xlsFiles = dir([imgpathname, IMGfpFile(1:14) '*.xls*']);
         end
-        
-    end
-    
-    memocon('XLS experiment parameters successfully imported!')
-    
 
-     % VISUALIZE AND ANNOTATE
-     memocon(sprintf('Imported image stack size: % s ', num2str(size(IMG))));
-     
-  IMG = IMG(:,:,1:total_frames);
+        for nn = 1:size(xlsFiles,1)
+        if  strcmp(xlsFiles(nn).name(end-4),'0') |...
+            strcmp(xlsFiles(nn).name(end-4),'1') |...
+            strcmp(xlsFiles(nn).name(end-4),'2') |...
+            strcmp(xlsFiles(nn).name(end-4),'3') |...
+            strcmp(xlsFiles(nn).name(end-4),'4') |...
+            strcmp(xlsFiles(nn).name(end-4),'5') |...
+            strcmp(xlsFiles(nn).name(end-4),'6') |...
+            strcmp(xlsFiles(nn).name(end-4),'7') |...
+            strcmp(xlsFiles(nn).name(end-4),'8') |...
+            strcmp(xlsFiles(nn).name(end-4),'9')
 
-    memocon(sprintf('Size after xls-informed adjustment: % s ', num2str(size(IMG))));
-
-    update_IMGfactors()
-    
-    memocon('Image stack and xls data import completed!')
-
-
-
-
-% runallIP
-BigDataFun
+            xlsFiles = xlsFiles(nn);
+            break
+        end
+        end
 
 
+        xlsfilename = xlsFiles.name;
+        xlspathname = imgpathname;
+        xlsfullpath = [xlspathname xlsfilename];
+
+
+        memocon(sprintf('GRIN DATASET: % s ', imgfilename));
+        pause(.1)
+
+
+
+
+
+        %------------  IMPORT GREEN CHANNEL TIF IMG STACK   ------------
+        memocon(sprintf('Importing tif stack from: % s', [imgpathname , imgfilename]));
+        fprintf('\n Importing tif stack from...\n % s \n', [imgpathname , imgfilename]);
+
+        FileTif=[imgpathname , imgfilename];
+        InfoImage=imfinfo(FileTif);
+        mImage=InfoImage(1).Width;
+        nImage=InfoImage(1).Height;
+        NumberImages=length(InfoImage);
+
+        if NumberImages < 2
+
+            IMG = imread(FileTif);
+
+            IMG = double(IMG);
+
+        else
+
+            IMG = zeros(nImage,mImage,NumberImages,'double');
+
+            TifLink = Tiff(FileTif, 'r');
+            for i=1:NumberImages
+               TifLink.setDirectory(i);
+               IMG(:,:,i)=TifLink.read();
+            end
+            TifLink.close();
+
+            clear InfoImage
+
+        end
+
+        memocon('Image stack sucessfully imported!') 
+
+        %---------  RESET AXES COLOR RANGE  -----------
+        IMGi = mean(IMG,3);   
+        axes(haxGRIN); colormap(haxGRIN,parula);
+        phGRIN = imagesc(IMGi,'Parent',haxGRIN,'CDataMapping','scaled');
+        axis tight
+        Imax = max(max(max(IMGi)));
+        Imin = min(min(min(IMGi)));
+        cmax = Imax - (Imax-Imin)/12;
+        cmin = Imin + (Imax-Imin)/12;
+        if cmax > cmin; haxGRIN.CLim=[cmin cmax]; end
+        pause(.3)
+
+        IMGraw = IMG(:,:,1);
+
+
+        if size(IMG,1) < 100
+            set(cropimgnumH, 'String', num2str(2));
+            set(haxGRIN, 'XLim', [1 size(IMG,2)+40], 'YLim', [1 size(IMG,1)+40]);
+        elseif (size(IMG,1) < 140) && (size(IMG,1) >= 100)
+            set(cropimgnumH, 'String', num2str(4));
+            set(haxGRIN, 'XLim', [1 size(IMG,2)+30], 'YLim', [1 size(IMG,1)+30]);
+        elseif size(IMG,1) < 180 && (size(IMG,1) >= 140)
+            set(cropimgnumH, 'String', num2str(8));
+            set(haxGRIN, 'XLim', [1 size(IMG,2)+20], 'YLim', [1 size(IMG,1)+20]);
+        elseif size(IMG,1) < 220 && (size(IMG,1) >= 180)
+            set(cropimgnumH, 'String', num2str(12));
+            set(haxGRIN, 'XLim', [1 size(IMG,2)+10], 'YLim', [1 size(IMG,1)+10]);
+        else
+            %set(cropimgnumH, 'String', num2str(18));
+            set(cropimgnumH, 'String', num2str(28));
+            set(haxGRIN, 'XLim', [1 size(IMG,2)], 'YLim', [1 size(IMG,1)]);
+        end
+
+
+
+
+
+
+
+
+        %------------  IMPORT RED CHANNEL TIF IMG STACK   ------------
+        rimgfilename = [imgfullpath(1:end-5) 'r.tif'];
+        memocon(sprintf('Importing tif stack from: % s', rimgfilename));
+
+        FileTif=rimgfilename;
+        InfoImage=imfinfo(FileTif);
+        mImage=InfoImage(1).Width;
+        nImage=InfoImage(1).Height;
+        NumberImages=length(InfoImage);
+
+        if NumberImages < 2
+
+            IMGr = imread(FileTif);
+
+            IMGr = double(IMGr);
+
+        else
+
+            IMGr = zeros(nImage,mImage,NumberImages,'double');
+
+            TifLink = Tiff(FileTif, 'r');
+            for i=1:NumberImages
+               TifLink.setDirectory(i);
+               IMGr(:,:,i)=TifLink.read();
+            end
+            TifLink.close();
+
+            clear InfoImage
+
+        end
+
+
+
+
+        %----------  IMPORT EXPERIMENT PARAMETERS XLS FILE  -----------
+        memocon(sprintf('Importing xls info from: % s', [xlspathname , xlsfilename]));
+        fprintf('\n Importing xls info from...\n % s \n', [xlspathname , xlsfilename]);
+
+        [xlsN,xlsT,xlsR] = xlsread([xlspathname , xlsfilename]);
+
+        if size(xlsN,1) == size(xlsR,1)
+            xlsN(1,:) = [];
+        end
+
+        frame_period    = xlsN(1,1);
+        framesUncomp    = xlsN(1,2);
+        CS_type         = xlsT(2:end,3);
+        US_type         = xlsT(2:end,4);
+        delaytoCS       = xlsN(:,5);
+        CS_length       = xlsN(1,6);
+        compressFrms    = xlsN(1,7);
+
+        total_trials    = size(xlsN,1);                     % total number of trials
+        framesPerTrial  = framesUncomp / compressFrms;      % frames per trial
+        secPerFrame     = frame_period * compressFrms;      % seconds per frame
+        framesPerSec    = 1 / secPerFrame;                  % frames per second
+        secondsPerTrial = framesPerTrial * secPerFrame;     % seconds per trial
+        total_frames    = total_trials * framesPerTrial;    % total collected frames
+        CS_lengthFrames = round(CS_length .* framesPerSec); % CS length in frames
+
+
+
+        %fprintf('\n\n In this dataset there are...')
+        %fprintf('\n    total trials: %10.1f  ', total_trials)
+        %fprintf('\n    frames per trial: %7.1f  ', framesPerTrial)
+        %fprintf('\n    seconds per frame: %8.5f  ', secPerFrame)
+        %fprintf('\n    frames per second: %8.5f  ', framesPerSec)
+        %fprintf('\n    seconds per trial: %8.4f  \n\n', secondsPerTrial)  
+
+
+        % CREATE ID FOR EACH UNIQUE CS+US COMBO AND DETERMINE ROW 
+        [GRINstruct, GRINtable] = gettrialtypes(total_trials, CS_type, US_type, framesPerTrial);
+
+        GRINstruct.file  = imgfilename;
+        GRINstruct.path  = [imgpathname imgfilename];
+
+        CSonsetDelay = min(delaytoCS);
+        set(alignCSFramesnumH, 'String', num2str(CSonsetDelay));
+        baselineTime = CSonsetDelay;
+        set(dFoverFnumH, 'String', num2str(baselineTime));
+
+        CSUSvals = unique(GRINstruct.csus);
+
+        CSonsetFrame = round(CSonsetDelay .* framesPerSec);
+        CSoffsetFrame = round((CSonsetDelay+CS_length) .* framesPerSec);
+
+        XLSdata.frame_period    = frame_period;
+        XLSdata.framesUncomp    = framesUncomp;
+        XLSdata.CS_type         = CS_type;
+        XLSdata.US_type         = US_type;
+        XLSdata.delaytoCS       = delaytoCS;
+        XLSdata.CS_length       = CS_length;
+        XLSdata.compressFrms    = compressFrms;
+        XLSdata.total_trials    = total_trials;
+        XLSdata.framesPerTrial  = framesPerTrial;
+        XLSdata.secPerFrame     = secPerFrame;
+        XLSdata.framesPerSec    = framesPerSec;
+        XLSdata.secondsPerTrial = secondsPerTrial;
+        XLSdata.total_frames    = total_frames;
+        XLSdata.CS_lengthFrames = CS_lengthFrames;
+        XLSdata.CSonsetDelay    = CSonsetDelay;
+        XLSdata.CSonsetFrame    = CSonsetFrame;
+        XLSdata.CSoffsetFrame   = CSoffsetFrame;
+        XLSdata.baselineTime    = baselineTime;
+        XLSdata.CSUSvals        = CSUSvals;
+        XLSdata.blockSize       = blockSize;
+        XLSdata.cropAmount      = cropAmount;
+        XLSdata.sizeIMG         = size(IMG);
+
+
+        % GET TREATMENT GROUP STRINGS
+        fid=[];
+        for nn = 1:size(GRINstruct.tf,2)
+            fid(nn) = find(GRINstruct.id==nn,1); 
+        end
+        GRINstruct.TreatmentGroups = GRINstruct.csus(fid);
+
+        if XLSdata.total_frames == size(IMG,3)
+            memocon('GOOD: XLSdata.total_frames == size(IMG,3)')
+        else
+            memocon('WARNING: XLSdata.total_frames ~= size(IMG,3)')
+            warning('WARNING: XLSdata.total_frames ~= size(IMG,3)')
+            fprintf('\n%s    Excel Frames: % .0f, Stack Size: % .0f\n',...
+            GRINstruct.file,XLSdata.total_frames,size(IMG,3))
+            continue
+        end
+
+        if numel(xlsT{2,8}) > 5
+            memocon(sprintf('XLSdata reports 2 channels: %s',xlsT{2,8}),'WARNING',4)
+
+            Isz = size(reshape(IMG,size(IMG,1),size(IMG,2),[],XLSdata.total_trials));
+
+            if Isz(3) == XLSdata.framesPerTrial && Isz(4) == XLSdata.total_trials
+                memocon('When IMG stack is reshaped it matches XLS data')
+                memocon('IMG matches XLS for frames per trial & total trials')
+                memocon(sprintf('Frames per trial: %s',num2str(Isz(3))))
+                memocon(sprintf('Total trials: %s',num2str(Isz(4))))
+            else
+                memocon('When IMG stack is reshaped it DOES NOT matches XLS data')
+                memocon('IMG ~= XLS for frames per trial & total trials')
+                memocon('RESETTING TOOLBOX IN 5 SECONDS','ERROR',6)
+                resetws
+            end
+
+        end
+
+        memocon('XLS experiment parameters successfully imported!')
+
+
+        % VISUALIZE AND ANNOTATE
+        memocon(sprintf('Imported image stack size: % s ', num2str(size(IMG))));
+
+        IMG = IMG(:,:,1:total_frames);
+
+        memocon(sprintf('Size after xls-informed adjustment: % s ', num2str(size(IMG))));
+
+        update_IMGfactors()
+
+        memocon('Image stack and xls data import completed!')
+
+
+
+        %---------  RUN IMAGE STACKS THROUGH PROCESSING STEPS  -----------
+        BigDataFun()
+
+    %if ii==2; keyboard; end
+    %--------------------
+    end % END MAIN LOOP
+    %-------------------
+
+% enableButtons
+% redChImportH.Enable = 'on';
 end
 
-enableButtons
-redChImportH.Enable = 'on';
-diary off
-end
+
 
 
 
 
 %----------------------------------------------------
-%        BIG DATA FUNCTION
+%        BIG DATA FUN
 %----------------------------------------------------
 function BigDataFun(hObject, eventdata)
 
 
+
+    %---------  RESET AXES COLOR RANGE  -----------
+    IMGi = mean(IMG,3);   
+    phGRIN = imagesc(IMGi,'Parent',haxGRIN,'CDataMapping','scaled');
+    axis tight
+    Imax = max(max(max(IMGi)));
+    Imin = min(min(min(IMGi)));
+    cmax = Imax - (Imax-Imin)/12;
+    cmin = Imin + (Imax-Imin)/12;
+    if cmax > cmin; haxGRIN.CLim=[cmin cmax]; end
+
+
+
+
+    %---------  PROCESS GREEN CHANNEL IMG STACK  -----------
+    memocon('Processing GREEN CHANNEL IMG STACK')
     smoothimg
     cropimg
-    %imgblocks
-    %------------------------------------
+    %-------------------------
     blockSize = 5;
     IMG = imresize(IMG, 1/blockSize , 'bilinear');
     previewStack
@@ -1362,19 +1341,22 @@ function BigDataFun(hObject, eventdata)
     XLSdata.blockSize = blockSize;
     XLSdata.sizeIMG = size(IMG);        
     IMhist.tiled = 1;
-    %------------------------------------
+    %-------------------------
     reshapeData
     alignCSframes
     %dFoverF
     timepointMeans
-    IMGS = uint16(IMG);
+    IMGC = uint16(IMG);
 
 
+
+    %---------  PROCESS RED CHANNEL IMG STACK  -----------
+    memocon('Processing RED CHANNEL IMG STACK')
     IMG = IMGr;
     smoothimg
     cropimg
     %imgblocks
-    %------------------------------------
+    %-------------------------
     blockSize = 5;
     IMG = imresize(IMG, 1/blockSize , 'bilinear');
     previewStack
@@ -1386,326 +1368,33 @@ function BigDataFun(hObject, eventdata)
     XLSdata.blockSize = blockSize;
     XLSdata.sizeIMG = size(IMG);        
     IMhist.tiled = 1;
-    %------------------------------------
+    %-------------------------
     reshapeData
     alignCSframes
     %dFoverF
     timepointMeans
-    IMGR = uint16(IMG);
+    IMRC = uint16(IMG);
 
 
-    XLSdata.sizeIMGS = size(IMGS);
+
+    %---------  UPDATE PARAMETERS  -----------
+    XLSdata.sizeIMG   = size(IMGC);
+    XLSdata.sizeIMGC  = size(IMGC);
+    XLSdata.sizeIMRC  = size(IMRC);
+    XLSdata.blockSize = blockSize;
 
     
-    cd(PATHgrindata);
-    save(['GRIM_' GRINstruct.file(1:end-4)],'IMGS','IMGR',...
-          'GRINstruct','XLSdata','blockSize','LICK')
+    %---------  SAVE PROCESSED DATA TO MAT FILE  -----------
+    memocon('SAVING DATA TO MAT FILE...')
+    cd(datafilepath);
+    save(['GRIM_' GRINstruct.file(1:end-4)],'IMGC','IMRC',...
+          'GRINstruct','XLSdata','LICK')
     cd(thisfilepath);
-
+    memocon('SAVING DATA TO MAT FILE... DONE')
 
 
 memocon('ALL PROCESSING COMPLETED!')
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-%----------------------------------------------------
-%        RUN PCA
-%----------------------------------------------------
-function runPCA(varargin)
-
-
-clear ts_trials tso_trials  all_trials var1 var2 var3
-ts_trials=IMG(1:blockSize:end,1:blockSize:end,:,(GRINstruct.id==1));% tone/sucrose trials for 10 x 10 tiling
-tso_trials=IMG(1:blockSize:end,1:blockSize:end,:,(GRINstruct.id==2));% tone/omission trials for 10 x 10 tiling
-
-size(ts_trials)    % 10x10x100x24  (tiles*tiles*frames*trials)
-size(tso_trials)   % 10x10x100x12  (tiles*tiles*frames*trials)
-
-
-ts_trials_l=[]; tso_trials_l=[];
-
-for n=1:10
-for m=1:10
-
-ts_trials_l=[ts_trials_l,squeeze(ts_trials(n,m,:,:))];
-tso_trials_l=[tso_trials_l,squeeze(tso_trials(n,m,:,:))];
-
-end
-end
-
-
-size(ts_trials_l)   % 100x2400  (frames * tile1_trials1:24+...tile100_trials_mn)
-size(tso_trials_l)  % 100x1200  (frames * tile1_trials1:24+...tile100_trials_mn)
-
-% I don't get this shape
-
-all_trials = ([ts_trials_l,tso_trials_l])';  %note the transponse
-
-
-[var1,var2,var3] = pca(all_trials);
-
-
-nTiles = 10;
-nTStrials = sum((GRINstruct.id==1));
-nTSOtrials = sum((GRINstruct.id==2));
-
-
-figure; 
-plot(var1(:,1:3));
-
-figure; 
-plot3(var2(1:2400,1),var2(1:2400,2),var2(1:2400,3),'.')
-hold on; 
-plot3(var2(2401:end,1),var2(2401:end,2),var2(2401:end,3),'.')
-grid on
-
-
-figure; 
-plot(var2(1:2400,1),var2(1:2400,2),'.b',var2(2401:end,1),var2(2401:end,2),'.r')
-
-
-t1=[];
-t2=[];
-t3=[];
-t4=[];
-
-keyboard
-
-
-t1 = var2(1:2400,1) > .4 & var2(1:2400,2) > .4;
-
-t2 = find(t1);
-
-mod(t2,24)
-
-
-
-
-
-end
-
-
-
-
-%----------------------------------------------------
-%        RUN PCA
-%----------------------------------------------------
-%{
-function runPCA(varargin)
-% disableButtons; pause(.02);
-
-
-t1=[];
-t2=[];
-t3=[];
-t4=[];
-
-% axh,pha,pixels,tiledatX,tiledatY
-
-INaxh      = varargin{3};
-INpha      = varargin{4};
-INpixels   = varargin{5};
-INtiledatX = varargin{6};
-INtiledatY = varargin{7};
-
-
-Colors = {varargin{1,4}{1}(1:end).Color};
-
-INpha{1}.Children
-
-
-CSids = unique(GRINstruct.csus);
-
-
-pxl = muIMGS(1:blockSize:end,1:blockSize:end,:,:);
-pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
-
-size(muIMGS)
-size(pxl)
-size(pixels)
-
-
-hb = round(blockSize / 2);
-PIM = IMG( hb:blockSize:end, hb:blockSize:end, : , : );
-
-% tiles = 3:8;
-% frames = GRINstruct.CSUSonoff(1)-10:GRINstruct.CSUSonoff(4)+20;
-
-tiles = 1:10;
-frames = 1:100;
-
-PIM = PIM(tiles,tiles,frames,:);
-
-
-disp(CSids)
-CSp = squeeze(PIM(:,:,:,GRINstruct.tf(:,1)));
-CSm = squeeze(PIM(:,:,:,GRINstruct.tf(:,2)));
-
-size(PIM)
-size(CSp)
-size(CSm)
-
-
-t1 = squeeze(reshape(PIM,numel(PIM(:,:,1)),[],size(PIM,3),size(PIM,4)));
-for nn = 1:size(GRINstruct.tf,2)
-    DAT{nn} = squeeze(t1(:,:,GRINstruct.tf(:,nn)));
-end
-
-size(t1)
-
-CSplus  = DAT{1};
-CSminus = DAT{2};
-
-
-%%
-fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
-
-nPlots = numel(tiles);
-
-aXlocs =  (0:nPlots) .* (1/nPlots);
-aXlocs(end) = [];
-aYlocs =  (0:nPlots) .* (1/nPlots);
-aYlocs(end) = [];
-aXlocs = aXlocs+.02;
-aYlocs = aYlocs+.025;
-% aXlocs = aXlocs+.05;
-% aYlocs = aYlocs+.045;
-[aX,aY] = meshgrid(aXlocs,aYlocs);
-
-aW = 1/(nPlots+1);
-aH = 1/(nPlots+1);
-
-NormType = 'dF';
-if strcmp(NormType,'dF')
-    YL = [-.1 .25];
-elseif strcmp(NormType,'Zscore')
-    YL = [-2 4];
-elseif strcmp(NormType,'Dprime')
-    YL = [-.15 .15];
-else
-    YL = 'auto';
-end
-XL = [0 size(DAT{1},2)];
-
-for ii = 1:size(DAT{1},1)
-
-    axh{ii} = axes('Position',[aX(ii) aY(ii) aW aH],...
-    'Color','none','Tag',num2str(ii),'YLim',YL,...
-    'YLimMode','manual','XTick',[]); 
-    hold on;
-    line([10 10],YL,'Color',[.8 .8 .8])
-    line([20 20],YL,'Color',[.8 .8 .8])
-    ylim(YL); xlim(XL); %cYlim = get(gca,'YLim');
-    axis off
-
-
-    for nn = 1:size(DAT,2)
-        pha{ii} = plot( 1:size(DAT{nn},2) , squeeze(DAT{nn}(ii,:,:)) ,...
-                    'Color',Colors{nn} + ((1-Colors{nn})./1.2),'LineWidth',1);
-        hold on
-    end
-
-    ChBx{ii} = uicontrol('Parent', fh10,'Style','checkbox','Units','normalized',...
-    'Position', [aX(ii) aY(ii) .02 .02] ,'String','', 'Value',0);
-
-end
-
-
-
-PCDAT = [];
-for ii = 1:size(DAT{1},1)
-
-    
-
-    for nn = 1:size(DAT,2)
-
-        %PCDAT(:,ii,nn) = smooth( mean(squeeze(DAT{nn}(ii,:,:)),2),  7, 'loess');
-        PCDAT(:,ii,nn) = mean(squeeze(DAT{nn}(ii,:,:)),2);
-
-        plot(axh{ii}, 1:size(DAT{nn},2) , PCDAT(:,ii,nn) ,...
-                    'Color',Colors{nn},'LineWidth',3);
-        hold on
-    end
-
-end
-
-
-%%
-% keyboard
-
-pause(.05)
-
-%%
-
-% ----- PCA ON CS+ & CS- TRIALS SEPERATELY ----
-
-
-% [CSPcoef , CSPscore , CSPvar] = pca(PCDAT(:,:,1)');
-
-figure('Units','normalized','OuterPosition',[.1 .1 .8 .8],'Color','w','MenuBar','none');
-
-sz = size(PCDAT,3);
-
-mm=1;
-for nn = 1:sz
-
-[coef , score , vari] = pca(PCDAT(:,:,nn)');
-
-axL{nn} = subplot(sz, 2, mm);   stem( coef(:,1:2) , 'MarkerFaceColor','auto');
-    xlabel('Frame'); 
-    ylabel([CSids{nn} ' PC1:2 Coef']);
-    mm=mm+1;
-
-axR{nn} = subplot(sz, 2, mm);   plot( score(:,1) , score(:,2) ,'.','MarkerSize',20); 
-    xlabel([CSids{nn} ' PC1 Scores']); 
-    ylabel([CSids{nn} ' PC2 Scores']);
-    %axis([-.6 .6 -.4 .4]);
-    mm=mm+1;
-
-end
-
-axLLim = zeros(size(axL,2),2);
-axRYLim = zeros(size(axR,2),2);
-axRXLim = zeros(size(axR,2),2);
-for nn = 1:size(axL,2)
-    axLLim(nn,:) = axL{nn}.YLim;
-    axRYLim(nn,:) = axR{nn}.YLim;
-    axRXLim(nn,:) = axR{nn}.XLim;
-end
-for nn = 1:size(axL,2)
-    axL{nn}.YLim = [min(axLLim(:,1)) max(axLLim(:,2))];
-    axR{nn}.YLim = [min(axRYLim(:,1)) max(axRYLim(:,2))];
-    axR{nn}.XLim = [min(axRXLim(:,1)) max(axRXLim(:,2))];
-end
-
-
-
-
-
-
-%%
-enableButtons        
-memocon('Run custom function completed!')
-end
-%}
-
-
-
-
-
-
-
 
 
 
@@ -1797,6 +1486,10 @@ memocon('Image smoothing completed!')
 end
 
 
+
+%------------------------
+% SMOOTHING MASK CREATOR
+%------------------------
 function Mask = GRINmask(GNpk,GNnum,GNsd,GNres)
 
 % (smoothHeight, smoothWidth, smoothSD, smoothRes, 1)
@@ -1825,6 +1518,120 @@ end
 %----------------------------------------------------
 %        CROP IMAGES
 %----------------------------------------------------
+function cropimg(hObject, eventdata)
+disableButtons; 
+cropimgH.FontWeight = 'bold';
+pause(.02);
+
+
+    %---------  RESET AXES COLOR RANGE  -----------
+    IMGi = mean(IMG,3);   
+    phGRIN = imagesc(IMGi,'Parent',haxGRIN,'CDataMapping','scaled');
+    axis tight
+    Imax = max(max(max(IMGi)));
+    Imin = min(min(min(IMGi)));
+    cmax = Imax - (Imax-Imin)/12;
+    cmin = Imin + (Imax-Imin)/12;
+    if cmax > cmin; haxGRIN.CLim=[cmin cmax]; end
+    pause(.07);
+
+
+    %---------  CREATE IMAGE CROPPING FIGURE  -----------
+    fh1=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],'Color','w','MenuBar','none');
+    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    phTRIM = imagesc(IMGi,'Parent',hax1,'CDataMapping','scaled');
+    axis tight
+    Imax = max(max(max(IMGi)));
+    Imin = min(min(min(IMGi)));
+    cmax = Imax - (Imax-Imin)/12;
+    cmin = Imin + (Imax-Imin)/12;
+    if cmax > cmin; hax1.CLim=[cmin cmax]; end
+    pause(.07);
+
+
+
+
+    % TRIM EDGES FROM IMAGE
+    memocon(' '); 
+    memocon('DRAG RECTANGLE TO DESIRED POSITION')
+    memocon('THEN DOUBLE CLICK INSIDE RECTANGLE TO CONTINUE')
+
+    %---------  CREATE ROI RECTANGLE ON CROPPING FIGURE  -----------
+    cropAmount = str2num(cropimgnumH.String);
+
+    [Iw,Ih,In] = size(IMG);
+
+    h = imrect(hax1, [cropAmount cropAmount Iw-cropAmount*2 Ih-cropAmount*2]);
+    setFixedAspectRatioMode(h,true)
+    setResizable(h,false)
+
+    position = wait(h);
+    disp('done')
+
+    position = round(position);
+    x = position(1);
+    y = position(2);
+    w = position(3);
+    h = position(4);
+
+    IMGt = IMG(x:(x+w-1) , y:(y+h-1) , :);
+
+
+
+
+    %---------  CLOSE CROPPING FIGURE  -----------
+    %close(fh1);
+    mainguih.HandleVisibility = 'off';
+    close all;
+    mainguih.HandleVisibility = 'on';
+
+
+
+    %---------  UPDATE MAIN IMG STACK TO CROPPED STACK  -----------
+    IMG = IMGt;
+
+
+
+    %---------  DISPLAY CROPPED IMAGE IN MAIN GUI WINDOW  -----------
+    IMGi = mean(IMG,3);
+    phGRIN = imagesc(IMGi,'Parent',haxGRIN,'CDataMapping','scaled');
+    pause(.1)
+
+
+
+    %---------  STORE REPRESENTATIVE IMAGE OF CROPPED STACK  -----------
+    reshapeData
+    for nn = 1:size(GRINstruct.tf,2)
+    IMGSraw(:,:,:,nn) = squeeze(mean(IMG(:,:,:,GRINstruct.tf(:,nn)),4));
+    end
+    IMG = IMGt;
+    XLSdata.sizeIMG = size(IMG);
+    % unshapeData
+    previewStack
+    axes(haxGRIN)
+    phGRIN = imagesc(mean(IMG,3) , 'Parent', haxGRIN);
+    update_IMGfactors()
+    XLSdata.cropAmount = cropAmount;
+    XLSdata.sizeIMG = size(IMG);
+    IMGraw = mean(IMG,3);
+
+
+
+IMhist.cropped = 1;
+cropimgH.FontWeight = 'normal';
+pause(.02);
+enableButtons        
+memocon('Crop Images completed!')
+end
+
+
+
+
+
+%----------------------------------------------------
+%        CROP IMAGES
+%----------------------------------------------------
+%{
 function cropimg(hObject, eventdata)
 disableButtons; 
 cropimgH.FontWeight = 'bold';
@@ -1891,13 +1698,13 @@ enableButtons
 memocon('Crop Images completed!')
 end
 
-
+%}
 
 
 
 
 %----------------------------------------------------
-%        CREATE IMAGE TILES BLOCKS
+%        CREATE IMAGE TILE BLOCKS
 %----------------------------------------------------
 function imgblocks(hObject, eventdata)
 disableButtons; 
