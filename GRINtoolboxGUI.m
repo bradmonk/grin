@@ -3160,11 +3160,12 @@ disableButtons; pause(.02);
         
         axes(haxGRIN)
         phGRIN = imagesc(IMGi(:,:,1),'Parent',haxGRIN,'CDataMapping','scaled');
-        cmax = max(max(max(IMGi)));
-        cmin = min(min(min(IMGi)));
-        cmax = cmax - abs(cmax/3);
-        cmin = cmin + abs(cmin/3);
+        [cmax, cmaxi] = max(IMGi(:));
+        [cmin, cmini] = min(IMGi(:));
+        cmax = cmax - abs(cmax/12);
+        cmin = cmin + abs(cmin/12);
         haxGRIN.CLim = [cmin cmax];
+
 
         for nn = 1:previewStacknum
 
