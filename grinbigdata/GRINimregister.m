@@ -62,20 +62,24 @@ end
 
 
 
+%% PREVIEW IMAGE STACK
 
+IM = DATA{1}.IMGC;
+IM = mean(IM,4);
 
-%% NORMALIZE GREEN - RED CHANNEL STACKS
+fh1=figure('Units','normalized','OuterPosition',[.1 .1 .4 .6],'Color','w','MenuBar','none');
+hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
 
+ph1 = imagesc(IM(:,:,1)); pause(1)
 
-for nn = 1:size(DATA,2)
-
-    IM = DATA{nn}.IMGC - DATA{nn}.IMRC;
-
-    DATA{nn}.IMG = IM;
+for nn = 1:size(IM,3)
+    fprintf('Stack: % .0f \n',nn)
+    ph1.CData = IM(:,:,nn);
+    pause(.04)
 end
 
-clearvars -except DATA
-
+close all
+clearvars -except datapaths datafiles DATA
 
 
 
@@ -83,11 +87,11 @@ clearvars -except DATA
 
 %% SAVE GREEN CHANNEL IMAGES INTO IM
 
-IM = zeros(size(DATA{1}.IMG,1),size(DATA{1}.IMG,2),size(DATA,2));
+IM = zeros(size(DATA{1}.IMGC,1),size(DATA{1}.IMGC,2),size(DATA,2));
 
 for mm = 1:size(DATA,2)
 
-    I = DATA{mm}.IMG;
+    I = DATA{mm}.IMGC;
     IM(:,:,mm) = mean(mean(I,4),3);
 
 end
@@ -213,11 +217,12 @@ clearvars -except datapaths datafiles DATA IM AlignVals
 
 %% USE ALIGNMENT VALUES FOR TRANSLATION
 
+n = round(numel(AlignVals.P1x) / 2);
 
-MASTER1x = AlignVals.P1x(1);
-MASTER1y = AlignVals.P1y(1);
-MASTER2x = AlignVals.P2x(1);
-MASTER2y = AlignVals.P2y(1);
+MASTER1x = AlignVals.P1x(n);
+MASTER1y = AlignVals.P1y(n);
+MASTER2x = AlignVals.P2x(n);
+MASTER2y = AlignVals.P2y(n);
 
 IMx = AlignVals.P1x;
 IMy = AlignVals.P1y;
@@ -230,63 +235,201 @@ tY = MASTER1y - IMy;
 
 
 
-IMGG={};
+IMGC={}; IMRC={};
 for mm = 1:size(DATA,2)
-    IMGG{mm} = DATA{mm}.IMGC;
+    IMGC{mm} = DATA{mm}.IMGC;
+    IMRC{mm} = DATA{mm}.IMRC;
 end
 
 
-IMGA={};
-for i = 1:size(IM,3)
+IMGA={}; IMRA={};
+for i = 1:size(IMGC,2)
 
-    I = IMGG{i};
+    G = IMGC{i};
+    R = IMRC{i};
 
-    IMGA{i} = imtranslate(I,[tX(i), tY(i)],'FillValues',mean(I(:)),'OutputView','same');
-
-end
-
-
-clearvars -except datapaths datafiles DATA IM AlignVals IMGG IMGA
-
-
-
-
-
-%% SAVE ALIGNED GREEN CHANNEL IMAGES INTO IMA
-
-IMA = zeros(size(IMGA{1},1),size(IMGA{1},2),size(IMGA,2));
-
-for mm = 1:size(IMA,3)
-
-    I = IMGA{mm};
-    IMA(:,:,mm) = mean(mean(I,4),3);
+    IMGA{i} = imtranslate(G,[tX(i), tY(i)],'FillValues',mean(G(:)),'OutputView','same');
+    IMRA{i} = imtranslate(R,[tX(i), tY(i)],'FillValues',mean(R(:)),'OutputView','same');
 
 end
 
 
-clearvars -except datapaths datafiles DATA IM AlignVals IMGG IMGA IMA
+clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA
 
 
 
 
 
-%% CROP TRANSLATED STACKS
 
-I = IMA(3:32,5:35,:);
+%% PREVIEW ALIGNMENT
+
+IG = zeros(size(IMGA{1},1) , size(IMGA{1},2) , size(IMGA,2));
+IR = zeros(size(IMRA{1},1) , size(IMRA{1},2) , size(IMRA,2));
+
+for nn = 1:size(IG,3)
+
+    IG(:,:,nn) = mean(mean(IMGA{nn},4),3);
+
+    IR(:,:,nn) = mean(mean(IMRA{nn},4),3);
+
+end
+
 
 close all
 fh1=figure('Units','normalized','OuterPosition',[.1 .1 .4 .6],'Color','w','MenuBar','none');
 hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
 
-ph1 = imagesc(I(:,:,1)); pause(1)
+ph1 = imagesc(IG(:,:,1)); pause(1)
+pause(1)
 
+for nn = 1:size(IG,3)
 
-for nn = 1:7
-
-    ph1.CData = I(:,:,nn);
-    pause(1)
+    ph1.CData = IG(:,:,nn);
+    pause(.8)
 
 end
+
+
+
+
+clearvars -except datapaths datafiles DATA AlignVals IMGA IMRA
+
+
+
+
+return
+%% CROP ALIGNMENT REGISTERED STACKS
+
+%!!!!  TBD  !!!!
+
+%---------  CREATE IMAGE CROPPING FIGURE  -----------
+    fh1=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],'Color','w','MenuBar','none');
+    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
+    phTRIM = imagesc(IMGi,'Parent',hax1,'CDataMapping','scaled');
+    axis tight
+    Imax = max(max(max(IMGi)));
+    Imin = min(min(min(IMGi)));
+    cmax = Imax - (Imax-Imin)/12;
+    cmin = Imin + (Imax-Imin)/12;
+    if cmax > cmin; hax1.CLim=[cmin cmax]; end
+    pause(.07);
+
+
+
+
+    % TRIM EDGES FROM IMAGE
+    memocon(' '); 
+    memocon('DRAG RECTANGLE TO DESIRED POSITION')
+    memocon('THEN DOUBLE CLICK INSIDE RECTANGLE TO CONTINUE')
+
+    %---------  CREATE ROI RECTANGLE ON CROPPING FIGURE  -----------
+    cropAmount = str2num(cropimgnumH.String);
+
+    [Iw,Ih,In] = size(IMG);
+
+    h = imrect(hax1, [cropAmount cropAmount Iw-cropAmount*2 Ih-cropAmount*2]);
+    setFixedAspectRatioMode(h,true)
+    setResizable(h,false)
+
+    CropPosition = wait(h);
+    disp('done')
+
+    CropPosition = round(CropPosition);
+    x = CropPosition(1);
+    y = CropPosition(2);
+    w = CropPosition(3);
+    h = CropPosition(4);
+
+    IMGt = IMG(x:(x+w-1) , y:(y+h-1) , :);
+
+
+
+
+
+
+%% COMPUTE DF/F FOR RED AND GREEN STACKS
+
+
+for nn = 1:size(DATA,2)
+    fprintf('Computing df/f for stack % .0f  of % .0f \n',nn,size(DATA,2))
+
+    IMGC = double(DATA{nn}.IMGC);
+
+    CSonsetFrame = DATA{nn}.XLSdata.CSonsetFrame;
+
+    baseIMG = mean(IMGC(:,:,1:CSonsetFrame,:),3);
+
+    im = repmat(baseIMG,1,1,size(IMGC,3),1);
+
+    IMGf = (IMGC - im) ./ im;
+    
+    IMGC = IMGf;
+
+
+
+
+    IMRC = double(DATA{nn}.IMRC);
+
+    CSonsetFrame = DATA{nn}.XLSdata.CSonsetFrame;
+
+    baseIMG = mean(IMRC(:,:,1:CSonsetFrame,:),3);
+
+    im = repmat(baseIMG,1,1,size(IMRC,3),1);
+
+    IMGf = (IMRC - im) ./ im;
+    
+    IMRC = IMGf;
+
+
+
+    DATA{nn}.IMGC = IMGC;
+    DATA{nn}.IMRC = IMRC;
+end
+
+clearvars -except datapaths datafiles DATA
+
+
+
+
+%% NORMALIZE GREEN - RED CHANNEL STACKS
+
+
+for nn = 1:size(DATA,2)
+
+    IM = DATA{nn}.IMGC - DATA{nn}.IMRC;
+
+    DATA{nn}.IMG = IM;
+end
+
+clearvars -except DATA
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 %% Write to TIFF file

@@ -120,7 +120,7 @@ global xlsN xlsT xlsR
 global lickN LICKraw
 global IMGraw IMGSraw IM
 global memes conboxH
-global NormType
+global NormType CropPosition
 
 global frame_period framesUncomp CS_type US_type delaytoCS CS_length compressFrms
 global total_trials framesPerTrial secPerFrame framesPerSec secondsPerTrial 
@@ -136,6 +136,7 @@ IMhist.rawIM      = [];
 IMhist.minIM      = [];
 IMhist.maxIM      = [];
 IMhist.aveIM      = [];
+CropPosition = [];
 
 IMGred = [];
 IMGr   = [];
@@ -1354,7 +1355,7 @@ function BigDataFun(hObject, eventdata)
     memocon('Processing RED CHANNEL IMG STACK')
     IMG = IMGr;
     smoothimg
-    cropimg
+    cropimgred
     %imgblocks
     %-------------------------
     blockSize = 5;
@@ -1516,7 +1517,7 @@ end
 
 
 %----------------------------------------------------
-%        CROP IMAGES
+%        CROP IMAGES GREEN CHANNEL
 %----------------------------------------------------
 function cropimg(hObject, eventdata)
 disableButtons; 
@@ -1565,14 +1566,14 @@ pause(.02);
     setFixedAspectRatioMode(h,true)
     setResizable(h,false)
 
-    position = wait(h);
+    CropPosition = wait(h);
     disp('done')
 
-    position = round(position);
-    x = position(1);
-    y = position(2);
-    w = position(3);
-    h = position(4);
+    CropPosition = round(CropPosition);
+    x = CropPosition(1);
+    y = CropPosition(2);
+    w = CropPosition(3);
+    h = CropPosition(4);
 
     IMGt = IMG(x:(x+w-1) , y:(y+h-1) , :);
 
@@ -1624,6 +1625,100 @@ enableButtons
 memocon('Crop Images completed!')
 end
 
+
+
+%----------------------------------------------------
+%        CROP IMAGES RED CHANNEL
+%----------------------------------------------------
+function cropimgred(hObject, eventdata)
+disableButtons; 
+cropimgH.FontWeight = 'bold';
+pause(.02);
+
+
+    %---------  RESET AXES COLOR RANGE  -----------
+    IMGi = mean(IMG,3);   
+    phGRIN = imagesc(IMGi,'Parent',haxGRIN,'CDataMapping','scaled');
+    axis tight
+    Imax = max(max(max(IMGi)));
+    Imin = min(min(min(IMGi)));
+    cmax = Imax - (Imax-Imin)/12;
+    cmin = Imin + (Imax-Imin)/12;
+    if cmax > cmin; haxGRIN.CLim=[cmin cmax]; end
+    pause(.07);
+
+
+
+
+    %---------  CREATE IMAGE CROPPING FIGURE  -----------
+%     fh1=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],'Color','w','MenuBar','none');
+%     hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
+%     phTRIM = imagesc(IMGi,'Parent',hax1,'CDataMapping','scaled');
+%     axis tight
+%     Imax = max(max(max(IMGi)));
+%     Imin = min(min(min(IMGi)));
+%     cmax = Imax - (Imax-Imin)/12;
+%     cmin = Imin + (Imax-Imin)/12;
+%     if cmax > cmin; hax1.CLim=[cmin cmax]; end
+%     pause(.07);
+
+    
+    %--------  APPLY GREEN CHANNEL CROPBOX TO RED CHANNEL STACK  --------
+    memocon(' '); memocon('CROPPING RED CHANNEL IMAGE STACK')
+    x = CropPosition(1);
+    y = CropPosition(2);
+    w = CropPosition(3);
+    h = CropPosition(4);
+
+    IMGt = IMG(x:(x+w-1) , y:(y+h-1) , :);
+
+
+
+
+    %---------  CLOSE CROPPING FIGURE  -----------
+    %close(fh1);
+    mainguih.HandleVisibility = 'off';
+    close all;
+    mainguih.HandleVisibility = 'on';
+
+
+
+    %---------  UPDATE MAIN IMG STACK TO CROPPED STACK  -----------
+    IMG = IMGt;
+
+
+
+    %---------  DISPLAY CROPPED IMAGE IN MAIN GUI WINDOW  -----------
+    IMGi = mean(IMG,3);
+    phGRIN = imagesc(IMGi,'Parent',haxGRIN,'CDataMapping','scaled');
+    pause(.1)
+
+
+
+    %---------  STORE REPRESENTATIVE IMAGE OF CROPPED STACK  -----------
+    reshapeData
+    for nn = 1:size(GRINstruct.tf,2)
+    IMGSraw(:,:,:,nn) = squeeze(mean(IMG(:,:,:,GRINstruct.tf(:,nn)),4));
+    end
+    IMG = IMGt;
+    XLSdata.sizeIMG = size(IMG);
+    % unshapeData
+    previewStack
+    axes(haxGRIN)
+    phGRIN = imagesc(mean(IMG,3) , 'Parent', haxGRIN);
+    update_IMGfactors()
+    XLSdata.cropAmount = cropAmount;
+    XLSdata.sizeIMG = size(IMG);
+    IMGraw = mean(IMG,3);
+
+
+
+IMhist.cropped = 1;
+cropimgH.FontWeight = 'normal';
+pause(.02);
+enableButtons        
+memocon('Crop Images completed!')
+end
 
 
 
