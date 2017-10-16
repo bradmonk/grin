@@ -11,23 +11,11 @@
 % save('IM.mat','IM','-v6')
 
 %% PURGE RAM
-clc; close all; clear
+clc; close all; clear;
+system('sudo purge')
+F = what('grindata');
+cd(F.path);
 
-cd '/Users/bradleymonk/Documents/MATLAB/myToolbox/LAB/grin/grindata/GRIN_COMPRESSED';
-
-[str,maxsize] = computer;
-if strcmp(str,'MACI64')
-    [SYSRAM.pso,SYSRAM.ps] = system('ps -caxm -orss,comm');
-    [SYSRAM.vmo,SYSRAM.vm] = system('vm_stat');
-    [TXTmatch,TXTnon] = strsplit(SYSRAM.ps,{'[0-9]+\S '},...
-    'CollapseDelimiters',true,'DelimiterType','RegularExpression');
-    RAM = sum(str2num([TXTnon{1,:}])') /1024/1024;
-end
-if strcmp(str,'MACI64') && RAM > 7
-    disp(' '); disp('Purging RAM'); 
-    system('sudo purge'); 
-end
-clear
 
 
 %% GET PATHS TO GRIN DATA MAT FILES
@@ -62,19 +50,19 @@ end
 
 
 
-%% PREVIEW IMAGE STACK
+%% PREVIEW IMAGE STACK FROM FIRST STACK
 
-IM = DATA{1}.IMGC;
-IM = mean(IM,4);
+I = DATA{1}.IMGC;
+I = mean(I,4);
 
-fh1=figure('Units','normalized','OuterPosition',[.1 .1 .4 .6],'Color','w','MenuBar','none');
-hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
+figure('Units','normalized','OuterPosition',[.1 .1 .4 .6],'Color','w','MenuBar','none');
+axes('Position',[.05 .05 .9 .9],'Color','none');
 
-ph1 = imagesc(IM(:,:,1)); pause(1)
+ph1 = imagesc(I(:,:,1)); pause(1)
 
-for nn = 1:size(IM,3)
+for nn = 1:size(I,3)
     fprintf('Stack: % .0f \n',nn)
-    ph1.CData = IM(:,:,nn);
+    ph1.CData = I(:,:,nn);
     pause(.04)
 end
 
@@ -85,7 +73,7 @@ clearvars -except datapaths datafiles DATA
 
 
 
-%% SAVE GREEN CHANNEL IMAGES INTO IM
+%% SAVE GREEN CHANNEL PROJECTION IMAGE FOR EACH DAY INTO 'IM'
 
 IM = zeros(size(DATA{1}.IMGC,1),size(DATA{1}.IMGC,2),size(DATA,2));
 
@@ -101,7 +89,7 @@ clearvars -except datapaths datafiles DATA IM
 
 
 
-%% PREVIEW IMAGE STACK
+%% PREVIEW PROJECTION 'IM' STACK
 
 fh1=figure('Units','normalized','OuterPosition',[.1 .1 .4 .6],'Color','w','MenuBar','none');
 hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
@@ -116,10 +104,10 @@ end
 
 
 clearvars -except datapaths datafiles DATA IM
-% clearvars -except datapaths datafiles DATA IM AlignVals IMGG IMGA IMA
 
 
-%% SHOW MONTAGE OF IMAGES
+
+%% SHOW MONTAGE OF EACH DAY'S PROJECTION IMAGE
 
 % imaqmontage(data, 'Parent', a);
 
@@ -145,16 +133,13 @@ montage(I,'Parent',hax1, 'Size', [NaN 5],...
          'DisplayRange',[(min(I(:))-(max(I(:)) - min(I(:)))/8)  max(I(:))])
 uiwait
 
-
-clc; disp('CHOOSE TWO ALIGNMENT LANDMARKS'); disp(' ')
-
-
-
+close all;
 
 
 
 %% GET ALIGNMENT VALUES
-close all;
+clc; disp('CHOOSE TWO ALIGNMENT LANDMARKS'); disp(' ')
+
 
 AlignVals.P1x = zeros(size(IM,3),1);
 AlignVals.P1y = zeros(size(IM,3),1);
@@ -172,8 +157,8 @@ fhIMA=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],'Color','w','Men
 haxIMA = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[],'YTick',[]);
 
 axes(haxIMA)
-% phG = imagesc(I,'Parent',haxIMA,'CDataMapping','scaled');
-phG = imshowpair(IM(:,:,1), I,'Scaling','joint');
+phG = imagesc(I,'Parent',haxIMA,'CDataMapping','scaled');
+% phG = imshowpair(IM(:,:,1), I,'Scaling','joint');
 
 [cmax, cmaxi] = max(I(:));
 [cmin, cmini] = min(I(:));
@@ -279,68 +264,416 @@ close all
 fh1=figure('Units','normalized','OuterPosition',[.1 .1 .4 .6],'Color','w','MenuBar','none');
 hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
 
-ph1 = imagesc(IG(:,:,1)); pause(1)
-pause(1)
+ph1 = imagesc(IG(:,:,1)); pause(.2)
 
 for nn = 1:size(IG,3)
 
     ph1.CData = IG(:,:,nn);
-    pause(.8)
+    pause(.4)
 
 end
 
 
 
 
-clearvars -except datapaths datafiles DATA AlignVals IMGA IMRA
+clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA IG IR
 
 
 
 
-return
-%% CROP ALIGNMENT REGISTERED STACKS
 
-%!!!!  TBD  !!!!
+% GET CROPBOX COORDINATES FOR ALIGNED (REGISTERED) STACKS
+
+I = mean(IG,3);
+
+disp(' '); 
+disp('DRAG RECTANGLE TO DESIRED POSITION')
+disp('THEN DOUBLE CLICK INSIDE RECTANGLE TO CONTINUE')
 
 %---------  CREATE IMAGE CROPPING FIGURE  -----------
-    fh1=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],'Color','w','MenuBar','none');
-    hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
-    phTRIM = imagesc(IMGi,'Parent',hax1,'CDataMapping','scaled');
-    axis tight
-    Imax = max(max(max(IMGi)));
-    Imin = min(min(min(IMGi)));
-    cmax = Imax - (Imax-Imin)/12;
-    cmin = Imin + (Imax-Imin)/12;
-    if cmax > cmin; hax1.CLim=[cmin cmax]; end
-    pause(.07);
+fh1=figure('Units','normalized','OuterPosition',[.1 .1 .4 .6],'Color','w','MenuBar','none');
+hax1 = axes('Position',[.05 .05 .9 .9],'Color','none'); % ,'YDir','reverse'
+phTRIM = imagesc(I,'Parent',hax1,'CDataMapping','scaled');
+axis tight; colormap(hot(40))
+pause(.07);
+
+
+%---------  CREATE ROI RECTANGLE ON CROPPING FIGURE  -----------
+cropAmount = 4;
+
+[Iw,Ih,In] = size(I);
+
+h = imrect(hax1, [cropAmount cropAmount Iw-cropAmount*2 Ih-cropAmount*2]);
+setFixedAspectRatioMode(h,true)
+setResizable(h,false)
+
+CropPosition = wait(h);
+close all;
+
+CropPosition = round(CropPosition);
+
+
+
+clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA IG IR ...
+CropPosition
 
 
 
 
-    % TRIM EDGES FROM IMAGE
-    memocon(' '); 
-    memocon('DRAG RECTANGLE TO DESIRED POSITION')
-    memocon('THEN DOUBLE CLICK INSIDE RECTANGLE TO CONTINUE')
+%% CROP AND TILE ALIGNED IMAGE STACK FOR EACH DAY
 
-    %---------  CREATE ROI RECTANGLE ON CROPPING FIGURE  -----------
-    cropAmount = str2num(cropimgnumH.String);
+s = size(IMGA{1},1);
+x = CropPosition(1);
+y = CropPosition(2);
+w = CropPosition(3);
+h = CropPosition(4);
 
-    [Iw,Ih,In] = size(IMG);
 
-    h = imrect(hax1, [cropAmount cropAmount Iw-cropAmount*2 Ih-cropAmount*2]);
-    setFixedAspectRatioMode(h,true)
-    setResizable(h,false)
+% %---- CROP IMAGES
+% IMGAC={}; IMRAC={};
+% for i = 1:size(IMGA,2)
+%     G = rot90(IMGA{i});
+%     R = rot90(IMRA{i});
+%     IMGAC{i} = rot90(  G(x:(x+w-1) , y:(y+h-1) , :)   ,-1);
+%     IMRAC{i} = rot90(  R(x:(x+w-1) , y:(y+h-1) , :)   ,-1);
+% end
 
-    CropPosition = wait(h);
-    disp('done')
+%---- CROP IMAGES
+IMGAC={}; IMRAC={};
+for i = 1:size(IMGA,2)
+    G = IMGA{i};
+    R = IMRA{i};
+    IMGAC{i} = G(x:(x+w-1) , y:(y+h-1) , :, :);
+    IMRAC{i} = R(x:(x+w-1) , y:(y+h-1) , :, :);
+end
 
-    CropPosition = round(CropPosition);
-    x = CropPosition(1);
-    y = CropPosition(2);
-    w = CropPosition(3);
-    h = CropPosition(4);
 
-    IMGt = IMG(x:(x+w-1) , y:(y+h-1) , :);
+
+%---- RESIZE IMAGES
+for i = 1:size(IMGAC,2)
+
+    IMGAC{i} = imresize(IMGAC{i}, 1/4 , 'bilinear');
+    IMRAC{i} = imresize(IMRAC{i}, 1/4 , 'bilinear');
+
+end
+
+% size(IMGA{1})
+% size(IMGAC{1})
+
+
+for i = 1:size(IMGAC,2)
+
+DATA{i}.IMGAC = IMGAC{i};
+DATA{i}.IMRAC = IMRAC{i};
+
+end
+
+clc; close all;
+clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA IG IR ...
+CropPosition
+
+
+
+
+
+
+%% PREVIEW ALIGNED AND CROPPED IMAGES
+
+IMGAC={}; IMRAC={};
+for i = 1:size(DATA,2)
+    IMGAC{i} = DATA{i}.IMGAC;
+    IMRAC{i} = DATA{i}.IMRAC;
+end
+
+
+IG = zeros(size(IMGAC{1},1) , size(IMGAC{1},2) , size(IMGAC,2));
+IR = zeros(size(IMRAC{1},1) , size(IMRAC{1},2) , size(IMRAC,2));
+
+for nn = 1:size(IG,3)
+    IG(:,:,nn) = mean(mean(IMGAC{nn},4),3);
+    IR(:,:,nn) = mean(mean(IMRAC{nn},4),3);
+end
+
+figure('Units','normalized','OuterPosition',[.1 .1 .4 .6],'Color','w','MenuBar','none');
+axes('Position',[.05 .05 .9 .9],'Color','none');
+ph1 = imagesc(IG(:,:,1)); pause(1)
+for nn = 1:size(IG,3)
+    ph1.CData = IG(:,:,nn); pause(.8);
+end
+
+
+
+clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA IG IR ...
+CropPosition
+
+
+
+
+%% NORMALIZE DATASET
+
+
+IMGAC={}; IMRAC={};
+for i = 1:size(DATA,2)
+    IMGAC{i} = double(DATA{i}.IMGAC);
+    IMRAC{i} = double(DATA{i}.IMRAC);
+end
+
+% Z = zscore(IMGAC{i},[],1);
+% size(Z)
+
+
+ZIMG = {};
+for i = 1:size(DATA,2)
+
+    I = IMGAC{i};
+    s = size(IMGAC{i});
+    ZIMG{i} = reshape(  zscore( I(:) ) , s  );
+
+end
+
+
+clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA IG IR ...
+CropPosition ZIMG
+
+
+%----------------------------------------------------
+%%        PLOT TILES OF RAW DATA
+%----------------------------------------------------
+
+
+for tt = 1:size(DATA,2)
+close all;
+% for tt = 1
+
+
+    pxl = ZIMG{tt};
+%     size(pxl)
+
+
+
+    GRINstruct = DATA{1,tt}.GRINstruct;
+    tf         = DATA{1,tt}.GRINstruct.tf;
+    csus       = DATA{1,tt}.GRINstruct.csus;
+    CSUSonoff  = DATA{1,tt}.GRINstruct.CSUSonoff;
+    
+
+    CSids = unique(csus);
+
+    
+
+    px = zeros(size(pxl,1),size(pxl,2),size(pxl,3),size(tf,2));
+
+    for j = 1:size(tf,2)
+        px(:,:,:,j) = mean(pxl(:,:,:,tf(:,j)),4);
+    end
+
+    pxl=px;
+
+    pixels = squeeze(reshape(pxl,numel(pxl(:,:,1)),[],size(pxl,3),size(pxl,4)));
+    
+    
+    
+    
+    %-------------------------- MULTI-TILE FIGURE --------------------------
+
+    fh10=figure('Units','normalized','OuterPosition',[.02 .02 .90 .90],'Color','w');
+    
+    set(fh10,'ButtonDownFcn',@(~,~)disp('figure'),'HitTest','off')
+    
+    
+    
+    aXlocs =  (0:(size(pxl,1))) .* (1/(size(pxl,1)));
+    aXlocs(end) = [];
+    aYlocs =  (0:(size(pxl,2))) .* (1/(size(pxl,2)));
+    aYlocs(end) = [];
+    aXlocs = aXlocs+.005;
+    aYlocs = aYlocs+.005;
+    [aX,aY] = meshgrid(aXlocs,aYlocs);
+    
+%     if strcmp(NormType,'dF')
+%         
+%         YL = [-.15 .15];
+% 
+%     elseif strcmp(NormType,'Zscore')
+%         
+        YL = [-1 3];
+%         
+%     elseif strcmp(NormType,'Dprime')
+%         
+%         YL = [-.15 .15];
+%         
+%     else
+%         YL = 'auto';
+%     end
+    
+
+    % PLOT ALL THE TILES ON A SINGLE FIGURE WINDOW. THIS PLOTS THE FIRST
+    % AXIS IN THE BOTTOM LEFT CORNER AND FIRST FILLS UPWARD THEN RIGHTWARD
+    for ii = 1:size(pixels,1)
+
+        axh{ii} = axes('Position',[aX(ii) aY(ii) (1/(size(pxl,1)+1)) (1/(size(pxl,2)+1))],...
+        'Color','none','Tag',num2str(ii)); 
+        % axis off;
+        hold on;
+    
+
+        
+
+        % h = squeeze(pixels(ii,:,:));
+        tiledatX{ii} = 1:size(pixels,2);
+        tiledatY{ii} = squeeze(pixels(ii,:,:));
+        
+        pha{ii} = plot( 1:size(pixels,2) , squeeze(pixels(ii,:,:)));
+        % set(gca,'YLim',YL)
+        %ylim(YL)
+        cYlim = get(gca,'YLim');
+        line([CSUSonoff(1) CSUSonoff(1)],cYlim,'Color',[.8 .8 .8])
+        line([CSUSonoff(2) CSUSonoff(2)],cYlim,'Color',[.8 .8 .8])
+        
+        set(axh{ii},'ButtonDownFcn',@(~,~)disp(gca),'HitTest','on')
+        
+    end
+    pause(.05)
+    
+    % INCREASE LINE WIDTH CHENYU
+    for ii = 1:size(pha,2)
+        for jj = 1:size(pha{ii},1)
+            pha{ii}(jj).LineWidth = 3;
+        end
+    end
+    
+    
+    %keyboard
+    % REMOVE AXES CLUTTER
+    %axh{ii}
+    
+    
+    
+    
+    
+    legpos = {  [0.01,0.95,0.15,0.033], ...
+                [0.01,0.92,0.15,0.033], ...
+                [0.01,0.89,0.15,0.033], ...
+                [0.01,0.86,0.15,0.033], ...
+                [0.01,0.83,0.15,0.033], ...
+                [0.01,0.80,0.15,0.033], ...
+                };
+    
+    pc = {pha{1}.Color};
+    pt = CSids;
+    
+    for nn = 1:size(pixels,3)        
+        annotation(fh10,'textbox',...
+        'Position',legpos{nn},...
+        'Color',pc{nn},...
+        'FontWeight','bold',...
+        'String',pt(nn),...
+        'FontSize',12,...
+        'FitBoxToText','on',...
+        'EdgeColor',pc{nn},...
+        'FaceAlpha',.8,...
+        'Margin',3,...
+        'LineWidth',1,...
+        'VerticalAlignment','bottom',...
+        'BackgroundColor',[1 1 1]);
+    end
+    
+    annotation(fh10,'textbox',...
+    'Position',[.85 .975 .15 .04],...
+    'Color',[0 0 0],...
+    'FontWeight','bold',...
+    'String','RIGHT-CLICK ANY GRAPH TO EXPAND',...
+    'FontSize',10,...
+    'FitBoxToText','on',...
+    'EdgeColor','none',...
+    'FaceAlpha',.7,...
+    'Margin',3,...
+    'LineWidth',2,...
+    'VerticalAlignment','bottom',...
+    'BackgroundColor',[1 1 1]);
+
+
+    annotation(fh10,'textbox',...
+    'Position',[.01 .975 .15 .04],...
+    'Color',[0 0 0],...
+    'FontWeight','bold',...
+    'String',GRINstruct.file,...
+    'FontSize',12,...
+    'FitBoxToText','on',...
+    'EdgeColor','none',...
+    'FaceAlpha',.7,...
+    'Margin',3,...
+    'LineWidth',2,...
+    'VerticalAlignment','bottom',...
+    'Interpreter','none',...
+    'BackgroundColor',[1 1 1]);
+
+
+
+
+
+
+% SET AXES LIMITS ACCORDING TO MIN MAX
+% xL=zeros(size(axh,2) , 2);
+% yL=zeros(size(axh,2) , 2);
+% for j = 1:size(axh,2)
+%     xL(j,:) = axh{j}.XLim;
+%     yL(j,:) = axh{j}.YLim;
+% end
+% xLm = median(xL);  
+% yLm = median(yL);  
+% for j = 1:size(axh,2)
+%     axh{j}.XLim = xLm;
+%     axh{j}.YLim = yLm;
+% end
+
+
+
+for j = 1:size(axh,2)
+    axh{j}.YLim = YL;
+end
+
+
+
+
+% cd(path);
+set(gcf, 'PaperPositionMode', 'auto');
+saveas(gcf,[DATA{tt}.GRINstruct.file(1:end-6) '_Z'],'png');
+% cd(path);
+
+
+
+    pause(.2)
+    %-------------------------------------------------------------------------
+    
+%     pcabutton = uicontrol(fh10,'Units','normalized',...
+%                   'Position',[.065 .003 .06 .04],...
+%                   'String','PCA',...
+%                   'Tag','gridbutton',...
+%                   'Callback',{@runPCA,axh,pha,pixels,tiledatX,tiledatY}); 
+%     
+%     
+%     gridbutton = uicontrol(fh10,'Units','normalized',...
+%                   'Position',[.003 .003 .06 .04],...
+%                   'String','Toggle Grid',...
+%                   'Tag','gridbutton',...
+%                   'Callback',@toggleGridOverlay);
+%     
+%     
+%     savetilesH = uicontrol(fh10,'Units','normalized',...
+%                   'Position',[.96 .003 .04 .04],...
+%                   'String','Save',...
+%                   'Tag','gridbutton',...
+%                   'Callback',@savetilesfun);    
+
+
+clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA IG IR ...
+CropPosition ZIMG tt
+end
+    
+        
+        
+
 
 
 

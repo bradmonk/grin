@@ -49,7 +49,6 @@ clc; close all; clear all;
 [str,maxsize] = computer;
 if strcmp(str,'MACI64')
     disp(' '); disp('Purging RAM'); 
-    system('sudo purge'); 
 end
 
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
@@ -750,7 +749,7 @@ end
 
     memocon(sprintf('GRIN DATASET: % s ', imgfilename));
     %fprintf('\n\n GRIN DATASET: % s \n\n', imgfilename);
-    pause(.1)
+    pause(.01)
     
     
     % ------------- IMG STACK IMPORT CODE -----------
@@ -988,6 +987,9 @@ memocon('GRIN LENS IMAGING TOOLBOX - ACQUIRING DATASET')
     for ii = 1:size(datapaths,1)
     memocon('PROCESSING IMAGE STACK:')
     memocon(datapaths{ii})
+    disp('######################################################')
+    %disp('PROCESSING DATASET')
+    %disp(datapaths{ii})
 
 
         %-------------  GET PATH TO FIRST DATASET   --------------
@@ -1551,23 +1553,24 @@ pause(.02);
 
 
 
-
-    % TRIM EDGES FROM IMAGE
-    memocon(' '); 
-    memocon('DRAG RECTANGLE TO DESIRED POSITION')
-    memocon('THEN DOUBLE CLICK INSIDE RECTANGLE TO CONTINUE')
-
     %---------  CREATE ROI RECTANGLE ON CROPPING FIGURE  -----------
     cropAmount = str2num(cropimgnumH.String);
 
     [Iw,Ih,In] = size(IMG);
 
-    h = imrect(hax1, [cropAmount cropAmount Iw-cropAmount*2 Ih-cropAmount*2]);
-    setFixedAspectRatioMode(h,true)
-    setResizable(h,false)
+    CropPosition = [cropAmount cropAmount Iw-cropAmount*2 Ih-cropAmount*2];
 
-    CropPosition = wait(h);
-    disp('done')
+
+    DO_MANUAL_CROP = 0;    
+    if DO_MANUAL_CROP==1
+        memocon(' '); 
+        memocon('DRAG RECTANGLE TO DESIRED POSITION')
+        memocon('THEN DOUBLE CLICK INSIDE RECTANGLE TO CONTINUE')
+        h = imrect(hax1, CropPosition);
+        setFixedAspectRatioMode(h,true)
+        setResizable(h,false)
+        CropPosition = wait(h);
+    end
 
     CropPosition = round(CropPosition);
     x = CropPosition(1);
@@ -1575,9 +1578,7 @@ pause(.02);
     w = CropPosition(3);
     h = CropPosition(4);
 
-    IMGt = IMG(x:(x+w-1) , y:(y+h-1) , :);
-
-
+    IMGt = IMG(x:(x+w-1) , y:(y+h-1) , :); % TRIM EDGES FROM IMAGE
 
 
     %---------  CLOSE CROPPING FIGURE  -----------
@@ -1669,6 +1670,7 @@ pause(.02);
     y = CropPosition(2);
     w = CropPosition(3);
     h = CropPosition(4);
+
 
     IMGt = IMG(x:(x+w-1) , y:(y+h-1) , :);
 
@@ -3368,7 +3370,7 @@ disableButtons; pause(.02);
 
             phGRIN.CData = IMGi(:,:,nn);
 
-            pause(.04)
+            pause(.01)
         end
     
     
@@ -3429,7 +3431,7 @@ disableButtons; pause(.02);
 
             phGRIN.CData = IMGi(:,:,nn);
 
-            pause(.04)
+            pause(.01)
         end
 
 %     phGRIN.CData = mean(squeeze(muIMGS(:,:,XLSdata.CSoffsetFrame,:)),3);
@@ -4645,7 +4647,7 @@ function memocon(spf,varargin)
     memes(1:end-1) = memes(2:end);
     memes{end} = spf;
     conboxH.String = memes;
-    pause(.02)
+    pause(.01)
     
     if nargin == 3
         
@@ -4665,7 +4667,7 @@ function memocon(spf,varargin)
         conboxH.FontAngle = 'normal';
         conboxH.ForegroundColor = [0 0 0];
         conboxH.String = memi;
-        pause(.02)
+        pause(.01)
         
     elseif nargin == 2
         vrs = deal(varargin);
