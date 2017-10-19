@@ -1,15 +1,5 @@
 %% GRINimregister
 
-% IMAGES PROCESSING STEPS ALREADY PERFORMED
-% smoothimg
-% cropimg
-% IMG = imresize(IMG, 1/5 , 'bilinear');
-% reshapeData
-% alignCSframes
-% timepointMeans
-
-% save('IM.mat','IM','-v6')
-
 %% PURGE RAM
 clc; close all; clear;
 system('sudo purge')
