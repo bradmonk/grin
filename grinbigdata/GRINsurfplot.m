@@ -24,20 +24,29 @@ end
 
 
 %% VISUALIZE ALL TILES FOR ALL DAYS
-% close all
-% for mm = 1:Days
-% for nn = 1:100
-% 
-%     subplot(10,10,nn); plot(TILE{mm}{nn})
-%     ylim([-.15 .15])
-% 
-% 
-%     spf = sprintf('\n Day: %.0f  Tile: %.0f \n',mm,nn);
-%     title(spf)
-%     pause(.2)
-% end
-% end
+close all
+for mm = 1:Days
+for nn = 1:100
 
+    plot(TILE{mm}{nn})
+    ylim([-.15 .15])
+
+
+    spf = sprintf('\n Day: %.0f  Tile: %.0f \n',mm,nn);
+    title(spf)
+    pause(.2)
+end
+end
+
+
+
+%% VIEW SINGLE TILE DATA
+
+
+day_tile = [ 1 , 56 ];
+
+plot(TILE{day_tile(1)}{day_tile(2)})
+ylim([-.15 .15])
 
 
 %% SPECIFY WHICH TILES YOU WANT FROM EACH DAY
