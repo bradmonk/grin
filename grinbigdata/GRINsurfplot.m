@@ -20,7 +20,13 @@ for nn = 1:Days
 
     TILE{nn} = T{nn}.TILE;
 
+    %TRIALTYPES{nn} = T{nn}.GRINstruct.TreatmentGroups;
+
 end
+
+
+
+TRIALTYPES = T{1}.GRINstruct.TreatmentGroups
 
 
 %% VISUALIZE ALL TILES FOR ALL DAYS
@@ -51,11 +57,17 @@ ylim([-.15 .15])
 
 %% SPECIFY WHICH TILES YOU WANT FROM EACH DAY
 
-t = [17 26 32 17 26]; % 55
+
+% ENTER THE TILE YOU WANT FOR EACH DAY HERE...
+
+t = [17 26 32 17 26];
+
+
+
 
 for nn = 1:Days
 
-    D{nn} = TILE{nn}{t(nn)}
+    D{nn} = TILE{nn}{t(nn)};
 
 end
 
@@ -64,8 +76,7 @@ y = cell2mat(D);
 
 sz = size(D{1});
 
-
-y = reshape(y,sz(1),sz(2),[])
+y = reshape(y,sz(1),sz(2),[]);
 
 
 for nn = 1:sz(2)
@@ -73,7 +84,6 @@ for nn = 1:sz(2)
     TrialType{nn} = squeeze(y(:,nn,:));
 
 end
-
 
 
 
@@ -88,7 +98,21 @@ legend(    cellstr(    num2str(  (1:Days)'   )    )    )
 %% SURFACE PLOT SMOOTHED
 % cftool
 
-ESALEQ = TrialType{2};
+PlotTrialType = 1; 
+
+
+clc
+disp('Trial Type Order:')
+disp(TRIALTYPES)
+
+
+
+
+
+
+%----------------------------------------
+TIT = TRIALTYPES{PlotTrialType};
+ESALEQ = TrialType{PlotTrialType};
 
 close all
 fh31 = figure('Units','normalized','OuterPosition',[.1 .05 .85 .92],'Color','w');
@@ -103,6 +127,7 @@ axes(ax31)
 h = plot( fitresult, [xData, yData], zData );
 legend( h, 'fit', 'Neural Activity', 'Location', 'NorthEast' );
 xlabel('SECONDS'); ylabel('DAY'); zlabel('NEURAL ACTIVITY')
+title(TIT)
 grid on
 view(-15,20)
 L1 = light('Position',[1 .3 .8],'Style','local');
