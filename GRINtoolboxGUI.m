@@ -50,11 +50,11 @@ disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
 % clearvars -except varargin
 % set(0,'HideUndocumented','off')
-[str,maxsize] = computer;
-if strcmp(str,'MACI64')
-    disp(' '); disp('Purging RAM'); 
-    system('sudo purge'); 
-end
+% [str,maxsize] = computer;
+% if strcmp(str,'MACI64')
+%     disp(' '); disp('Purging RAM'); 
+%     system('sudo purge'); 
+% end
 
 
 global thisfilepath
