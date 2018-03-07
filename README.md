@@ -1,6 +1,6 @@
 # grin
 
-<img src="http://bradleymonk.com/images/GRINoverview.png" width="800" border="10" />
+<img src="https://cdn.rawgit.com/subroutines/grin/afbd4849/gc74%20%20tone%20sucrose%20omission.svg" width="800" border="10" />
 
 ## GRIN lens MATLAB toolbox
 
