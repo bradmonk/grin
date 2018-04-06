@@ -7,53 +7,102 @@ fileparts(which('GRINtoolboxGUI.m')))
 
 
 
-%% GET FULL PATHS TO ALL MAT FILES IN A FILE
-
-datafilepath = uigetdir;
-regexpStr = '((\S)+(\.mat+))';
-allfileinfo = dir(datafilepath);
-allfilenames = {allfileinfo.name};
-r = regexp(allfilenames,regexpStr);                        
-datafiles = allfilenames(~cellfun('isempty',r));      
-datafiles = reshape(datafiles,size(datafiles,2),[]);
-datapaths = fullfile(datafilepath,datafiles);
-disp(' '); fprintf('   %s \r',  datafiles{:} ); disp(' ')
-disp(' '); fprintf('   %s \r',  datapaths{:} ); disp(' ')
-clearvars -except datapaths datafiles
-
-
-
 %% IMPORT DATASETS AND (OPTIONALLY) NORMALIZE GREEN - RED CHANNEL STACKS
 
-load(datapaths{1})
+[filename,filepath] = uigetfile;
 
-IMG = {};
-INFO = GRINstruct;
-XLS = XLSdata;
+cd(filepath)
 
-size(IMGS)
+load([filepath,filename])
 
-
+clearvars -except filepath filename DATA
 
 
-for nn = 1:size(datapaths,1)
+IMG  = {};
+INFO = DATA{1}.GRINstruct;
+XLS  = DATA{1}.XLSdata;
 
-    G = load(datapaths{nn});
 
-    if isfield(G, 'IMGR')
-        IM = G.IMGS - G.IMGR;
-    else
-        IM = G.IMGS;
-    end
 
-    IMG{nn,1} = IM;
+for nn = 1:size(DATA,1)
+
+    G = DATA{nn};
+    
+    IMG{nn,1}  = G.IMAL;
     INFO(nn,1) = G.GRINstruct;
-    XLS(nn,1) = G.XLSdata;
+    XLS(nn,1)  = G.XLSdata;
 
 end
 
-clearvars -except...
-datapaths datafiles IMG INFO XLS
+clearvars -except filepath filename DATA IMG INFO XLS
+
+
+
+
+close all
+fh1=figure('Units','normalized','OuterPosition',[.1 .1 .4 .6],'Color','w','MenuBar','none');
+hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
+ph1 = imagesc(mean(mean(IMG{1},4),3));
+for nn = 1:size(IMG,1)
+    ph1.CData = mean(mean(IMG{nn},4),3);
+    pause(.2)
+end
+
+
+
+disp('EACH IMAGE STACK IS SIZE: ')
+disp( size(IMG{1}) )
+pause(2)
+
+
+
+%#############################################################
+%%               WHAT DAYS TO ANALYZE??
+%#############################################################
+clc
+
+answer = questdlg('DO YOU HAVE AN EXCEL SHEET WITH DAYS?', ...
+	'DO YOU HAVE AN EXCEL SHEET WITH DAYS?', ...
+	'YES','NO','NO');
+% Handle response
+switch answer
+    case 'YES'
+        disp('SELECT EXCEL SHEET WITH DAYS TO ANALYZE')
+        [filename,filepath] = uigetfile('*.xls*');
+        [xlsN, xlsT, xlsR] = xlsread([filepath filename]);
+        F=[];
+        for i = 1:size(INFO,1)
+            F(i) = any(strcmp(INFO(i).file,xlsT));
+        end
+        IMG(~F) = [];
+        INFO(~F) = [];
+        XLS(~F) = [];
+    case 'NO'
+        disp('YOU SUCK!')
+end
+
+
+
+
+
+clearvars -except filepath filename DATA IMG INFO XLS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -197,7 +246,7 @@ end
 
 
 %% GET NUMBER OF FRAMES & IMAGE SIZES
-
+%{
 N = size(IMG,1);
 
 FRAMES=[];
@@ -230,7 +279,7 @@ fprintf('\n These image stacks have %.0f pixels and %.0f frames \n',PIX,FRM);
 
 
 clearvars -except IMG IMF INFO XLS FRM PIX
-
+%}
 
 
 
@@ -577,6 +626,20 @@ clc; clearvars -except IMG INFO XLS FRM PIX IMX STIM IMS
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 %% PUT STACKS INTO CONTAINER WITH OTHERS OF SAME STYPE
 
 %{
@@ -733,6 +796,9 @@ clearvars -except IMG INFO XLS FRM PIX IMX STIM IMS IMT
 
 
 
+
+
+
 %% SELECT ROI FROM IMAGES OF STIM TYPE SELECTED ABOVE
 
 
@@ -762,6 +828,7 @@ disp(rows)
 
 
 clearvars -except IMG INFO XLS FRM PIX IMX STIM IMS IMT rows cols
+
 
 
 
@@ -895,83 +962,301 @@ STIM STYPE TGi IMS Tx TrialType TNS TxTNS TTActivityPerDay
 
 
 
+% %% SURFACE PLOT SMOOTHED
+% % cftool
+% 
+% 
+% % ACT = IMD(:,1:9);
+% ACT = IMD;
+% 
+% StimType = INFO(1).PopupPick;
+% 
+% 
+% [xD,yD,zD] = prepareSurfaceData(1:size(ACT,1),1:size(ACT,2),ACT);
+% ft = 'biharmonicinterp';
+% [fitresult, gof] = fit( [xD, yD], zD, ft, 'Normalize', 'on' );
+% 
+% 
+% close all
+% fh31 = figure('Units','normalized','OuterPosition',[.1 .04 .81 .93],'Color','w');
+% ax31 = axes('Position',[.1 .40 .83 .55],'Color','none');
+% ax32 = axes('Position',[.1 .05 .83 .26],'Color','none');
+% 
+% 
+% axes(ax31)
+% h1 = plot( fitresult, [xD, yD], zD );
+% xlabel('SECONDS'); ylabel('DAY'); zlabel('NEURAL ACTIVITY')
+% title([INFO(1).file(1:4) '  ' StimType]); grid on; view(-9,12)
+% L1 = light('Position',[1 .3 .8],'Style','local');
+% L2 = light('Position',[1 .5 1],'Style','local');
+% lighting gouraud;
+% % shading interp
+% hold on
+% 
+% % axes(ax31)
+% x = 30:2:55;
+% y = 1:1:8;
+% z = -.1:.05:.15;
+% [x,y,z] = meshgrid(x,y,z);
+% v = x.*exp(-x.^2-y.^2-z.^2);
+% xslice = [XLS(1).CSonsetFrame(1) , XLS(1).CSoffsetFrame(1)]; 
+% yslice = 0; 
+% zslice = [0,0];
+% 
+% 
+% % hx = slice(x,y,z,v,xslice,yslice,zslice);
+% hx = slice(x,y,z,v,xslice,[],[]);
+% for i=1:length(hx)
+% hx(i).FaceColor = 'interp';
+% hx(i).EdgeColor = 'none';
+% hx(i).FaceAlpha = .2;
+% % colormap hsv
+% end
+% 
+% 
+% % Make contour plot.
+% axes(ax32)
+% h2 = plot( fitresult, [xD, yD], zD, 'Style', 'Contour' );
+% xlabel('SECONDS'); ylabel('DAY'); grid on; hold on
+% line([XLS(1).CSonsetFrame(1) XLS(1).CSonsetFrame(1)],ax32.YLim,...
+% 'Color','red','LineStyle','--')
+% line([XLS(1).CSoffsetFrame(1) XLS(1).CSoffsetFrame(1)],ax32.YLim,...
+% 'Color','red','LineStyle','--')
+% 
+% 
+% 
+% 
+% h1(2).Marker = 'none';
+% h2(2).Marker = 'none';
+% 
+% 
+% 
+% 
+% clc;
+% clearvars -except IMG INFO XLS FRM PIX IMX STIM IMS IMT rows cols IMD
+% 
+% 
+% saveas(gcf,[INFO(1).file(1:4) '  ' INFO(1).PopupPick '.png'])
+% saveas(gcf,[INFO(1).file(1:4) '  ' INFO(1).PopupPick '.svg'])
+% saveas(gcf,[INFO(1).file(1:4) '  ' INFO(1).PopupPick],'epsc')
+% disp('figure saved')
+
+
+
+
+
+
+
 %% SURFACE PLOT SMOOTHED
-% cftool
 
+clc;
+clearvars -except IMG INFO XLS FRM PIX IMX STIM IMS IMT rows cols IMD
 
-ACT = IMD(:,1:9);
 
 StimType = INFO(1).PopupPick;
 
+ACT = IMD;
+% ACT(:,[6,8]) = [];
+% ACT(:,[6,9]) = [];
+% ACT(:,[8,9]) = [];
+% ACT = ACT(:,1:9);
 
+[i,j] = sort(mean(ACT(52:65,:)),'descend');
+
+ACT = ACT(:,j);
+
+
+% ACT(1:40,:) = zscore(ACT(1:40,:));
+% ACT(1:40,:) = ACT(1:40,:) - mean(ACT(1:40,:));
+
+%--------------------- SMOOTH DATA ---------------------
+ACT = ACT - mean(ACT(1:40,:));
+ACT(1:40,:) = reshape(smooth(ACT(1:40,:),15,'rlowess'),size(ACT(1:40,:)));
+ACT(80:end,:) = reshape(smooth(ACT(80:end,:),10,'rlowess'),size(ACT(80:end,:)));
+ACT(80:end,:) = reshape(smooth(ACT(80:end,:),10,'rlowess'),size(ACT(80:end,:)));
+ACT = reshape(smooth(ACT,9,'lowess'),size(ACT));
+
+
+
+% %--------------------- PLOT 2D SIGNAL ---------------------
+% clc; close all
+% fh1 = figure('Units','normalized','OuterPosition',[.01 .06 .95 .8],'Color','w','MenuBar','none');
+% ax1 = axes('Position',[.05 .06 .9 .9],'Color','none'); hold on;
+% ax2 = axes('Position',[.05 .06 .9 .9],'Color','none'); hold on;
+% 
+% axes(ax1)
+% plot(ACT)
+% axes(ax2)
+% plot(ACT,'.','LineStyle','none')
+% ax1.YLim = ax2.YLim;
+
+
+
+
+%--------------------- PREPARE 3D SURFACE DATA ---------------------
 [xD,yD,zD] = prepareSurfaceData(1:size(ACT,1),1:size(ACT,2),ACT);
+% cftool(xD,yD,zD)
+
+%---- INTERPOLATION TYPE
 ft = 'biharmonicinterp';
-[fitresult, gof] = fit( [xD, yD], zD, ft, 'Normalize', 'on' );
+% ft = 'smoothingspline';
+% ft = 'lowess'
+% ft = 'poly11'
+[fitresult, gof] = fit( [xD, yD], zD, ft, 'Normalize', 'on');
 
 
-close all
+
+
+
+%-----------------   GENERATE FIGURE AND AXES   ---------------------
+close all;
 fh31 = figure('Units','normalized','OuterPosition',[.1 .04 .81 .93],'Color','w');
-ax31 = axes('Position',[.1 .40 .83 .55],'Color','none');
-ax32 = axes('Position',[.1 .05 .83 .26],'Color','none');
+ax31 = axes('Position',[.08 .40 .85 .55],'Color','none');
+ax32 = axes('Position',[.06 .05 .43 .26],'Color','none'); hold on;
+ax33 = axes('Position',[.06 .05 .43 .26],'Color','none'); hold on;
+ax34 = axes('Position',[.54 .05 .43 .26],'Color','none');
 
 
-axes(ax31)
+    axes(ax31)
 h1 = plot( fitresult, [xD, yD], zD );
+
 xlabel('SECONDS'); ylabel('DAY'); zlabel('NEURAL ACTIVITY')
-title([INFO(1).file(1:4) '  ' StimType]); grid on; view(-9,12)
-L1 = light('Position',[1 .3 .8],'Style','local');
-L2 = light('Position',[1 .5 1],'Style','local');
-lighting gouraud;
-% shading interp
+title([INFO(1).file(1:4) '  ' StimType]); 
+grid on; view(77,31)
+% L1 = light('Position',[20 1  .12],'Style','local');
+% L2 = light('Position',[90 5 -.12],'Style','local');
+h1(1).FaceAlpha = .9;
+h1(1).FaceColor = 'interp';
+h1(1).FaceLighting = 'gouraud';
+h1(1).BackFaceLighting = 'unlit';
+h1(1).EdgeAlpha = 1;
+h1(1).EdgeLighting = 'gouraud';
+% h1(1).Marker = '.';
+% h1(1).MarkerSize = 20;
+h1(1).AmbientStrength = .8;
+h1(1).SpecularStrength = .5;
+h1(1).SpecularExponent = 15;
+h1(1).SpecularColorReflectance = .2;
+
+h1(2).Marker = 'none';
+% h1(2).Marker = '.';
+% h1(2).MarkerEdgeColor = 'k';
+% camproj('perspective')
 hold on
+
+
+
+%------ DRAW STIM WINDOWS
 
 % axes(ax31)
 x = 30:2:55;
-y = 1:1:8;
-z = -.1:.05:.15;
+y = 1:1:size(ACT,2);
+% z = -.1:.05:.15;
+z = (min(zD)-.02):.05:max(zD)*1.2;
 [x,y,z] = meshgrid(x,y,z);
 v = x.*exp(-x.^2-y.^2-z.^2);
 xslice = [XLS(1).CSonsetFrame(1) , XLS(1).CSoffsetFrame(1)]; 
 yslice = 0; 
 zslice = [0,0];
 
-
 % hx = slice(x,y,z,v,xslice,yslice,zslice);
 hx = slice(x,y,z,v,xslice,[],[]);
 for i=1:length(hx)
-hx(i).FaceColor = 'interp';
+% hx(i).FaceColor = 'interp';
+hx(i).FaceColor = 'r';
 hx(i).EdgeColor = 'none';
-hx(i).FaceAlpha = .2;
+hx(i).FaceAlpha = .4;
 % colormap hsv
 end
 
 
-% Make contour plot.
-axes(ax32)
-h2 = plot( fitresult, [xD, yD], zD, 'Style', 'Contour' );
-xlabel('SECONDS'); ylabel('DAY'); grid on; hold on
-line([XLS(1).CSonsetFrame(1) XLS(1).CSonsetFrame(1)],ax32.YLim,...
-'Color','red','LineStyle','--')
-line([XLS(1).CSoffsetFrame(1) XLS(1).CSoffsetFrame(1)],ax32.YLim,...
-'Color','red','LineStyle','--')
+
+
+
+%-----------  MAKE BOTTOM PLOT 2D SIGNAL  ---------------------
+    axes(ax32)
+ph1 = plot(ACT);
+
+    axes(ax33)
+ph2 = plot(ACT,'.','LineStyle','none');
+    ax33.YLim = ax32.YLim;
+ni = numel(ph1);
+c = flipud(cool(ni));
+% c = cool(ni);
+for nn=1:numel(ph1)
+    ph1(nn).Color = c(nn,:);
+    ph2(nn).Color = c(nn,:);
+end
 
 
 
 
+line([XLS(1).CSonsetFrame(1) XLS(1).CSonsetFrame(1)],ax33.YLim,...
+'Color','red','LineStyle','--','LineWidth',2)
+line([XLS(1).CSoffsetFrame(1) XLS(1).CSoffsetFrame(1)],ax33.YLim,...
+'Color','red','LineStyle','--','LineWidth',2)
+
+
+
+
+
+
+
+%-----------  MAKE BOTTOM GRID SURF PLOT  ---------------------
+
+    axes(ax34)
+h1 = plot( fitresult, [xD, yD], zD );
+
+xlabel('SECONDS'); ylabel('DAY'); zlabel('NEURAL ACTIVITY')
+title([INFO(1).file(1:4) '  ' StimType]); 
+grid on; view(0,90); hold on;
+h1(1).FaceAlpha = .9;
+h1(1).FaceColor = 'interp';
+h1(1).FaceLighting = 'gouraud';
+h1(1).BackFaceLighting = 'unlit';
+h1(1).EdgeAlpha = 1;
+h1(1).EdgeLighting = 'gouraud';
+h1(1).AmbientStrength = .8;
+h1(1).SpecularStrength = .5;
+h1(1).SpecularExponent = 15;
+h1(1).SpecularColorReflectance = .2;
 h1(2).Marker = 'none';
-h2(2).Marker = 'none';
+
+line([XLS(1).CSonsetFrame(1) XLS(1).CSonsetFrame(1)],ax34.YLim,[50 50],...
+'Color','red','LineStyle','-','LineWidth',3)
+line([XLS(1).CSoffsetFrame(1) XLS(1).CSoffsetFrame(1)],ax34.YLim,[50 50],...
+'Color','red','LineStyle','-','LineWidth',3)
+
+
+% %------ MAKE BOTTOM CONTOUR PLOT
+% axes(ax32)
+% h4 = plot( fitresult, [xD, yD], zD, 'Style', 'Contour');
+% h4(2).Marker = 'none';
+% 
+% h4(1).LineWidth = .1;
+% h4(1).LineColor = [.2 .3 .8];
+% % h4(1).LevelStep = .02;
+% 
+% xlabel('SECONDS'); ylabel('DAY'); grid on; hold on
+% line([XLS(1).CSonsetFrame(1) XLS(1).CSonsetFrame(1)],ax32.YLim,...
+% 'Color','red','LineStyle','--')
+% line([XLS(1).CSoffsetFrame(1) XLS(1).CSoffsetFrame(1)],ax32.YLim,...
+% 'Color','red','LineStyle','--')
 
 
 
+
+
+
+% saveas(gcf,[INFO(1).file(1:4) '  ' INFO(1).PopupPick '.png'])
+% saveas(gcf,[INFO(1).file(1:4) '  ' INFO(1).PopupPick '.svg'])
+% saveas(gcf,[INFO(1).file(1:4) '  ' INFO(1).PopupPick],'epsc')
 
 clc;
+disp('figure saved')
 clearvars -except IMG INFO XLS FRM PIX IMX STIM IMS IMT rows cols IMD
 
 
-saveas(gcf,[INFO(1).file(1:4) '  ' INFO(1).PopupPick '.png'])
-saveas(gcf,[INFO(1).file(1:4) '  ' INFO(1).PopupPick '.svg'])
-saveas(gcf,[INFO(1).file(1:4) '  ' INFO(1).PopupPick],'epsc')
-disp('figure saved')
 
 
 

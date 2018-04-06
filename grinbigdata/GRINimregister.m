@@ -29,15 +29,19 @@ clearvars -except datapaths datafiles
 %% IMPORT DATASETS INTO CELL STRUCT
 
 % IMPORT DATASETS
-DATA = {};
+DATA = cell(size(datapaths));
 
 for nn = 1:size(datapaths,1)
 
     DATA{nn} = load(datapaths{nn});
 
+    IMGC = DATA{nn}.IMGS;
+    DATA{nn} = rmfield(DATA{nn},'IMGS');
+    DATA{nn}.IMGC = IMGC;
+
 end
 
-
+clearvars -except datapaths datafiles DATA
 
 
 %% PREVIEW IMAGE STACK FROM FIRST STACK
@@ -63,19 +67,66 @@ clearvars -except datapaths datafiles DATA
 
 
 
-%% SAVE GREEN CHANNEL PROJECTION IMAGE FOR EACH DAY INTO 'IM'
 
-IM = zeros(size(DATA{1}.IMGC,1),size(DATA{1}.IMGC,2),size(DATA,2));
 
-for mm = 1:size(DATA,2)
+
+
+%% MAKE EVERY DAY 40 X 40 IMAGE
+
+
+if size(DATA{1}.IMGC , 1) ~= 40 
+
+for mm = 1:size(DATA,1)
 
     I = DATA{mm}.IMGC;
+
+    B = imresize(I,[40 40]);
+
+    DATA{mm}.IMGC = B;
+
+end
+
+end
+
+
+clc; clearvars -except datapaths datafiles DATA
+
+
+
+%% NORMALIZE TO RED CHANNEL THEN DISCARD RED CHANNEL
+
+
+
+
+% TBD
+
+
+
+
+
+
+
+%% SAVE GREEN CHANNEL PROJECTION IMAGE FOR EACH DAY INTO 'IM'
+clc;
+
+IM = zeros(size(DATA{1}.IMGC,1),size(DATA{1}.IMGC,2),size(DATA,1));
+
+for mm = 1:size(DATA,1)
+
+    I = DATA{mm}.IMGC;
+
     IM(:,:,mm) = mean(mean(I,4),3);
 
 end
 
 
 clearvars -except datapaths datafiles DATA IM
+
+
+
+
+
+
 
 
 
@@ -99,11 +150,9 @@ clearvars -except datapaths datafiles DATA IM
 
 %% SHOW MONTAGE OF EACH DAY'S PROJECTION IMAGE
 
-% imaqmontage(data, 'Parent', a);
-
 close all
 fh1=figure('Units','normalized','OuterPosition',[.05 .06 .9 .9],'Color','w','MenuBar','none');
-hax1 = axes('Position',[.05 .05 .9 .9],'Color','none'); %hold on;
+hax1 = axes('Position',[.01 .04 .97 .95],'Color','none'); %hold on;
 
 clc
 disp('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
@@ -111,18 +160,13 @@ disp('CLOSE WINDOW WHEN READY TO CONTINUE')
 disp('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 disp(' ')
 
-% montage(I) displays all the frames of a multiframe image array I in a 
-% single image object. I can be a sequence of binary, grayscale, or 
-% truecolor images. A binary or grayscale image sequence must be an 
-% M-by-N-by-1-by-K array. A truecolor image sequence must be an 
-% M-by-N-by-3-by-K array.
-
 I = mat2gray(reshape(IM,40,40,1,[]));
 
-montage(I,'Parent',hax1, 'Size', [NaN 5],...
-         'DisplayRange',[(min(I(:))-(max(I(:)) - min(I(:)))/8)  max(I(:))])
-uiwait
+hm = montage(I,'Parent',hax1, 'Size', [NaN 9]);
 
+colormap(jet)
+
+uiwait
 close all;
 
 
@@ -146,15 +190,16 @@ close all;
 fhIMA=figure('Units','normalized','OuterPosition',[.1 .1 .6 .8],'Color','w','MenuBar','none');
 haxIMA = axes('Position',[.05 .05 .9 .9],'Color','none','XTick',[],'YTick',[]);
 
-axes(haxIMA)
-phG = imagesc(I,'Parent',haxIMA,'CDataMapping','scaled');
-% phG = imshowpair(IM(:,:,1), I,'Scaling','joint');
 
-[cmax, cmaxi] = max(I(:));
-[cmin, cmini] = min(I(:));
-cmax = cmax - abs(cmax/12);
-cmin = cmin + abs(cmin/12);
-haxIMA.CLim = [cmin cmax];
+% axes(haxIMA)
+phG = imagesc(I,'Parent',haxIMA,'CDataMapping','scaled');
+% phG = imshowpair(IM(:,:,1), I,'Scaling','independent');
+
+% [cmax, cmaxi] = max(I(:));
+% [cmin, cmini] = min(I(:));
+% cmax = cmax - abs(cmax/12);
+% cmin = cmin + abs(cmin/12);
+% haxIMA.CLim = [cmin cmax];
 
 
 % SELECT TWO ROI POINTS
@@ -191,6 +236,7 @@ clearvars -except datapaths datafiles DATA IM AlignVals
 
 
 %% USE ALIGNMENT VALUES FOR TRANSLATION
+clc;
 
 n = round(numel(AlignVals.P1x) / 2);
 
@@ -210,26 +256,23 @@ tY = MASTER1y - IMy;
 
 
 
-IMGC={}; IMRC={};
-for mm = 1:size(DATA,2)
+IMGC={};
+for mm = 1:size(DATA,1)
     IMGC{mm} = DATA{mm}.IMGC;
-    IMRC{mm} = DATA{mm}.IMRC;
 end
 
 
-IMGA={}; IMRA={};
+IMGA={};
 for i = 1:size(IMGC,2)
 
     G = IMGC{i};
-    R = IMRC{i};
 
     IMGA{i} = imtranslate(G,[tX(i), tY(i)],'FillValues',mean(G(:)),'OutputView','same');
-    IMRA{i} = imtranslate(R,[tX(i), tY(i)],'FillValues',mean(R(:)),'OutputView','same');
 
 end
 
 
-clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA
+clearvars -except datapaths datafiles DATA IM AlignVals IMGA
 
 
 
@@ -237,18 +280,21 @@ clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA
 
 
 %% PREVIEW ALIGNMENT
+clc; close all;
+
 
 IG = zeros(size(IMGA{1},1) , size(IMGA{1},2) , size(IMGA,2));
-IR = zeros(size(IMRA{1},1) , size(IMRA{1},2) , size(IMRA,2));
+
 
 for nn = 1:size(IG,3)
 
     IG(:,:,nn) = mean(mean(IMGA{nn},4),3);
 
-    IR(:,:,nn) = mean(mean(IMRA{nn},4),3);
-
 end
 
+
+
+%---------  PREVIEW ALIGNMENT AND CAPTURE GIF FRAMES  -----------
 
 close all
 fh1=figure('Units','normalized','OuterPosition',[.1 .1 .4 .6],'Color','w','MenuBar','none');
@@ -259,20 +305,56 @@ ph1 = imagesc(IG(:,:,1)); pause(.2)
 for nn = 1:size(IG,3)
 
     ph1.CData = IG(:,:,nn);
+    title(DATA{nn}.GRINstruct.file,'Interpreter','none')
     pause(.4)
+
+    frame = getframe(fh1);
+    figframe{nn} = frame2im(frame);
 
 end
 
 
 
+% --- JUST WAIT TO SAVE A GIF OF THE CROPPED DATA BELOW ---
+%
+% clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA IG IR...
+% isred figframe
+% 
+% 
+% %---------  SAVE ANIMATED GIF OF ALIGNMENT  -----------
+% 
+% filename = [DATA{1}.GRINstruct.file(1:4) '_aligned.gif'];
+% 
+% for i = 1:size(figframe,2)
+% 
+%     [A,map] = rgb2ind(figframe{i},256);
+% 
+%     if i == 1
+%         imwrite(A,map,filename,'gif','LoopCount',Inf,'DelayTime',.5);
+%     else
+%         imwrite(A,map,filename,'gif','WriteMode','append','DelayTime',.5);
+%     end
+% end
+% 
+% close all;
 
-clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA IG IR
+
+clearvars -except datapaths datafiles DATA IM AlignVals IMGA IG
 
 
 
 
 
-% GET CROPBOX COORDINATES FOR ALIGNED (REGISTERED) STACKS
+
+
+
+
+
+
+
+
+%% GET CROPBOX COORDINATES FOR ALIGNED (REGISTERED) STACKS
+clc; close all;
 
 I = mean(IG,3);
 
@@ -300,107 +382,228 @@ setResizable(h,false)
 CropPosition = wait(h);
 close all;
 
-CropPosition = round(CropPosition);
+% CropPosition = round(CropPosition);
+
+pos = [ceil(CropPosition(1:2) - .5) ceil(CropPosition(3:4))];
+cols = pos(1):(pos(1)+pos(3)-1);
+rows = pos(2):(pos(2)+pos(4)-1);
 
 
 
-clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA IG IR ...
-CropPosition
-
+clearvars -except datapaths datafiles DATA IM AlignVals IMGA IG...
+CropPosition pos cols rows
 
 
 
 %% CROP AND TILE ALIGNED IMAGE STACK FOR EACH DAY
 
-s = size(IMGA{1},1);
-x = CropPosition(1);
-y = CropPosition(2);
-w = CropPosition(3);
-h = CropPosition(4);
+%---- CROP IMAGES
+
+IMGAC={}; 
+
+for i = 1:size(IMGA,2)
+
+    G = IMGA{i};
+    IMGAC{i} = G(rows , cols , :, :);
+
+end
 
 
+
+
+%---------  PREVIEW ALIGNED & CROPPED STACK  -----------
+
+close all
+fh1=figure('Units','normalized','OuterPosition',[.1 .1 .4 .6],'Color','w','MenuBar','none');
+hax1 = axes('Position',[.05 .05 .9 .9],'Color','none');
+
+IMU = mean(mean(IMGAC{1},4),3);
+
+ph1 = imagesc(IMU); pause(.2)
+
+for nn = 1:size(IG,3)
+
+    IMU = mean(mean(IMGAC{nn},4),3);
+
+    ph1.CData = IMU;
+    title(DATA{nn}.GRINstruct.file,'Interpreter','none')
+    pause(.2)
+
+    frame = getframe(fh1);
+    figframe{nn} = frame2im(frame);
+
+end
+
+
+%---------  SAVE ANIMATED GIF OF ALIGNMENT  -----------
+
+filename = [DATA{1}.GRINstruct.file(1:4) '_aligned_cropped.gif'];
+for i = 1:size(figframe,2)
+    [A,map] = rgb2ind(figframe{i},256);
+    if i == 1
+        imwrite(A,map,filename,'gif','LoopCount',Inf,'DelayTime',.5);
+    else
+        imwrite(A,map,filename,'gif','WriteMode','append','DelayTime',.5);
+    end
+end
+close all;
+
+
+
+clearvars -except datapaths datafiles DATA IM AlignVals IMGA IG IMGAC
+
+
+
+
+
+% ################################################################
+%%                      SAVE ALIGNED DATASET
+% ################################################################
+
+%---- SAVE STACK BACK INTO MAIN DATA CONTAINER
+for i = 1:size(IMGAC,2)
+
+    DATA{i}.IMAL = IMGAC{i};
+
+end
+
+
+
+for nn = 1:size(DATA,1)
+
+    if isfield(DATA{nn}, 'blockSize')
+        DATA{nn} = rmfield(DATA{nn},'blockSize');
+    end
+
+%     if isfield(DATA{nn}, 'IMGC')
+%     DATA{nn} = rmfield(DATA{nn},'IMGC');
+%     end
+% 
+%     if isfield(DATA{nn}, 'IMGR')
+%     DATA{nn} = rmfield(DATA{nn},'IMGR');
+%     end
+
+end
+
+
+clc; clearvars -except datapaths datafiles DATA IM AlignVals IMGA IG IMGAC
+
+
+filename = [DATA{1}.GRINstruct.file(1:4) '_ALIGNED.mat'];
+
+save(filename,'DATA')
+
+
+
+
+
+
+
+return
+
+open GRINbiganalysis_v2.m
+
+
+
+
+
+
+
+
+%% OTHER CRAP...
+
+
+%% CROP AND TILE ALIGNED IMAGE STACK FOR EACH DAY
+%{
+% s = size(IMGA{1},1);
+% x = CropPosition(1);
+% y = CropPosition(2);
+% w = CropPosition(3);
+% h = CropPosition(4);
+% 
+% 
+% % %---- CROP IMAGES
+% % IMGAC={}; IMRAC={};
+% % for i = 1:size(IMGA,2)
+% %     G = rot90(IMGA{i});
+% %     R = rot90(IMRA{i});
+% %     IMGAC{i} = rot90(  G(x:(x+w-1) , y:(y+h-1) , :)   ,-1);
+% %     IMRAC{i} = rot90(  R(x:(x+w-1) , y:(y+h-1) , :)   ,-1);
+% % end
+% 
 % %---- CROP IMAGES
 % IMGAC={}; IMRAC={};
 % for i = 1:size(IMGA,2)
-%     G = rot90(IMGA{i});
-%     R = rot90(IMRA{i});
-%     IMGAC{i} = rot90(  G(x:(x+w-1) , y:(y+h-1) , :)   ,-1);
-%     IMRAC{i} = rot90(  R(x:(x+w-1) , y:(y+h-1) , :)   ,-1);
+%     G = IMGA{i};
+%     R = IMRA{i};
+%     IMGAC{i} = G(x:(x+w-1) , y:(y+h-1) , :, :);
+%     IMRAC{i} = R(x:(x+w-1) , y:(y+h-1) , :, :);
 % end
+% 
+% 
+% 
+% %---- RESIZE IMAGES
+% for i = 1:size(IMGAC,2)
+% 
+%     IMGAC{i} = imresize(IMGAC{i}, 1/4 , 'bilinear');
+%     IMRAC{i} = imresize(IMRAC{i}, 1/4 , 'bilinear');
+% 
+% end
+% 
+% % size(IMGA{1})
+% % size(IMGAC{1})
+% 
+% 
+% for i = 1:size(IMGAC,2)
+% 
+% DATA{i}.IMGAC = IMGAC{i};
+% DATA{i}.IMRAC = IMRAC{i};
+% 
+% end
+% 
+% clc; close all;
+% clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA IG IR ...
+% CropPosition
+% 
+% 
+% 
+% 
+% 
+% 
+% %% PREVIEW ALIGNED AND CROPPED IMAGES
+% 
+% IMGAC={}; IMRAC={};
+% for i = 1:size(DATA,2)
+%     IMGAC{i} = DATA{i}.IMGAC;
+%     IMRAC{i} = DATA{i}.IMRAC;
+% end
+% 
+% 
+% IG = zeros(size(IMGAC{1},1) , size(IMGAC{1},2) , size(IMGAC,2));
+% IR = zeros(size(IMRAC{1},1) , size(IMRAC{1},2) , size(IMRAC,2));
+% 
+% for nn = 1:size(IG,3)
+%     IG(:,:,nn) = mean(mean(IMGAC{nn},4),3);
+%     IR(:,:,nn) = mean(mean(IMRAC{nn},4),3);
+% end
+% 
+% figure('Units','normalized','OuterPosition',[.1 .1 .4 .6],'Color','w','MenuBar','none');
+% axes('Position',[.05 .05 .9 .9],'Color','none');
+% ph1 = imagesc(IG(:,:,1)); pause(1)
+% for nn = 1:size(IG,3)
+%     ph1.CData = IG(:,:,nn); pause(.8);
+% end
+% 
+% 
+% 
+% clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA IG IR ...
+% CropPosition
 
-%---- CROP IMAGES
-IMGAC={}; IMRAC={};
-for i = 1:size(IMGA,2)
-    G = IMGA{i};
-    R = IMRA{i};
-    IMGAC{i} = G(x:(x+w-1) , y:(y+h-1) , :, :);
-    IMRAC{i} = R(x:(x+w-1) , y:(y+h-1) , :, :);
-end
-
-
-
-%---- RESIZE IMAGES
-for i = 1:size(IMGAC,2)
-
-    IMGAC{i} = imresize(IMGAC{i}, 1/4 , 'bilinear');
-    IMRAC{i} = imresize(IMRAC{i}, 1/4 , 'bilinear');
-
-end
-
-% size(IMGA{1})
-% size(IMGAC{1})
-
-
-for i = 1:size(IMGAC,2)
-
-DATA{i}.IMGAC = IMGAC{i};
-DATA{i}.IMRAC = IMRAC{i};
-
-end
-
-clc; close all;
-clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA IG IR ...
-CropPosition
-
-
-
-
-
-
-%% PREVIEW ALIGNED AND CROPPED IMAGES
-
-IMGAC={}; IMRAC={};
-for i = 1:size(DATA,2)
-    IMGAC{i} = DATA{i}.IMGAC;
-    IMRAC{i} = DATA{i}.IMRAC;
-end
-
-
-IG = zeros(size(IMGAC{1},1) , size(IMGAC{1},2) , size(IMGAC,2));
-IR = zeros(size(IMRAC{1},1) , size(IMRAC{1},2) , size(IMRAC,2));
-
-for nn = 1:size(IG,3)
-    IG(:,:,nn) = mean(mean(IMGAC{nn},4),3);
-    IR(:,:,nn) = mean(mean(IMRAC{nn},4),3);
-end
-
-figure('Units','normalized','OuterPosition',[.1 .1 .4 .6],'Color','w','MenuBar','none');
-axes('Position',[.05 .05 .9 .9],'Color','none');
-ph1 = imagesc(IG(:,:,1)); pause(1)
-for nn = 1:size(IG,3)
-    ph1.CData = IG(:,:,nn); pause(.8);
-end
-
-
-
-clearvars -except datapaths datafiles DATA IM AlignVals IMGA IMRA IG IR ...
-CropPosition
-
-
+%}
 
 
 %% NORMALIZE DATASET
-
+%{
 
 IMGAC={}; IMRAC={};
 for i = 1:size(DATA,2)
@@ -794,7 +997,7 @@ t.writeEncodedStrip(1, stripData);
 
 t.write(data);
 t.close();
-%}
+
 
 %% PREVIEW TRANSLATED IMAGE STACK
 close all
@@ -881,4 +1084,6 @@ montage(reshape(Gz,size(IM,1),size(IM,2),1,size(IM,3)),...
 % 
 % hax1.CLim = [min([CL1 CL2])     max([CL1 CL2])  ]
 % hax2.CLim = [min([CL1 CL2])     max([CL1 CL2])  ]
+
+%}
 
