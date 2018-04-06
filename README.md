@@ -8,18 +8,11 @@ https://giant.gfycat.com/DearSingleDiscus.webm
   <source src="https://giant.gfycat.com/DearSingleDiscus.gifv" type="video/gifv">
 Your browser does not support the video tag.
 </video>
-
-
+<img src="https://thumbs.gfycat.com/DearSingleDiscus-max-14mb.gif">
+<img src="https://i.imgur.com/JnO77zT.gif">
 --->
 
-
-
-<img src="https://thumbs.gfycat.com/DearSingleDiscus-max-14mb.gif">
-
-
-<img src="https://i.imgur.com/JnO77zT.gif">
-
-<img src="https://thumbs.gfycat.com/DearSingleDiscus-small.gif">
+<img src="https://thumbs.gfycat.com/DearSingleDiscus-small.gif" width="500" border="4">
 
 
 
