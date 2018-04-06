@@ -2,7 +2,31 @@
 
 <!---
 img src="https://cdn.rawgit.com/subroutines/grin/afbd4849/gc74%20%20tone%20sucrose%20omission.svg" width="800" border="10" 
+https://giant.gfycat.com/DearSingleDiscus.webm
+<video width="320" height="240" controls>
+  <source src="https://giant.gfycat.com/DearSingleDiscus.webm" type="video/webm">
+  <source src="https://giant.gfycat.com/DearSingleDiscus.gifv" type="video/gifv">
+Your browser does not support the video tag.
+</video>
+
+
 --->
+
+
+
+<img src="https://thumbs.gfycat.com/DearSingleDiscus-max-14mb.gif">
+
+
+<img src="https://i.imgur.com/JnO77zT.gif">
+
+<img src="https://thumbs.gfycat.com/DearSingleDiscus-small.gif">
+
+
+
+
+
+
+
 
 ## GRIN lens MATLAB toolbox
 
