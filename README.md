@@ -12,7 +12,7 @@ Your browser does not support the video tag.
 <img src="https://i.imgur.com/JnO77zT.gif">
 --->
 
-<img src="https://thumbs.gfycat.com/DearSingleDiscus-small.gif" width="500" border="4">
+<img src="https://thumbs.gfycat.com/DearSingleDiscus-small.gif" width="400" border="4">
 
 
 
