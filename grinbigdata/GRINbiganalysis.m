@@ -1060,10 +1060,8 @@ ACT = IMD;
 % ACT(:,[6,9]) = [];
 % ACT(:,[8,9]) = [];
 % ACT = ACT(:,1:9);
-
-[i,j] = sort(mean(ACT(52:65,:)),'descend');
-
-ACT = ACT(:,j);
+% [i,j] = sort(mean(ACT(52:65,:)),'descend');
+% ACT = ACT(:,j);
 
 
 % ACT(1:40,:) = zscore(ACT(1:40,:));
