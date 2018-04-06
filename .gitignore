@@ -19,3 +19,5 @@ grindata
 grindata/*
 grinfigures
 grinfigures/*
+grinbigdata/archive/*
+grinaligned/*
