@@ -1,9 +1,9 @@
 clc; close all; clear all;
 % system('sudo purge')
 
-cd(fileparts(which('GRINtoolboxGUI.m')));
+cd(fileparts(which('GRINbiganalysis.m')));
 fprintf('\n\n Working DIR set to: \n % s \n', ...
-fileparts(which('GRINtoolboxGUI.m')))
+fileparts(which('GRINbiganalysis.m')))
 
 
 
@@ -1068,7 +1068,9 @@ ACT = IMD;
 % ACT(1:40,:) = ACT(1:40,:) - mean(ACT(1:40,:));
 
 %--------------------- SMOOTH DATA ---------------------
-ACT = ACT - mean(ACT(1:40,:));
+szA = size(ACT,2);
+
+ACT = ACT - mean(mean(ACT(1:40,:)));
 ACT(1:40,:) = reshape(smooth(ACT(1:40,:),15,'rlowess'),size(ACT(1:40,:)));
 ACT(80:end,:) = reshape(smooth(ACT(80:end,:),10,'rlowess'),size(ACT(80:end,:)));
 ACT(80:end,:) = reshape(smooth(ACT(80:end,:),10,'rlowess'),size(ACT(80:end,:)));

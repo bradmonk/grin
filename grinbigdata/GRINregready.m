@@ -2,7 +2,7 @@
 
 %% PURGE RAM
 clc; close all; clear;
-system('sudo purge')
+% system('sudo purge')
 F = what('grindata');
 cd(F.path);
 
@@ -33,11 +33,17 @@ DATA = cell(size(datapaths));
 
 for nn = 1:size(datapaths,1)
 
+    disp(datapaths{nn})
+
     DATA{nn} = load(datapaths{nn});
 
+    f = isfield(DATA{nn}, {'IMGS', 'IMGC', 'IMRC', 'LICK'});
+    
+    if f(1)
     IMGC = DATA{nn}.IMGS;
     DATA{nn} = rmfield(DATA{nn},'IMGS');
     DATA{nn}.IMGC = IMGC;
+    end
 
 end
 
@@ -74,15 +80,24 @@ clearvars -except datapaths datafiles DATA
 %% MAKE EVERY DAY 40 X 40 IMAGE
 
 
-if size(DATA{1}.IMGC , 1) ~= 40 
-
 for mm = 1:size(DATA,1)
+
+    sz = size(DATA{1}.IMGC , 1);
+
+    fprintf('\nIMPORTED STACK SIZE FOR [[%s]]: %.0f x %.0f \n' ,...
+        DATA{mm}.GRINstruct.file,sz,sz)
+
+if sz ~= 40 
+    disp('...resizing to 40x40')
 
     I = DATA{mm}.IMGC;
 
     B = imresize(I,[40 40]);
 
     DATA{mm}.IMGC = B;
+    
+    disp('resize successful.')
+else
 
 end
 
@@ -93,16 +108,29 @@ clc; clearvars -except datapaths datafiles DATA
 
 
 
+
+
+%% EXPORT ALIGNMENT-READY STACK
+
+clc; clearvars -except DATA
+
+filename = [DATA{1}.GRINstruct.file(1:4) '_REGREADY.mat'];
+
+save(filename,'DATA')
+
+clc
+disp(filename)
+disp('Saved in this folder: ')
+disp(pwd)
+
+
+
+
+%% PERFORM ALIGNMENT
+%{
 %% NORMALIZE TO RED CHANNEL THEN DISCARD RED CHANNEL
 
-
-
-
 % TBD
-
-
-
-
 
 
 
@@ -502,15 +530,7 @@ save(filename,'DATA')
 return
 
 open GRINbiganalysis_v2.m
-
-
-
-
-
-
-
-
-%% OTHER CRAP...
+%}
 
 
 %% CROP AND TILE ALIGNED IMAGE STACK FOR EACH DAY

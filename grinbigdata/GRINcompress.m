@@ -1,4 +1,4 @@
-function [] = GRINbigsaveGUI(varargin)
+function [] = GRINcompress(varargin)
 %% GRINbigsaveGUI.m - GRIN LENS IMAGING TOOLBOX
 %{
 % 
