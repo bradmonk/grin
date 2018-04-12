@@ -1,17 +1,33 @@
-%% GRINimregister
+%% GRINalign
+%{
+GRINalign is the fourth step in the grinbigdata pipeline.
 
-%% PURGE RAM
+1. GRINcompress
+2. GRINregready
+3. GRINdaypicker
+4. [[ GRINalign ]]
+5. GRINbiganalysis
+
+GRINalign imports a mat file created by GRINdaypicker which contains
+a subset of days for a particular animal than need to be aligned before
+analysis.
+
+%}
+
+%% CLEAR RAM AND CHANGE WORKING DIRECTORIES
 clc; close all; clear;
 % system('sudo purge')
-F = what('grindata');
-cd(F.path);
-
+g=what('grin'); m=what('grin-master');
+try cd(g.path); catch;end; try cd(m.path); catch;end
+try cd([g.path filesep 'grindata' filesep 'grin_daypicks']); catch;end
+try cd([m.path filesep 'grindata' filesep 'grin_daypicks']); catch;end
+% addpath([g.path filesep 'grindata' filesep 'grin_compressed'])
 
 
 %% GET PATHS TO REGREADY MAT FILE
 clc; close all; clear
 
-disp('Choose a regready mat file.')
+disp('Choose a daypicks mat file.')
 
 [filename , filepath] = uigetfile;
 fullpath = [filepath, filename];
@@ -20,7 +36,7 @@ clearvars -except filename filepath fullpath
 
 
 % LOAD ALIGNMENT-READY STACK
-disp('Loading REGREADY.mat file (please wait)...')
+disp('Loading DAYPICKS.mat file (please wait)...')
 load(fullpath)
 disp('Finished loading REGREADY.mat')
 
@@ -33,6 +49,7 @@ disp('Finished loading REGREADY.mat')
 %#############################################################
 %%               WHAT DAYS TO ALIGN??
 %#############################################################
+%{
 clc
 
 answer = questdlg('DO YOU HAVE AN EXCEL SHEET WITH DAYS?', ...
@@ -52,7 +69,7 @@ switch answer
     case 'NO'
         disp('NO EXCEL FILE IT IS. PREPARE TO ALIGN ALL DAYS...')
 end
-
+%}
 
 
 
@@ -94,7 +111,7 @@ ph1 = imagesc(IM(:,:,1)); pause(1)
 for nn = 1:size(IM,3)
     fprintf('Stack: % .0f \n',nn)
     ph1.CData = IM(:,:,nn);
-    pause(.5)
+    pause(.1)
 end
 
 
@@ -259,8 +276,8 @@ ph1 = imagesc(IG(:,:,1)); pause(.2)
 for nn = 1:size(IG,3)
 
     ph1.CData = IG(:,:,nn);
-    title(DATA{nn}.GRINstruct.file,'Interpreter','none')
-    pause(.4)
+    title(DATA{nn}.INFO.file,'Interpreter','none')
+    pause(.2)
 
     frame = getframe(fh1);
     figframe{nn} = frame2im(frame);
@@ -380,7 +397,7 @@ for nn = 1:size(IG,3)
     IMU = mean(mean(IMGAC{nn},4),3);
 
     ph1.CData = IMU;
-    title(DATA{nn}.GRINstruct.file,'Interpreter','none')
+    title(DATA{nn}.INFO.file,'Interpreter','none')
     pause(.2)
 
     frame = getframe(fh1);
@@ -391,7 +408,7 @@ end
 
 %---------  SAVE ANIMATED GIF OF ALIGNMENT  -----------
 
-filename = [DATA{1}.GRINstruct.file(1:4) '_aligned_cropped.gif'];
+filename = [DATA{1}.INFO.file(1:4) '_aligned_cropped.gif'];
 for i = 1:size(figframe,2)
     [A,map] = rgb2ind(figframe{i},256);
     if i == 1
@@ -442,15 +459,12 @@ end
 
 clc; clearvars -except datapaths datafiles DATA IM AlignVals IMGA IG IMGAC
 
+cd('..')
 
-filename = [DATA{1}.GRINstruct.file(1:4) '_ALIGNED_.mat'];
+filename = [DATA{1}.INFO.file(1:4) '_ALIGNED_.mat'];
 
 % save(filename,'DATA')
 uisave('DATA',filename)
 
 disp('Finished.')
 
-
-
-return
-open GRINbiganalysis.m

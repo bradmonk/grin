@@ -1,55 +1,32 @@
 function [] = GRINcompress(varargin)
-%% GRINbigsaveGUI.m - GRIN LENS IMAGING TOOLBOX
-%{
+%% GRINcompress
+%
+% GRINcompress is the first step in the GRIN BIGDATA pipeline.
 % 
-% Syntax
-% -----------------------------------------------------
-%     GRINtoolboxGUI()
+% This processing pipeline includes:
 % 
-% 
-% Description
-% -----------------------------------------------------
-% 
-%     GRINtoolboxGUI() is run with no arguments passed in. The user
-%     will be prompted to select a directory which contains the image data
-%     tif stack along with the corresponding xls file.
-%     
-% 
-% Useage Definitions
-% -----------------------------------------------------
-% 
-%     GRINtoolboxGUI()
-%         launches a GUI to process image stack data from GRIN lens
-%         experiments
-%  
+%   1. [[ GRINcompress ]]
+%   2. GRINregready
+%   3. GRINdaypicker
+%   4. GRINalign
+%   5. GRINbiganalysis
 % 
 % 
-% Example
-% -----------------------------------------------------
-% 
-%     TBD
 % 
 % 
-% See Also
-% -----------------------------------------------------
-% >> web('http://bradleymonk.com/grintoolbox')
-% >> web('http://imagej.net/Miji')
-% >> web('http://bigwww.epfl.ch/sage/soft/mij/')
-% 
-% 
-% Attribution
-% -----------------------------------------------------
-% % Created by: Bradley Monk
-% % email: brad.monk@gmail.com
-% % website: bradleymonk.com
-% % 2016.07.04
-%}
 %----------------------------------------------------
-clc; close all; clear all;
-[str,maxsize] = computer;
-if strcmp(str,'MACI64')
-    disp(' '); disp('Purging RAM'); 
-end
+
+
+
+
+
+%% CLEAR RAM AND CHANGE WORKING DIRECTORIES
+clc; close all; clear;
+% system('sudo purge')
+g=what('grin'); m=what('grin-master');
+try cd(g.path); catch;end
+try cd(m.path); catch;end
+disp(pwd)
 
 disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 
@@ -61,11 +38,9 @@ disp('WELCOME TO THE GRIN LENS IMAGING TOOLBOX')
 global datafilepath
 global thisfilefun
 global thisfilepath
-thisfilefun = 'GRINbigsaveGUI';
-thisfile = 'GRINbigsaveGUI.m';
+thisfilefun = 'GRINcompress';
+thisfile = 'GRINcompress.m';
 thisfilepath = fileparts(which(thisfile));
-cd(thisfilepath);
-cd('..');
 thisfilepath = pwd;
 
 % fprintf('\n\n Current working path set to: \n % s \n', thisfilepath)

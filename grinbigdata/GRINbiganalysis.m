@@ -1,9 +1,26 @@
-clc; close all; clear all;
-% system('sudo purge')
+%% GRINbiganalysis
+%{
+GRINbiganalysis is the fifth step in the grinbigdata pipeline.
 
-cd(fileparts(which('GRINbiganalysis.m')));
-fprintf('\n\n Working DIR set to: \n % s \n', ...
-fileparts(which('GRINbiganalysis.m')))
+1. GRINcompress
+2. GRINregready
+3. GRINdaypicker
+4. GRINalign
+5. [[ GRINbiganalysis ]]
+
+GRINbiganalysis imports a mat file created by GRINalign which contains
+aligned image stacks across days.
+
+%}
+
+%% CLEAR RAM AND CHANGE WORKING DIRECTORIES
+clc; close all; clear;
+% system('sudo purge')
+g=what('grin'); m=what('grin-master');
+try cd(g.path); catch;end; try cd(m.path); catch;end
+try cd([g.path filesep 'grindata' filesep 'grin_aligned']); catch;end
+try cd([m.path filesep 'grindata' filesep 'grin_aligned']); catch;end
+% addpath([g.path filesep 'grindata' filesep 'grin_aligned'])
 
 
 

@@ -1,12 +1,34 @@
-%% GRINimregister
+%% GRINregready
+%{
+GRINregready is the second step in the grin bigdata pipeline.
 
-%% PURGE RAM
+1. GRINcompress
+2. [[ GRINregready ]]
+3. GRINdaypicker
+4. GRINalign
+5. GRINbiganalysis
+
+GRINregready imports mat files created by 'GRINcompress' and packages
+them into a single mat file that can be used by 'GRINdaypicker'.
+
+This script also performs several checks to make sure information and
+content from each mat file is standardized. It will check that each
+mat file calls variables by the same name, and makes sure all image
+stacks are the same hight and width.
+
+%}
+
+
+
+
+%% CLEAR RAM AND CHANGE WORKING DIRECTORIES
 clc; close all; clear;
 % system('sudo purge')
-M = what('grin-master');
-F = what('grin');
-cd(M.path);
-cd(F.path);
+g=what('grin'); m=what('grin-master');
+try cd(g.path); catch;end; try cd(m.path); catch;end
+try cd([g.path filesep 'grindata' filesep 'grin_compressed']); catch;end
+try cd([m.path filesep 'grindata' filesep 'grin_compressed']); catch;end
+% addpath([g.path filesep 'grindata' filesep 'grin_compressed'])
 
 
 
@@ -124,11 +146,10 @@ clearvars -except datapaths datafiles DATA
 clc; clearvars -except DATA
 
 
-try
-F = what('grin');
-cd([F.path filesep 'grindata' filesep 'grin_regready']);
-catch
-end
+g=what('grin'); m=what('grin-master');
+try cd(g.path); catch;end; try cd(m.path); catch;end
+try cd([g.path filesep 'grindata' filesep 'grin_regready']); catch;end
+try cd([m.path filesep 'grindata' filesep 'grin_regready']); catch;end
 
 
 filename = [DATA{1}.INFO.file(1:4) '_REGREADY.mat'];
