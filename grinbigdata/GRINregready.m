@@ -3,7 +3,9 @@
 %% PURGE RAM
 clc; close all; clear;
 % system('sudo purge')
-F = what('grindata');
+M = what('grin-master');
+F = what('grin');
+cd(M.path);
 cd(F.path);
 
 
@@ -37,13 +39,20 @@ for nn = 1:size(datapaths,1)
 
     DATA{nn} = load(datapaths{nn});
 
-    f = isfield(DATA{nn}, {'IMGS', 'IMGC', 'IMRC', 'LICK'});
+    f = isfield(DATA{nn}, {'IMGS', 'IMGC', 'IMRC', 'LICK','INFO'});
     
     if f(1)
     IMGC = DATA{nn}.IMGS;
     DATA{nn} = rmfield(DATA{nn},'IMGS');
     DATA{nn}.IMGC = IMGC;
     end
+
+    if ~f(5)
+    INFO = DATA{nn}.GRINstruct;
+    DATA{nn} = rmfield(DATA{nn},'GRINstruct');
+    DATA{nn}.INFO = INFO;
+    end
+
 
 end
 
@@ -84,8 +93,8 @@ for mm = 1:size(DATA,1)
 
     sz = size(DATA{1}.IMGC , 1);
 
-    fprintf('\nIMPORTED STACK SIZE FOR [[%s]]: %.0f x %.0f \n' ,...
-        DATA{mm}.GRINstruct.file,sz,sz)
+    fprintf('IMPORTED STACK SIZE FOR [[%s]]: %.0f x %.0f \n' ,...
+        DATA{mm}.INFO.file,sz,sz)
 
 if sz ~= 40 
     disp('...resizing to 40x40')
@@ -104,7 +113,7 @@ end
 end
 
 
-clc; clearvars -except datapaths datafiles DATA
+clearvars -except datapaths datafiles DATA
 
 
 
@@ -114,7 +123,15 @@ clc; clearvars -except datapaths datafiles DATA
 
 clc; clearvars -except DATA
 
-filename = [DATA{1}.GRINstruct.file(1:4) '_REGREADY.mat'];
+
+try
+F = what('grin');
+cd([F.path filesep 'grindata' filesep 'grin_regready']);
+catch
+end
+
+
+filename = [DATA{1}.INFO.file(1:4) '_REGREADY.mat'];
 
 save(filename,'DATA')
 
