@@ -55,16 +55,8 @@ disp('Finished loading REGREADY.mat')
 %#############################################################
 %%        DETERMINE SUBJECT'S DAILY STIM SCHEDULE
 %#############################################################
-
-
-
-i=1;
-
-DATA{i}
-
-
-%% GET ALL STIM TRIAL TYPES FOR ALL DAYS
-
+% GET ALL STIM TRIAL TYPES FOR ALL DAYS
+%
 % It could be (and probably will be) the case that not all stim
 % trial types are given each day. For example on day-1 of the
 % experiment for a given animal, it may recieve stim trial types:
