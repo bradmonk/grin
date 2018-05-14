@@ -1,20 +1,36 @@
 %% GRINdaypicker
+% 
+% GRINdaypicker is the third step in the grin big data pipeline.
+% 
+% 1. GRINcompress
+% 2. GRINregready
+% 3. >> GRINdaypicker <<
+% 4. GRINalign
+% 5. GRINbiganalysis
+% 
+% 
 %{
-GRINalign is the third step in the grinbigdata pipeline.
-
-1. GRINcompress
-2. GRINregready
-3. [[ GRINdaypicker ]]
-4. GRINalign
-5. GRINbiganalysis
-
-GRINdaypicker imports a single mat file created by GRINregready which 
-contains image stacks and info for all days of experiments performed
-on a single subject. Here you will pick a subset of days to group for
-image alignment performed in the next script, GRINalign.
-
-
+% 
+% GRINdaypicker imports a single mat file created by GRINregready which
+% contains image stacks and info for all days of experiments performed on
+% a single subject. Here you will pick a subset of days to group for 
+% image alignment performed in the next script, GRINalign().
+% 
+% 
+% In order to facilitate the choosing of days, I made it so a graphic will
+% open and display all the trial types and indicate which days each trial
+% type was presented. The user is then asked to click on the first day and
+% last day they would like to export from GRINdaypicker(). The program will
+% then package those days (the first through the last day chosen) into a
+% single mat file ready for image alignment...
+% 
+% 
+% A montage of projection images from the chosen days is shown to the user
+% upon export. This same montage is shown during the GRINalign() program.
+% 
+%
 %}
+%----------------------------------------------------
 
 
 %% CLEAR RAM AND CHANGE WORKING DIRECTORIES

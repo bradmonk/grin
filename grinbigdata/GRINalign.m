@@ -1,18 +1,53 @@
 %% GRINalign
+% 
+% GRINalign is the fourth step in the grin big data pipeline.
+% 
+% 1. GRINcompress
+% 2. GRINregready
+% 3. GRINdaypicker
+% 4. >> GRINalign <<
+% 5. GRINbiganalysis
+% 
+% 
 %{
-GRINalign is the fourth step in the grinbigdata pipeline.
-
-1. GRINcompress
-2. GRINregready
-3. GRINdaypicker
-4. [[ GRINalign ]]
-5. GRINbiganalysis
-
-GRINalign imports a mat file created by GRINdaypicker which contains
-a subset of days for a particular animal than need to be aligned before
-analysis.
-
+% 
+% 
+% GRINalign() imports a .mat file created by GRINdaypicker() which contains
+% a subset of testing days for a particular subject, and performs image
+% registration based on user selected landmarks. The alignment proceeds as
+% such:
+% 
+% 
+% 1. A montage of all the images is displayed to the user, so they can
+%    identify landmarks that persist throughout the selected days.
+% 
+% 
+% 2. After closing the montage image set, a projection image from each day
+%    is shown to the user, at which point the user clicks on two landmarks.
+%    (nb: currently only the first-clicked point is used for translational
+%    alignment; however both alignment points are saved for possible future 
+%    development of the code to include rotation, expand/shrink, etc.)
+% 
+% 
+% 3. After landmarks have been selected for all images, a global landmark
+%    position is calculated so as to minimize data-loss across all images.
+%    That is, image translation requires some parts of each image to move
+%    out-of-screen. A global landmark position is chosen to minimize the
+%    total amount of image loss due to translation.
+% 
+% 
+% 4. Images are aligned via translation of the local landmark to the 
+%    global landmark.
+% 
+% 
+% 5. A mat file is exported containing the aligned image stacks and
+%    associated descriptive information. Also an animated gif of the 
+%    aligned projection images is exported to check alignment quality.
+%
 %}
+%----------------------------------------------------
+
+
 
 %% CLEAR RAM AND CHANGE WORKING DIRECTORIES
 clc; close all; clear;

@@ -1,23 +1,28 @@
 %% GRINregready
+% 
+% GRINregready is the second step in the grin big data pipeline.
+% 
+% 1. GRINcompress
+% 2. >> GRINregready <<
+% 3. GRINdaypicker
+% 4. GRINalign
+% 5. GRINbiganalysis
+% 
+% 
 %{
-GRINregready is the second step in the grin bigdata pipeline.
-
-1. GRINcompress
-2. [[ GRINregready ]]
-3. GRINdaypicker
-4. GRINalign
-5. GRINbiganalysis
-
-GRINregready imports mat files created by 'GRINcompress' and packages
-them into a single mat file that can be used by 'GRINdaypicker'.
-
-This script also performs several checks to make sure information and
-content from each mat file is standardized. It will check that each
-mat file calls variables by the same name, and makes sure all image
-stacks are the same hight and width.
-
+% 
+% 
+% GRINregready imports mat files created by 'GRINcompress' and packages
+% them into a single mat file that can be used by 'GRINdaypicker'.
+% 
+% This script also performs several checks to make sure information and
+% content from each mat file is standardized. It will check that each
+% mat file calls variables by the same name, and makes sure all image
+% stacks are the same hight and width.
+% 
+% 
 %}
-
+%----------------------------------------------------
 
 
 

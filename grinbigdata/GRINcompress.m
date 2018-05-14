@@ -1,19 +1,59 @@
 function [] = GRINcompress(varargin)
 %% GRINcompress
 %
-% GRINcompress is the first step in the GRIN BIGDATA pipeline.
+% GRINcompress is the first step in the GRIN BIG DATA pipeline.
 % 
 % This processing pipeline includes:
 % 
-%   1. [[ GRINcompress ]]
+%   1. >> GRINcompress <<
 %   2. GRINregready
 %   3. GRINdaypicker
 %   4. GRINalign
 %   5. GRINbiganalysis
 % 
 % 
+%{
+%
+% GRINcompress()
+% Prompts user to select a folder containing assorted raw GRIN data for
+% import. The program will search that folder and imports the following:
+% 
+%     - green-channel tiff image stack 
+%     - red-channel tiff image stack (if available) 
+%     - excel workbook describing data organization 
+%     - lick data (if available)
 % 
 % 
+% It then performs the following processes to each image stack:
+% 
+%     - smooth 
+%     - crop 
+%     - resize 
+%     - reshapes stack 
+%     - aligns CS on/off frames
+% 
+% The resulting image stack is:
+% 
+%     40x40xFxT
+% 
+% Where F is the number of frames per trial (almost always 100; typically
+% the max frames that can be kept after aligning CS on/off) and T is the 
+% number of trials on a given day. The resizing to 40x40 is done using 
+% bicubic interpolation (each output pixel value is a weighted average of 
+% pixels in the nearest 4-by-4 neighborhood).
+% 
+% The program also interprets the excel data and repackages this data 
+% into structural arrays for later use. Any associated lick data is also 
+% packaged into the mat file.
+% 
+% Then, for each day, a single file is packaged with all this data and 
+% export as a mat file. Compression achieved for each day:
+% 
+%     import: ~ 1.2 GB  assorted files/formats
+%     export: ~  10 MB  single mat file
+% 
+% 
+%}
 %----------------------------------------------------
 
 

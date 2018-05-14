@@ -1,17 +1,43 @@
 %% GRINbiganalysis
+% 
+% GRINbiganalysis is the fifth step in the grinbigdata pipeline.
+% 
+% 1. GRINcompress
+% 2. GRINregready
+% 3. GRINdaypicker
+% 4. GRINalign
+% 5. >> GRINbiganalysis <<
+% 
+% 
 %{
-GRINbiganalysis is the fifth step in the grinbigdata pipeline.
-
-1. GRINcompress
-2. GRINregready
-3. GRINdaypicker
-4. GRINalign
-5. [[ GRINbiganalysis ]]
-
-GRINbiganalysis imports a mat file created by GRINalign which contains
-aligned image stacks across days.
-
+% 
+% 
+% GRINbiganalysis() imports a mat file created by GRINalign() that contain
+% aligned image stacks across days chosen by the GRINdaypicker() program.
+% 
+% 
+% 1. The program prompts the user to select a mat file created by the
+%    GRINalign() program. The data from this mat file is then imported.
+% 
+% 
+% 2. A popup prompt is displayed to user, with a dropdown menu with all
+%    trial types that were ever given on any of the days of the imported
+%    datasets.
+% 
+% 
+% 3. It then prompts the user to select an ROI from a projection image 
+%    across all days for that particular stim type.
+% 
+% 
+% 4. I processes pixels from the selected ROI and generates several plots.
+% 
+% 
+% 
+% 
 %}
+%----------------------------------------------------
+
+
 
 %% CLEAR RAM AND CHANGE WORKING DIRECTORIES
 clc; close all; clear;
