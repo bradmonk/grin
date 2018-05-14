@@ -44,6 +44,14 @@ try cd([m.path filesep 'grindata' filesep 'grin_regready']); catch;end
 
 
 
+% g=what('grin'); m=what('grin-master');
+% try cd(g.path); catch; try cd(m.path); catch;end;end
+% p=[pwd filesep 'grindata' filesep 'grin_daypicks'];
+% try cd(p);catch;try mkdir(p); cd(p); catch;end;end
+% p=[pwd filesep filename(1:4)];
+% try cd(p);catch;try mkdir(p); cd(p); catch;end;end
+
+
 
 %% GET PATHS TO REGREADY MAT FILE
 clc; close all; clear
@@ -289,7 +297,40 @@ clc; clearvars -except DATA
 
 filename = [DATA{1}.INFO.file(1:4) '_DAYPICKS_.mat'];
 
-uisave('DATA',filename)
+
+disp('Saving data...')
+
+
+% ATTEMPT TO SAVE 'gc00_DAYPICKS_.mat' INTO FOLDER...
+% 
+%     ~/grin/grindata/grin_daypicks/gc00/
+% ELSE
+%     ~/grin/grindata/grin_daypicks/
+% ELSE
+%     ~/grin/
+% ELSE
+%     uisave()
+%
+
+g=what('grin'); m=what('grin-master');
+try cd(g.path); catch; try cd(m.path); catch;end;end
+p=[pwd filesep 'grindata' filesep 'grin_daypicks'];
+try cd(p);catch;try mkdir(p); cd(p); catch;end;end
+p=[pwd filesep filename(1:4)];
+try cd(p);catch;try mkdir(p); cd(p); catch;end;end
+
+clc;
+s = regexpi(pwd,'grin');
+if isempty(s)
+    uisave('DATA',filename)
+else
+    save(filename,'DATA')
+    disp(filename)
+    disp('Saved in this folder: ')
+    disp(pwd)
+end
+
+
 
 disp('Finished.')
 
