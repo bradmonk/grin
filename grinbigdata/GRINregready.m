@@ -66,7 +66,7 @@ for nn = 1:size(datapaths,1)
 
     DATA{nn} = load(datapaths{nn});
 
-    f = isfield(DATA{nn}, {'IMGS', 'IMGC', 'IMRC', 'LICK', 'INFO', 'XLSD'});
+    f = isfield(DATA{nn}, {'IMGS', 'IMGC', 'IMRC', 'LICK', 'INFO', 'XLSD', 'IMGR'});
     g = isfield(DATA{nn}, {'GRINstruct', 'XLSdata', 'blockSize'});
 
 
@@ -80,8 +80,11 @@ for nn = 1:size(datapaths,1)
 
 
     % MAKE SURE 'IMRC' VARIABLE EXISTS, EVEN IF EMPTY
-    if ~f(3)
-    DATA{nn}.IMRC = [];
+    if (~f(3)) && (~f(7))
+        DATA{nn}.IMRC = [];
+    elseif f(7)
+        DATA{nn}.IMRC = DATA{nn}.IMGR;
+        DATA{nn} = rmfield(DATA{nn},'IMGR');
     end
 
 
@@ -116,6 +119,7 @@ for nn = 1:size(datapaths,1)
 end
 
 clearvars -except datapaths datafiles DATA
+
 
 
 %% PREVIEW IMAGE STACK FROM FIRST STACK
@@ -184,7 +188,74 @@ clearvars -except datapaths datafiles DATA
 
 
 
-%% EXPORT ALIGNMENT-READY STACK
+%% RESAVE FILES AS UPDATED INDIVIDUAL COMPRESSED MAT FILES
+
+answer = questdlg(...
+    'RESAVE FILES AS UPDATED INDIVIDUAL COMPRESSED MAT FILES?', ...
+	'RESAVE INDIVIDUAL COMPRESSED FILES', ...
+	'YES, THEN EXIT',...
+    'YES, THEN MAKE REG-READY',...
+    'NO, JUST MAKE REG-READY','NO, JUST MAKE REG-READY');
+% Handle response
+switch answer
+    case 'YES, THEN EXIT'
+        disp([answer ' coming right up.'])
+        doRESAVE = 0;
+    case 'YES, THEN MAKE REG-READY'
+        disp([answer ' coming right up.'])
+        doRESAVE = 1;
+    case 'NO, JUST MAKE REG-READY'
+        disp([answer ' coming right up.'])
+        doRESAVE = 2;
+end
+
+if doRESAVE < 2
+
+IMGC = [];
+IMRC = [];
+INFO = [];
+XLSD = [];
+LICK = [];
+
+resavedir = ['resave' datafiles{1}(1:9)];
+mkdir(resavedir)
+
+for nn = 1:size(datapaths,1)
+
+    disp(datapaths{nn})
+
+    IMGC = DATA{nn}.IMGC;
+    IMRC = DATA{nn}.IMRC;
+    INFO = DATA{nn}.INFO;
+    XLSD = DATA{nn}.XLSD;
+    LICK = DATA{nn}.LICK;
+
+
+
+    if strcmp(datafiles{nn}(end-5:end-4),'_g')
+
+        upfilename = datafiles{nn}(1:end-6);
+    else
+        upfilename = datafiles{nn}(1:end-4);
+    end
+
+    save( [resavedir filesep upfilename '.mat'], ...
+         'IMGC','IMRC','INFO','XLSD','LICK')
+end
+
+if doRESAVE == 0
+    return
+end
+
+end
+
+
+
+
+
+
+
+%% EXPORT REG-READY (REGISTRATION ALIGNMENT-READY) STACK
 
 clc; clearvars -except DATA
 
@@ -203,7 +274,6 @@ disp(DATA{1})
 disp(' ')
 disp('DATA{end} contains...')
 disp(DATA{end})
-
 
 disp('Saving file...')
 
